@@ -1,0 +1,19 @@
+{
+  "api_gateway_url": "https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod/",
+  "user_pool_id": "us-east-1_G46Iiw7Sy",
+  "user_pool_client_id": "ogbc3dna1g1geptovu4d03r3u",
+  "storage_bucket_name": "agent-hub-storage-448049831733",
+  "lambda_functions": {
+    "agent_executor": "AgentExecutor",
+    "agent_manager": "AgentManager"
+  },
+  "dynamodb_tables": {
+    "agent_registry": "AgentRegistry",
+    "execution_history": "ExecutionHistory", 
+    "user_profiles": "UserProfiles"
+  },
+  "deployment_status": "SUCCESS",
+  "deployment_time": "2025-10-07T13:06:57Z",
+  "region": "us-east-1",
+  "account_id": "448049831733"
+}
