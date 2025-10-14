@@ -44,6 +44,22 @@ const Navbar: React.FC = () => {
             >
               Manage Agents
             </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/integration" 
+              active={location.pathname === '/integration'}
+              className="text-success"
+            >
+              Integration Hub
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/enterprise" 
+              active={location.pathname === '/enterprise'}
+              className="text-primary"
+            >
+              🔌 Enterprise API
+            </Nav.Link>
           </Nav>
           <Nav>
             <Nav.Link disabled className="text-success">

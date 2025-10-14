@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
                 </Col>
               </Row>
               <Row className="mt-2">
-                <Col md={6}>
+                <Col md={4}>
                   <Button 
                     variant="info" 
                     size="lg" 
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
                     📚 Documentation
                   </Button>
                 </Col>
-                <Col md={6}>
+                <Col md={4}>
                   <Button 
                     variant="outline-primary" 
                     size="lg" 
@@ -146,6 +146,16 @@ const Dashboard: React.FC = () => {
                     }}
                   >
                     🌟 View Examples
+                  </Button>
+                </Col>
+                <Col md={4}>
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className="w-100 mb-2"
+                    onClick={() => navigate('/enterprise')}
+                  >
+                    🔌 Enterprise API
                   </Button>
                 </Col>
               </Row>

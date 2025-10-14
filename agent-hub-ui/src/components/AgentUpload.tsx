@@ -25,6 +25,28 @@ interface AgentMetadata {
   tags: string[];
   frameworks?: string[];
   dependencies?: string[];
+  inputSchema?: any;
+  outputSchema?: any;
+  executionRequirements?: {
+    timeout?: number;
+    memory?: number;
+    cpu?: number;
+    environment?: string[];
+  };
+  integrations?: {
+    type: string;
+    required: boolean;
+    description: string;
+  }[];
+  visibility?: 'private' | 'team' | 'organization' | 'public';
+  license?: string;
+  documentation?: string;
+  examples?: {
+    name: string;
+    input: any;
+    expectedOutput: any;
+    description: string;
+  }[];
 }
 
 interface ValidationResult {

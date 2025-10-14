@@ -122,7 +122,7 @@ const Dashboard: React.FC = () => {
                 </Col>
               </Row>
               <Row className="mt-2">
-                <Col md={6}>
+                <Col md={4}>
                   <Button 
                     variant="outline-dark" 
                     size="lg" 
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
                     <span className="me-2">?</span> Documentation
                   </Button>
                 </Col>
-                <Col md={6}>
+                <Col md={4}>
                   <Button 
                     variant="outline-warning" 
                     size="lg" 
@@ -146,6 +146,16 @@ const Dashboard: React.FC = () => {
                     }}
                   >
                     <span className="me-2">★</span> View Examples
+                  </Button>
+                </Col>
+                <Col md={4}>
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className="w-100 mb-2 d-flex align-items-center justify-content-center"
+                    onClick={() => navigate('/enterprise')}
+                  >
+                    <span className="me-2">🔌</span> Enterprise API
                   </Button>
                 </Col>
               </Row>
@@ -227,6 +237,67 @@ const Dashboard: React.FC = () => {
                     <li><strong>Faster Time-to-Market:</strong> Deploy features 2-3x faster with automated testing</li>
                     <li><strong>Risk Reduction:</strong> Catch security issues and performance problems before production</li>
                   </ul>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Enterprise Integration Highlight */}
+      <Row className="mb-4">
+        <Col>
+          <Card className="border-primary">
+            <Card.Header className="bg-primary text-white">
+              <h5 className="mb-0">🔌 Enterprise API Integration</h5>
+            </Card.Header>
+            <Card.Body>
+              <Row>
+                <Col md={8}>
+                  <h6>Integrate Any Agent Into Your Existing Workflows</h6>
+                  <p className="mb-3">
+                    Use our agents directly in your applications, CI/CD pipelines, or custom tools. 
+                    No need to use our UI - integrate programmatically with REST APIs, SDKs, or CLI tools.
+                  </p>
+                  
+                  <Row>
+                    <Col md={6}>
+                      <h6 className="text-primary">🚀 Quick Integration</h6>
+                      <ul className="small">
+                        <li><strong>5-minute setup</strong> with API keys</li>
+                        <li><strong>SDKs available</strong> for Python, JavaScript, Java</li>
+                        <li><strong>CI/CD ready</strong> with GitHub Actions, Jenkins</li>
+                        <li><strong>Real-time webhooks</strong> for notifications</li>
+                      </ul>
+                    </Col>
+                    <Col md={6}>
+                      <h6 className="text-success">💡 Use Cases</h6>
+                      <ul className="small">
+                        <li><strong>QA Teams:</strong> Auto-generate tests in CI/CD</li>
+                        <li><strong>DevOps:</strong> Daily cost optimization reports</li>
+                        <li><strong>Security:</strong> Automated compliance scanning</li>
+                        <li><strong>Business:</strong> Scheduled analytics reports</li>
+                      </ul>
+                    </Col>
+                  </Row>
+                </Col>
+                <Col md={4} className="text-center">
+                  <div className="bg-light p-3 rounded">
+                    <h4 className="text-primary">753%</h4>
+                    <small>Year 1 ROI</small>
+                    <hr />
+                    <h4 className="text-success">1.4mo</h4>
+                    <small>Payback Period</small>
+                    <hr />
+                    <Button 
+                      variant="primary" 
+                      size="lg" 
+                      className="w-100"
+                      onClick={() => navigate('/enterprise')}
+                    >
+                      View Integration Guide
+                    </Button>
+                  </div>
                 </Col>
               </Row>
             </Card.Body>
