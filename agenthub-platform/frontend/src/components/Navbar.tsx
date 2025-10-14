@@ -46,6 +46,14 @@ const Navbar: React.FC = () => {
             </Nav.Link>
             <Nav.Link 
               as={Link} 
+              to="/integration" 
+              active={location.pathname === '/integration'}
+              className="text-success"
+            >
+              Integration Hub
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
               to="/enterprise" 
               active={location.pathname === '/enterprise'}
               className="text-primary"

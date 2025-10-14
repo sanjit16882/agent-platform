@@ -10,6 +10,7 @@ import AgentExecutor from './components/AgentExecutor';
 import ResultsViewer from './components/ResultsViewer';
 import AgentUpload from './components/AgentUpload';
 import AgentManagement from './components/AgentManagement';
+import PlatformIntegration from './components/PlatformIntegration';
 import EnterpriseIntegration from './components/EnterpriseIntegration';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/results/:executionId" element={<ResultsViewer />} />
             <Route path="/upload" element={<AgentUpload />} />
             <Route path="/manage" element={<AgentManagement />} />
+            <Route path="/integration" element={<PlatformIntegration />} />
             <Route path="/enterprise" element={<EnterpriseIntegration />} />
           </Routes>
         </div>
