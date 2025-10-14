@@ -29,7 +29,7 @@ agent-hub-cdk/
 ### **2. Libraries & Dependencies Deployed**
 
 #### **CDK Infrastructure (TypeScript)**
-- `aws-cdk-lib@2.70.0` - AWS CDK core library
+- `aws-cdk-lib@2.219.0` - AWS CDK core library (updated for security)
 - `constructs@^10.0.0` - CDK constructs framework
 - `typescript@~4.9.5` - TypeScript compiler
 - `@types/node@18.14.6` - Node.js type definitions
