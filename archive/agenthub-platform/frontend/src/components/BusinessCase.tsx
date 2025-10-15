@@ -1,32 +1,30 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Form, Table, Alert } from 'react-bootstrap';
+import { 
+  calculateConservativeROI, 
+  formatCurrency, 
+  getAssumptionsText, 
+  getIndustryBenchmarks,
+  type ROIInputs 
+} from '../utils/roiCalculator';
 
 const BusinessCase: React.FC = () => {
   const [teamSize, setTeamSize] = useState(5);
   const [avgSalary, setAvgSalary] = useState(75000);
   const [infraCost, setInfraCost] = useState(50000);
+  const [companySize, setCompanySize] = useState<'startup' | 'midsize' | 'enterprise'>('midsize');
 
-  // Calculate ROI based on inputs
-  const calculateROI = () => {
-    const monthlyQESavings = (teamSize * (avgSalary / 12) * 0.85); // 85% time savings
-    const monthlyInfraSavings = (infraCost * 0.25); // 25% infrastructure savings
-    const monthlyTotalSavings = monthlyQESavings + monthlyInfraSavings;
-    const annualSavings = monthlyTotalSavings * 12;
-    const platformCost = 50000; // Annual platform cost
-    const roi = ((annualSavings - platformCost) / platformCost) * 100;
-    const paybackMonths = platformCost / monthlyTotalSavings;
-
-    return {
-      monthlyQESavings,
-      monthlyInfraSavings,
-      monthlyTotalSavings,
-      annualSavings,
-      roi,
-      paybackMonths
-    };
+  // Calculate ROI using conservative industry benchmarks
+  const inputs: ROIInputs = {
+    teamSize,
+    avgSalary,
+    infraCost,
+    companySize
   };
 
-  const results = calculateROI();
+  const results = calculateConservativeROI(inputs);
+  const benchmarks = getIndustryBenchmarks(companySize);
+  const assumptions = getAssumptionsText(companySize);
 
   return (
     <Container className="mt-4">
@@ -77,12 +75,25 @@ const BusinessCase: React.FC = () => {
         <Col md={6}>
           <Card>
             <Card.Header>
-              <h5>🧮 ROI Calculator</h5>
+              <h5>🧮 Conservative ROI Calculator</h5>
+              <small className="text-muted">Based on industry benchmarks and realistic assumptions</small>
             </Card.Header>
             <Card.Body>
               <Form>
                 <Form.Group className="mb-3">
-                  <Form.Label>Engineering Team Size</Form.Label>
+                  <Form.Label>Company Size</Form.Label>
+                  <Form.Select 
+                    value={companySize} 
+                    onChange={(e) => setCompanySize(e.target.value as 'startup' | 'midsize' | 'enterprise')}
+                  >
+                    <option value="startup">Startup (10-100 employees)</option>
+                    <option value="midsize">Mid-size (100-1000 employees)</option>
+                    <option value="enterprise">Enterprise (1000+ employees)</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>QE/Engineering Team Size</Form.Label>
                   <Form.Range
                     min={1}
                     max={50}
@@ -99,34 +110,44 @@ const BusinessCase: React.FC = () => {
                 <Form.Group className="mb-3">
                   <Form.Label>Average Engineer Salary</Form.Label>
                   <Form.Range
-                    min={50000}
-                    max={200000}
+                    min={60000}
+                    max={180000}
                     step={5000}
                     value={avgSalary}
                     onChange={(e) => setAvgSalary(parseInt(e.target.value))}
                   />
                   <div className="d-flex justify-content-between small text-muted">
-                    <span>$50K</span>
+                    <span>$60K</span>
                     <span><strong>${(avgSalary / 1000).toFixed(0)}K/year</strong></span>
-                    <span>$200K</span>
+                    <span>$180K</span>
                   </div>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label>Monthly Infrastructure Cost</Form.Label>
                   <Form.Range
-                    min={10000}
-                    max={500000}
-                    step={5000}
+                    min={5000}
+                    max={200000}
+                    step={2500}
                     value={infraCost}
                     onChange={(e) => setInfraCost(parseInt(e.target.value))}
                   />
                   <div className="d-flex justify-content-between small text-muted">
-                    <span>$10K</span>
+                    <span>$5K</span>
                     <span><strong>${(infraCost / 1000).toFixed(0)}K/month</strong></span>
-                    <span>$500K</span>
+                    <span>$200K</span>
                   </div>
                 </Form.Group>
+
+                <Alert variant="info" className="small">
+                  <strong>Conservative Assumptions for {companySize} companies:</strong>
+                  <ul className="mb-0 mt-1">
+                    <li>QE time savings: {benchmarks.qeAutomationSavings}</li>
+                    <li>Infrastructure optimization: {benchmarks.infraOptimization}</li>
+                    <li>Implementation time: {benchmarks.implementationTime}</li>
+                    <li>Risk buffer: {benchmarks.riskBuffer} applied</li>
+                  </ul>
+                </Alert>
               </Form>
             </Card.Body>
           </Card>
@@ -135,33 +156,40 @@ const BusinessCase: React.FC = () => {
         <Col md={6}>
           <Card className="border-success">
             <Card.Header className="bg-success text-white">
-              <h5>💰 Your Projected Savings</h5>
+              <h5>💰 Conservative Projected Savings</h5>
+              <small>Risk-adjusted estimates with industry benchmarks</small>
             </Card.Header>
             <Card.Body>
               <Table borderless>
                 <tbody>
                   <tr>
-                    <td><strong>QE Automation Savings:</strong></td>
+                    <td><strong>QE Time Savings:</strong></td>
                     <td className="text-end">
-                      <Badge bg="success">${results.monthlyQESavings.toLocaleString()}/month</Badge>
+                      <Badge bg="success">{formatCurrency(results.monthlyQESavings)}/month</Badge>
                     </td>
                   </tr>
                   <tr>
                     <td><strong>Infrastructure Optimization:</strong></td>
                     <td className="text-end">
-                      <Badge bg="success">${results.monthlyInfraSavings.toLocaleString()}/month</Badge>
+                      <Badge bg="success">{formatCurrency(results.monthlyInfraSavings)}/month</Badge>
                     </td>
                   </tr>
                   <tr className="border-top">
                     <td><strong>Total Monthly Savings:</strong></td>
                     <td className="text-end">
-                      <Badge bg="primary">${results.monthlyTotalSavings.toLocaleString()}/month</Badge>
+                      <Badge bg="primary">{formatCurrency(results.monthlyTotalSavings)}/month</Badge>
                     </td>
                   </tr>
                   <tr>
-                    <td><strong>Annual Savings:</strong></td>
+                    <td><strong>Annual Savings (Year 1):</strong></td>
                     <td className="text-end">
-                      <Badge bg="primary">${results.annualSavings.toLocaleString()}/year</Badge>
+                      <Badge bg="primary">{formatCurrency(results.annualSavings)}/year</Badge>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>Platform Investment:</strong></td>
+                    <td className="text-end">
+                      <Badge bg="secondary">{formatCurrency(results.platformCost)}/year</Badge>
                     </td>
                   </tr>
                 </tbody>
@@ -170,16 +198,26 @@ const BusinessCase: React.FC = () => {
               <hr />
 
               <div className="text-center">
-                <h4 className="text-success">ROI: {results.roi.toFixed(0)}%</h4>
-                <p className="text-muted">Payback Period: {results.paybackMonths.toFixed(1)} months</p>
+                <h4 className={results.roi > 0 ? "text-success" : "text-warning"}>
+                  ROI: {results.roi > 0 ? '+' : ''}{results.roi.toFixed(0)}%
+                </h4>
+                <p className="text-muted">
+                  Payback Period: {results.paybackMonths.toFixed(1)} months
+                  {results.paybackMonths > 12 && <span className="text-warning"> (includes implementation time)</span>}
+                </p>
               </div>
+
+              <Alert variant="light" className="small">
+                <strong>Methodology:</strong> Conservative estimates based on industry studies. 
+                Includes {benchmarks.riskBuffer} risk buffer and {benchmarks.implementationTime} implementation period.
+              </Alert>
 
               <div className="d-grid gap-2">
                 <Button variant="success" size="lg">
                   📞 Schedule Demo
                 </Button>
                 <Button variant="outline-primary">
-                  📊 Download Full Business Case
+                  📊 Download Detailed Analysis
                 </Button>
               </div>
             </Card.Body>

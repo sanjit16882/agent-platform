@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Badge, Modal, Table, Tabs, Tab, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import axios from 'axios';
+import { Icon } from './Icon';
 
 interface Agent {
   agent_id: string;
@@ -257,11 +258,8 @@ const AgentManagement: React.FC = () => {
       ];
       setAgents(mockAgents);
       
-      addToast({
-        type: 'info',
-        title: 'Demo Mode',
-        message: 'Running in demo mode with sample data. All features are functional for testing.'
-      });
+      // Silently use demo data without showing popup
+      console.log('Using demo data for agent management');
     } finally {
       setLoading(false);
     }
@@ -697,7 +695,8 @@ const AgentManagement: React.FC = () => {
             size="lg"
             onClick={() => setShowUploadModal(true)}
           >
-            ➕ Register New Agent
+            <Icon name="upload" size="small" className="me-2" />
+            Register New Agent
           </Button>
         </Col>
       </Row>
@@ -784,7 +783,7 @@ const AgentManagement: React.FC = () => {
                         </td>
                         <td>
                           <Badge bg={agent.deployment_status === 'deployed' ? 'success' : 'secondary'}>
-                            {agent.deployment_status === 'deployed' ? '🟢 Live' : '⚪ Offline'}
+                            {agent.deployment_status === 'deployed' ? 'Live' : 'Offline'}
                           </Badge>
                         </td>
                         <td>{agent.author}</td>

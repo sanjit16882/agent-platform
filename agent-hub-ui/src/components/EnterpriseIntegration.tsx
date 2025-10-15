@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Badge, Modal, Tabs, Tab, Accordion } from 'react-bootstrap';
+import { Icon } from './Icon';
 
 interface Agent {
   id: string;
@@ -303,7 +304,10 @@ ${Object.keys(agent.inputSchema).map(key =>
       <Row className="mb-4">
         <Col>
           <div className="text-center mb-4">
-            <h1 className="display-5 fw-bold text-primary">🔌 Enterprise Integration</h1>
+            <h1 className="display-5 fw-bold text-primary d-flex align-items-center justify-content-center">
+              <Icon name="enterprise" size="large" className="me-3" />
+              Enterprise Integration
+            </h1>
             <p className="lead">Integrate Agent Factory into your existing workflows and applications</p>
           </div>
           
@@ -329,7 +333,10 @@ ${Object.keys(agent.inputSchema).map(key =>
         <Col>
           <Card>
             <Card.Header className="bg-primary text-white">
-              <h5 className="mb-0">🔑 Step 1: Get Your API Key</h5>
+              <h5 className="mb-0 d-flex align-items-center">
+                <Icon name="security" size="small" className="me-2" />
+                Step 1: Get Your API Key
+              </h5>
             </Card.Header>
             <Card.Body>
               <p>Generate an API key to authenticate your applications with the Agent Factory platform.</p>
@@ -353,7 +360,10 @@ ${Object.keys(agent.inputSchema).map(key =>
         <Col>
           <Card>
             <Card.Header className="bg-success text-white">
-              <h5 className="mb-0">🤖 Step 2: Choose an Agent</h5>
+              <h5 className="mb-0 d-flex align-items-center">
+                <Icon name="agent" size="small" className="me-2" />
+                Step 2: Choose an Agent
+              </h5>
             </Card.Header>
             <Card.Body>
               <p>Select any agent from our catalog to see integration examples:</p>
@@ -390,7 +400,10 @@ ${Object.keys(agent.inputSchema).map(key =>
           <Col>
             <Card>
               <Card.Header className="bg-info text-white">
-                <h5 className="mb-0">💻 Step 3: Integration Examples for {selectedAgent.name}</h5>
+                <h5 className="mb-0 d-flex align-items-center">
+                  <Icon name="settings" size="small" className="me-2" />
+                  Step 3: Integration Examples for {selectedAgent.name}
+                </h5>
               </Card.Header>
               <Card.Body>
                 <Tabs defaultActiveKey="sdk" className="mb-3">
@@ -413,7 +426,10 @@ ${Object.keys(agent.inputSchema).map(key =>
                     </pre>
                     
                     <div className="mt-3">
-                      <h6>📦 Installation:</h6>
+                      <h6 className="d-flex align-items-center">
+                        <Icon name="download" size="small" className="me-2" />
+                        Installation:
+                      </h6>
                       {selectedLanguage === 'python' && (
                         <pre className="bg-light p-2 rounded"><code>pip install agent-factory-sdk</code></pre>
                       )}
@@ -478,12 +494,18 @@ app.post('/webhook/agent-factory', (req, res) => {
         <Col>
           <Card>
             <Card.Header className="bg-warning text-dark">
-              <h5 className="mb-0">🎯 Common Integration Patterns</h5>
+              <h5 className="mb-0 d-flex align-items-center">
+                <Icon name="target" size="small" className="me-2" />
+                Common Integration Patterns
+              </h5>
             </Card.Header>
             <Card.Body>
               <Accordion>
                 <Accordion.Item eventKey="0">
-                  <Accordion.Header>🧪 QA Team: Automated Test Generation</Accordion.Header>
+                  <Accordion.Header>
+                    <Icon name="agent" size="small" className="me-2" />
+                    QA Team: Automated Test Generation
+                  </Accordion.Header>
                   <Accordion.Body>
                     <strong>Scenario:</strong> Generate tests automatically when requirements change
                     <ul className="mt-2">
@@ -498,7 +520,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                 </Accordion.Item>
                 
                 <Accordion.Item eventKey="1">
-                  <Accordion.Header>⚙️ DevOps Team: Infrastructure Optimization</Accordion.Header>
+                  <Accordion.Header>
+                    <Icon name="settings" size="small" className="me-2" />
+                    DevOps Team: Infrastructure Optimization
+                  </Accordion.Header>
                   <Accordion.Body>
                     <strong>Scenario:</strong> Continuous cost optimization and monitoring
                     <ul className="mt-2">
@@ -513,7 +538,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                 </Accordion.Item>
                 
                 <Accordion.Item eventKey="2">
-                  <Accordion.Header>🔒 Security Team: Continuous Compliance</Accordion.Header>
+                  <Accordion.Header>
+                    <Icon name="security" size="small" className="me-2" />
+                    Security Team: Continuous Compliance
+                  </Accordion.Header>
                   <Accordion.Body>
                     <strong>Scenario:</strong> Automated security scanning and compliance
                     <ul className="mt-2">
@@ -528,7 +556,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                 </Accordion.Item>
                 
                 <Accordion.Item eventKey="3">
-                  <Accordion.Header>📊 Business Team: Data Analysis Automation</Accordion.Header>
+                  <Accordion.Header>
+                    <Icon name="analytics" size="small" className="me-2" />
+                    Business Team: Data Analysis Automation
+                  </Accordion.Header>
                   <Accordion.Body>
                     <strong>Scenario:</strong> Automated business intelligence and reporting
                     <ul className="mt-2">
@@ -552,16 +583,37 @@ app.post('/webhook/agent-factory', (req, res) => {
         <Col md={6}>
           <Card className="h-100">
             <Card.Header className="bg-primary text-white">
-              <h6 className="mb-0">✅ Integration Benefits</h6>
+              <h6 className="mb-0 d-flex align-items-center">
+                <Icon name="success" size="small" className="me-2" />
+                Integration Benefits
+              </h6>
             </Card.Header>
             <Card.Body>
               <ul className="list-unstyled">
-                <li className="mb-2">🚀 <strong>No UI Required:</strong> Pure API integration</li>
-                <li className="mb-2">⚡ <strong>Fast Setup:</strong> 5-minute integration</li>
-                <li className="mb-2">🔧 <strong>Flexible:</strong> Use any programming language</li>
-                <li className="mb-2">🔄 <strong>CI/CD Ready:</strong> Pipeline integration</li>
-                <li className="mb-2">📊 <strong>Real-time:</strong> Webhook notifications</li>
-                <li className="mb-2">🔐 <strong>Secure:</strong> API key authentication</li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="upload" size="small" className="me-2" />
+                  <strong>No UI Required:</strong> Pure API integration
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="agentHub" size="small" className="me-2" />
+                  <strong>Fast Setup:</strong> 5-minute integration
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="settings" size="small" className="me-2" />
+                  <strong>Flexible:</strong> Use any programming language
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="activity" size="small" className="me-2" />
+                  <strong>CI/CD Ready:</strong> Pipeline integration
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="chart" size="small" className="me-2" />
+                  <strong>Real-time:</strong> Webhook notifications
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="security" size="small" className="me-2" />
+                  <strong>Secure:</strong> API key authentication
+                </li>
               </ul>
             </Card.Body>
           </Card>
@@ -570,7 +622,10 @@ app.post('/webhook/agent-factory', (req, res) => {
         <Col md={6}>
           <Card className="h-100">
             <Card.Header className="bg-success text-white">
-              <h6 className="mb-0">📈 Expected ROI</h6>
+              <h6 className="mb-0 d-flex align-items-center">
+                <Icon name="analytics" size="small" className="me-2" />
+                Expected ROI
+              </h6>
             </Card.Header>
             <Card.Body>
               <div className="row text-center">
@@ -601,12 +656,18 @@ app.post('/webhook/agent-factory', (req, res) => {
         <Col>
           <Card>
             <Card.Header className="bg-dark text-white">
-              <h5 className="mb-0">🆘 Support & Resources</h5>
+              <h5 className="mb-0 d-flex align-items-center">
+                <Icon name="users" size="small" className="me-2" />
+                Support & Resources
+              </h5>
             </Card.Header>
             <Card.Body>
               <Row>
                 <Col md={3}>
-                  <h6>📚 Documentation</h6>
+                  <h6 className="d-flex align-items-center">
+                    <Icon name="view" size="small" className="me-2" />
+                    Documentation
+                  </h6>
                   <ul className="list-unstyled">
                     <li><a href="#" className="text-decoration-none">API Reference</a></li>
                     <li><a href="#" className="text-decoration-none">SDK Documentation</a></li>
@@ -614,7 +675,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                   </ul>
                 </Col>
                 <Col md={3}>
-                  <h6>🛠️ Tools</h6>
+                  <h6 className="d-flex align-items-center">
+                    <Icon name="settings" size="small" className="me-2" />
+                    Tools
+                  </h6>
                   <ul className="list-unstyled">
                     <li><a href="#" className="text-decoration-none">CLI Tool</a></li>
                     <li><a href="#" className="text-decoration-none">Postman Collection</a></li>
@@ -622,7 +686,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                   </ul>
                 </Col>
                 <Col md={3}>
-                  <h6>💬 Community</h6>
+                  <h6 className="d-flex align-items-center">
+                    <Icon name="users" size="small" className="me-2" />
+                    Community
+                  </h6>
                   <ul className="list-unstyled">
                     <li><a href="#" className="text-decoration-none">GitHub Discussions</a></li>
                     <li><a href="#" className="text-decoration-none">Slack Channel</a></li>
@@ -630,7 +697,10 @@ app.post('/webhook/agent-factory', (req, res) => {
                   </ul>
                 </Col>
                 <Col md={3}>
-                  <h6>🎯 Support</h6>
+                  <h6 className="d-flex align-items-center">
+                    <Icon name="target" size="small" className="me-2" />
+                    Support
+                  </h6>
                   <ul className="list-unstyled">
                     <li><a href="#" className="text-decoration-none">Enterprise Support</a></li>
                     <li><a href="#" className="text-decoration-none">Training Sessions</a></li>
@@ -646,7 +716,10 @@ app.post('/webhook/agent-factory', (req, res) => {
       {/* API Key Modal */}
       <Modal show={showApiKeyModal} onHide={() => setShowApiKeyModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>🔑 API Key Generated</Modal.Title>
+          <Modal.Title className="d-flex align-items-center">
+            <Icon name="security" size="small" className="me-2" />
+            API Key Generated
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Alert variant="success">

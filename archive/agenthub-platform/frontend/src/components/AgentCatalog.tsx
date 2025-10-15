@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Icon } from './Icon';
 
 interface Agent {
   agent_id: string;
@@ -421,9 +422,9 @@ const AgentCatalog: React.FC = () => {
   };
 
   const getTechnicalBadges = (agent: Agent) => {
-    const badges = ['🤖 AI-Powered', '⚡ Fast', '🛡️ Secure'];
-    if (agent.usage_count > 1000) badges.push('📊 High Performance');
-    if (agent.category === 'Custom') badges.push('🔧 Customizable');
+    const badges = ['AI-Powered', 'Fast', 'Secure'];
+    if (agent.usage_count > 1000) badges.push('High Performance');
+    if (agent.category === 'Custom') badges.push('Customizable');
     return badges;
   };
 
@@ -444,7 +445,10 @@ const AgentCatalog: React.FC = () => {
     <Container>
       <Row className="mb-4">
         <Col md={8}>
-          <h1>🤖 Agent Catalog</h1>
+          <h1 className="d-flex align-items-center">
+            <Icon name="agent" size="large" className="me-3" />
+            Agent Catalog
+          </h1>
           <p className="lead">Discover and deploy AI agents for any business function</p>
         </Col>
         <Col md={4} className="text-end">
@@ -454,7 +458,8 @@ const AgentCatalog: React.FC = () => {
             onClick={() => navigate('/upload')}
             className="mb-2"
           >
-            🚀 Upload Agent
+            <Icon name="upload" size="small" className="me-2" />
+            Upload Agent
           </Button>
           <br />
           <small className="text-muted">Add your custom agents to the marketplace</small>
@@ -465,7 +470,9 @@ const AgentCatalog: React.FC = () => {
       <Row className="mb-4">
         <Col md={8}>
           <InputGroup>
-            <InputGroup.Text>🔍</InputGroup.Text>
+            <InputGroup.Text>
+              <Icon name="view" size="small" />
+            </InputGroup.Text>
             <Form.Control
               type="text"
               placeholder="Search agents by name or description..."
@@ -498,7 +505,10 @@ const AgentCatalog: React.FC = () => {
             <Card.Body>
               <Row className="align-items-center">
                 <Col md={8}>
-                  <h5 className="mb-2">🚀 Universal AI Agent Platform</h5>
+                  <h5 className="mb-2 d-flex align-items-center">
+                    <Icon name="agentHub" size="small" className="me-2" />
+                    Universal AI Agent Platform
+                  </h5>
                   <p className="mb-0">
                     <strong>Multi-Domain:</strong> QE, DevOps, Security, Business, Market Data • 
                     <strong>Extensible:</strong> Upload custom agents and frameworks • 
@@ -506,8 +516,14 @@ const AgentCatalog: React.FC = () => {
                   </p>
                 </Col>
                 <Col md={4} className="text-end">
-                  <Badge bg="success" className="me-2">🤖 AI-Powered</Badge>
-                  <Badge bg="info">☁️ Cloud-Native</Badge>
+                  <Badge bg="success" className="me-2 d-flex align-items-center">
+                    <Icon name="agent" size="small" className="me-1" />
+                    AI-Powered
+                  </Badge>
+                  <Badge bg="info" className="d-flex align-items-center">
+                    <Icon name="database" size="small" className="me-1" />
+                    Cloud-Native
+                  </Badge>
                 </Col>
               </Row>
             </Card.Body>
@@ -537,12 +553,14 @@ const AgentCatalog: React.FC = () => {
                     {agent.category}
                   </Badge>
                   {agent.category === 'Custom' && (
-                    <Badge bg="secondary" className="me-2">
-                      👤 User Upload
+                    <Badge bg="secondary" className="me-2 d-flex align-items-center">
+                      <Icon name="users" size="small" className="me-1" />
+                      User Upload
                     </Badge>
                   )}
-                  <Badge bg="info">
-                    🤖 AI-Powered
+                  <Badge bg="info" className="d-flex align-items-center">
+                    <Icon name="agent" size="small" className="me-1" />
+                    AI-Powered
                   </Badge>
                 </div>
               </Card.Header>
@@ -557,14 +575,16 @@ const AgentCatalog: React.FC = () => {
                       variant="primary"
                       onClick={() => navigate(`/agents/${agent.agent_id}/execute`)}
                     >
-                      🚀 Execute Agent
+                      <Icon name="play" size="small" className="me-2" />
+                      Execute Agent
                     </Button>
                     <Button
                       variant="outline-secondary"
                       size="sm"
                       disabled
                     >
-                      📋 View Details
+                      <Icon name="view" size="small" className="me-2" />
+                      View Details
                     </Button>
                   </div>
                 </div>

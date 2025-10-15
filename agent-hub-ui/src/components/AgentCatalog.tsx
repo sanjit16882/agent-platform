@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Icon } from './Icon';
 
 interface Agent {
   agent_id: string;
@@ -537,8 +538,9 @@ const AgentCatalog: React.FC = () => {
                     {agent.category}
                   </Badge>
                   {agent.category === 'Custom' && (
-                    <Badge bg="secondary" className="me-2">
-                      👤 User Upload
+                    <Badge bg="secondary" className="me-2 d-flex align-items-center">
+                      <Icon name="users" size="small" className="me-1" />
+                      User Upload
                     </Badge>
                   )}
                   <Badge bg="info">

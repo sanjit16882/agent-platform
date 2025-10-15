@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Badge, Modal, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
+import { Icon } from './Icon';
 
 interface UploadedFile {
   file: File;
@@ -513,7 +514,7 @@ const AgentUpload: React.FC = () => {
                 {isUploading ? (
                   <Spinner animation="border" size="sm" />
                 ) : (
-                  <i className="fas fa-check-circle fa-2x"></i>
+                  <Icon name="success" size={32} color="success" />
                 )}
               </div>
               <div className="flex-grow-1">
@@ -554,7 +555,9 @@ const AgentUpload: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <Card.Body>
-                      <div className="display-4 text-primary mb-2">FILE</div>
+                      <div className="mb-3">
+                        <Icon name="file" size="xlarge" color="primary" />
+                      </div>
                       <h6>Upload Files</h6>
                       <p className="small text-muted">
                         ZIP, TAR, or Python files
@@ -570,7 +573,9 @@ const AgentUpload: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <Card.Body>
-                      <div className="display-4 text-dark mb-2">GIT</div>
+                      <div className="mb-3">
+                        <Icon name="git" size="xlarge" color="dark" />
+                      </div>
                       <h6>GitHub Repository</h6>
                       <p className="small text-muted">
                         Import from GitHub repo
@@ -586,7 +591,9 @@ const AgentUpload: React.FC = () => {
                     style={{ cursor: 'pointer' }}
                   >
                     <Card.Body>
-                      <div className="display-4 text-info mb-2">IMG</div>
+                      <div className="mb-3">
+                        <Icon name="docker" size="xlarge" color="info" />
+                      </div>
                       <h6>Docker Image</h6>
                       <p className="small text-muted">
                         Pull from Docker Hub
@@ -619,7 +626,7 @@ const AgentUpload: React.FC = () => {
                 >
                   <input {...getInputProps()} />
                   <div className="mb-3">
-                    <i className="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                    <Icon name="upload" size={48} color="muted" />
                   </div>
                   {isDragActive ? (
                     <p className="mb-0">Drop the files here...</p>

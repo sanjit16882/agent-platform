@@ -12,6 +12,9 @@ import AgentUpload from './components/AgentUpload';
 import AgentManagement from './components/AgentManagement';
 import PlatformIntegration from './components/PlatformIntegration';
 import EnterpriseIntegration from './components/EnterpriseIntegration';
+import IntegrationGuide from './components/IntegrationGuide';
+import UseCases from './components/UseCases';
+import CloudWatchMetrics from './components/CloudWatchMetrics';
 
 function App() {
   return (
@@ -28,6 +31,9 @@ function App() {
             <Route path="/manage" element={<AgentManagement />} />
             <Route path="/integration" element={<PlatformIntegration />} />
             <Route path="/enterprise" element={<EnterpriseIntegration />} />
+            <Route path="/integration-guide" element={<IntegrationGuide />} />
+            <Route path="/use-cases" element={<UseCases />} />
+            <Route path="/metrics" element={<CloudWatchMetrics />} />
           </Routes>
         </div>
       </div>
