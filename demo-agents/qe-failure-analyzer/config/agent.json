@@ -1,0 +1,71 @@
+{
+  "name": "QE Failure Analyzer",
+  "version": "1.0.0",
+  "description": "Advanced test failure analysis agent that categorizes failures, identifies root causes, and provides actionable fix recommendations for QE teams",
+  "category": "qa",
+  "framework": "openai",
+  "author": "QE Team",
+  "tags": ["testing", "failure-analysis", "debugging", "qa", "automation"],
+  "capabilities": [
+    "failure_categorization",
+    "root_cause_analysis",
+    "fix_recommendations", 
+    "pattern_detection",
+    "priority_assessment"
+  ],
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "failures": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "test_name": {"type": "string"},
+            "error_message": {"type": "string"},
+            "stack_trace": {"type": "string"},
+            "test_file": {"type": "string"},
+            "line_number": {"type": "integer"},
+            "execution_time": {"type": "number"}
+          },
+          "required": ["test_name", "error_message", "stack_trace", "test_file"]
+        }
+      },
+      "test_framework": {"type": "string", "default": "jest"},
+      "project_context": {"type": "string"}
+    },
+    "required": ["failures"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "summary": {"type": "string"},
+      "total_failures": {"type": "integer"},
+      "categories": {"type": "object"},
+      "analyses": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "failure_category": {"type": "string"},
+            "root_cause": {"type": "string"},
+            "confidence_score": {"type": "number"},
+            "suggested_fixes": {"type": "array", "items": {"type": "string"}},
+            "priority": {"type": "string"}
+          }
+        }
+      },
+      "recommendations": {"type": "array", "items": {"type": "string"}},
+      "estimated_fix_time": {"type": "string"}
+    }
+  },
+  "pricing": {
+    "cost_per_execution": 0.15,
+    "estimated_runtime": "30s"
+  },
+  "requirements": {
+    "memory": "512MB",
+    "cpu": "0.5",
+    "timeout": 300
+  }
+}

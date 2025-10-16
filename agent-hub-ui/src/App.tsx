@@ -15,13 +15,16 @@ import EnterpriseIntegration from './components/EnterpriseIntegration';
 import IntegrationGuide from './components/IntegrationGuide';
 import UseCases from './components/UseCases';
 import CloudWatchMetrics from './components/CloudWatchMetrics';
+import APIDocumentation from './components/APIDocumentation';
+import { AgentProvider } from './context/AgentContext';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Navbar />
-        <div className="container-fluid mt-3">
+    <AgentProvider>
+      <Router>
+        <div className="App">
+          <Navbar />
+          <div className="container-fluid mt-3">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/agents" element={<AgentCatalog />} />
@@ -34,10 +37,12 @@ function App() {
             <Route path="/integration-guide" element={<IntegrationGuide />} />
             <Route path="/use-cases" element={<UseCases />} />
             <Route path="/metrics" element={<CloudWatchMetrics />} />
+            <Route path="/api-docs" element={<APIDocumentation />} />
           </Routes>
         </div>
       </div>
     </Router>
+    </AgentProvider>
   );
 }
 

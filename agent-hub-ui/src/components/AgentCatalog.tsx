@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Icon } from './Icon';
+
+import { useAgentContext } from '../context/AgentContext';
 
 interface Agent {
   agent_id: string;
@@ -14,17 +15,8 @@ interface Agent {
   created_at: string;
 }
 
-const AgentCatalog: React.FC = () => {
-  const navigate = useNavigate();
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-
-  const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
-
-  // Comprehensive agent catalog with realistic examples
-  const mockAgents: Agent[] = [
+// Comprehensive agent catalog with realistic examples - moved outside component to prevent re-creation
+const mockAgents: Agent[] = [
     // QE & Testing Agents
     {
       agent_id: 'qe-test-generator-v2',
@@ -369,13 +361,49 @@ const AgentCatalog: React.FC = () => {
       average_rating: 4,
       created_at: '2024-02-22T11:30:00Z'
     }
-  ];
+];
 
-  useEffect(() => {
-    fetchAgents();
-  }, []);
+const AgentCatalog: React.FC = () => {
+  const navigate = useNavigate();
+  const { deployedAgents, updateDeployedAgent, removeDeployedAgent } = useAgentContext();
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const fetchAgents = async () => {
+  const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
+
+  // Check if an agent is a deployed (custom) agent
+  const isDeployedAgent = (agentId: string) => {
+    return deployedAgents.some(agent => agent.id === agentId);
+  };
+
+  // Handle agent management actions
+  const handleEditAgent = (agentId: string) => {
+    // For now, just show an alert - could open an edit modal
+    alert(`Edit functionality for agent ${agentId} would open here`);
+  };
+
+  const handleDeleteAgent = (agentId: string) => {
+    const agent = deployedAgents.find(a => a.id === agentId);
+    if (agent && window.confirm(`Are you sure you want to delete "${agent.name}"?`)) {
+      removeDeployedAgent(agentId);
+      // Refresh the agents list
+      fetchAgents();
+    }
+  };
+
+  const handleToggleAgent = (agentId: string) => {
+    const agent = deployedAgents.find(a => a.id === agentId);
+    if (agent) {
+      const newStatus = agent.status === 'active' ? 'inactive' : 'active';
+      updateDeployedAgent(agentId, { status: newStatus });
+      // Refresh the agents list
+      fetchAgents();
+    }
+  };
+
+  const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
       // Try to fetch from API, but use mock data for demo
@@ -384,16 +412,47 @@ const AgentCatalog: React.FC = () => {
       
       // For demo, use mock data with a slight delay to simulate API call
       setTimeout(() => {
-        setAgents(mockAgents);
+        // Convert deployed agents to Agent format and combine with mock agents
+        const deployedAgentsAsAgents: Agent[] = deployedAgents
+          .filter(agent => agent.status === 'active')
+          .map(agent => ({
+            agent_id: agent.id,
+            name: agent.name,
+            description: agent.description,
+            category: agent.category,
+            usage_count: agent.executionCount,
+            average_rating: 4.5, // Default rating for deployed agents
+            created_at: agent.deployedAt
+          }));
+
+        // Combine deployed agents with mock agents (deployed agents first)
+        const allAgents = [...deployedAgentsAsAgents, ...mockAgents];
+        setAgents(allAgents);
         setLoading(false);
       }, 500);
     } catch (error) {
       console.error('Error fetching agents:', error);
-      // Fallback to mock data
-      setAgents(mockAgents);
+      // Fallback to mock data with deployed agents
+      const deployedAgentsAsAgents: Agent[] = deployedAgents
+        .filter(agent => agent.status === 'active')
+        .map(agent => ({
+          agent_id: agent.id,
+          name: agent.name,
+          description: agent.description,
+          category: agent.category,
+          usage_count: agent.executionCount,
+          average_rating: 4.5,
+          created_at: agent.deployedAt
+        }));
+      
+      setAgents([...deployedAgentsAsAgents, ...mockAgents]);
       setLoading(false);
     }
-  };
+  }, [deployedAgents]);
+
+  useEffect(() => {
+    fetchAgents();
+  }, [fetchAgents, deployedAgents.length]);
 
   const filteredAgents = agents.filter(agent => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -456,6 +515,17 @@ const AgentCatalog: React.FC = () => {
             className="mb-2"
           >
             Upload Agent
+          </Button>
+          <Button 
+            variant="outline-primary" 
+            size="sm"
+            onClick={() => {
+              setLoading(true);
+              fetchAgents();
+            }}
+            className="mb-2 ms-2"
+          >
+            Refresh
           </Button>
           <br />
           <small className="text-muted">Add your custom agents to the marketplace</small>
@@ -537,9 +607,12 @@ const AgentCatalog: React.FC = () => {
                   <Badge bg={getCategoryColor(agent.category)} className="me-2">
                     {agent.category}
                   </Badge>
-                  {agent.category === 'Custom' && (
-                    <Badge bg="secondary" className="me-2 d-flex align-items-center">
-                      <Icon name="users" size="small" className="me-1" />
+                  {isDeployedAgent(agent.agent_id) ? (
+                    <Badge bg="success" className="me-2">
+                      Deployed
+                    </Badge>
+                  ) : agent.category === 'Custom' && (
+                    <Badge bg="secondary" className="me-2">
                       User Upload
                     </Badge>
                   )}
@@ -561,13 +634,45 @@ const AgentCatalog: React.FC = () => {
                     >
                       Execute Agent
                     </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      disabled
-                    >
-                      View Details
-                    </Button>
+                    
+                    {isDeployedAgent(agent.agent_id) ? (
+                      // Management options for deployed agents
+                      <div className="d-flex gap-1">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleEditAgent(agent.agent_id)}
+                          className="flex-fill"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline-warning"
+                          size="sm"
+                          onClick={() => handleToggleAgent(agent.agent_id)}
+                          className="flex-fill"
+                        >
+                          Toggle
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => handleDeleteAgent(agent.agent_id)}
+                          className="flex-fill"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    ) : (
+                      // Standard view details for built-in agents
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        disabled
+                      >
+                        View Details
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card.Body>

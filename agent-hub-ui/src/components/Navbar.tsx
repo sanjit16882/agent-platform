@@ -122,6 +122,16 @@ const Navbar: React.FC = () => {
               <Icon name="enterprise" size="small" className="me-1" />
               Enterprise API
             </Nav.Link>
+
+            <Nav.Link 
+              as={Link} 
+              to="/api-docs" 
+              active={location.pathname === '/api-docs'}
+              className="d-flex align-items-center px-3 text-success small"
+            >
+              <Icon name="view" size="small" className="me-1" />
+              API Docs
+            </Nav.Link>
           </Nav>
         </Container>
       </div>

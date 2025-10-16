@@ -3,9 +3,11 @@ import { Container, Row, Col, Card, Button, Badge, Modal, Form, Table, Alert } f
 import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
 import { calculateConservativeROI, formatCurrency, type ROIInputs } from '../utils/roiCalculator';
+import { useAgentContext } from '../context/AgentContext';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { getActiveAgentsCount } = useAgentContext();
   const [showROICalculator, setShowROICalculator] = useState(false);
   const [showMethodology, setShowMethodology] = useState(false);
   const [roiInputs, setROIInputs] = useState<ROIInputs>({
@@ -15,8 +17,11 @@ const Dashboard: React.FC = () => {
     companySize: 'midsize'
   });
 
+  const baseAgentCount = 38;
+  const deployedAgentCount = getActiveAgentsCount();
+  console.log('Dashboard - deployed agent count:', deployedAgentCount);
   const stats = {
-    totalAgents: 38,
+    totalAgents: baseAgentCount + deployedAgentCount,
     categories: 6,
     frameworks: 12,
     avgResponseTime: 1.1,
@@ -178,43 +183,48 @@ const Dashboard: React.FC = () => {
                 </Col>
               </Row>
               <Row className="mt-2">
-                <Col md={4}>
+                <Col md={3}>
                   <Button 
                     variant="outline-dark" 
                     size="lg" 
                     className="w-100 mb-2 d-flex align-items-center justify-content-center"
-                    onClick={() => {
-                      // Show help or documentation
-                      window.open('https://github.com/your-org/agenthub-docs', '_blank');
-                    }}
+                    onClick={() => navigate('/integration')}
                   >
                     <Icon name="view" size="small" className="me-2" />
                     Documentation
                   </Button>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
+                  <Button 
+                    variant="outline-success" 
+                    size="lg" 
+                    className="w-100 mb-2 d-flex align-items-center justify-content-center"
+                    onClick={() => navigate('/api-docs')}
+                  >
+                    <Icon name="enterprise" size="small" className="me-2" />
+                    API Docs
+                  </Button>
+                </Col>
+                <Col md={3}>
                   <Button 
                     variant="outline-warning" 
                     size="lg" 
                     className="w-100 mb-2 d-flex align-items-center justify-content-center"
-                    onClick={() => {
-                      // Navigate to examples or tutorials
-                      navigate('/agents');
-                    }}
+                    onClick={() => setShowROICalculator(true)}
                   >
-                    <Icon name="award" size="small" className="me-2" />
-                    View Examples
+                    <Icon name="chart" size="small" className="me-2" />
+                    Calculate ROI
                   </Button>
                 </Col>
-                <Col md={4}>
+                <Col md={3}>
                   <Button 
                     variant="primary" 
                     size="lg" 
                     className="w-100 mb-2 d-flex align-items-center justify-content-center"
-                    onClick={() => navigate('/enterprise')}
+                    onClick={() => navigate('/metrics')}
                   >
-                    <Icon name="enterprise" size="small" className="me-2" />
-                    Enterprise API
+                    <Icon name="activity" size="small" className="me-2" />
+                    CloudWatch Metrics
                   </Button>
                 </Col>
               </Row>
@@ -620,51 +630,7 @@ const Dashboard: React.FC = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4}>
-          <Card>
-            <Card.Header className="bg-info text-white">
-              <h5 className="mb-0">Platform Health</h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="mb-3">
-                <div className="d-flex justify-content-between">
-                  <span>Uptime</span>
-                  <Badge bg="success">{stats.uptime}%</Badge>
-                </div>
-              </div>
-              <div className="mb-3">
-                <div className="d-flex justify-content-between">
-                  <span>Active Agents</span>
-                  <Badge bg="primary">{stats.totalAgents}</Badge>
-                </div>
-              </div>
-              <div className="mb-3">
-                <div className="d-flex justify-content-between">
-                  <span>Response Time</span>
-                  <Badge bg="info">{stats.avgResponseTime}s</Badge>
-                </div>
-              </div>
-              <Button 
-                variant="outline-primary" 
-                size="sm" 
-                className="w-100 mb-2"
-                onClick={() => navigate('/metrics')}
-              >
-                <Icon name="activity" size="small" className="me-1" />
-                View CloudWatch Metrics
-              </Button>
-              <Button 
-                variant="success" 
-                size="sm" 
-                className="w-100"
-                onClick={() => navigate('/agents')}
-              >
-                <Icon name="grid" size="small" className="me-1" />
-                See Live Examples
-              </Button>
-            </Card.Body>
-          </Card>
-        </Col>
+
       </Row>
 
       {/* ROI Calculator Modal */}

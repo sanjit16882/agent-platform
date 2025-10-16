@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useAgentContext } from '../context/AgentContext';
 
 interface ExecutionResult {
   execution_id: string;
@@ -27,6 +28,7 @@ interface AgentConfig {
 const AgentExecutor: React.FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
+  const { deployedAgents } = useAgentContext();
   
   const [inputData, setInputData] = useState('');
   const [analysisType, setAnalysisType] = useState('');
@@ -1788,7 +1790,79 @@ SPECIAL FEATURES:
     }
   };
 
-  const currentAgent = agentConfigs[agentId || ''] || {
+  // Check if this is a deployed agent first
+  const deployedAgent = deployedAgents.find(agent => agent.id === agentId);
+  
+  const currentAgent = deployedAgent ? {
+    name: deployedAgent.name,
+    description: deployedAgent.description,
+    category: deployedAgent.category,
+    inputLabel: deployedAgent.category === 'QE' ? 'Test Failure Data' : 'Input Data',
+    inputPlaceholder: deployedAgent.category === 'QE' ? 
+      'Paste your test failure logs, error messages, or stack traces here...' : 
+      'Enter your input data here...',
+    inputHelp: deployedAgent.category === 'QE' ? 
+      'Provide test failure information for analysis and recommendations.' : 
+      'Provide input data for processing.',
+    analysisTypes: deployedAgent.category === 'QE' ? [
+      { value: 'failure_analysis', label: 'Failure Root Cause Analysis' },
+      { value: 'pattern_detection', label: 'Failure Pattern Detection' },
+      { value: 'fix_recommendations', label: 'Fix Recommendations' },
+      { value: 'categorization', label: 'Failure Categorization' }
+    ] : [
+      { value: 'standard', label: 'Standard Analysis' },
+      { value: 'detailed', label: 'Detailed Analysis' }
+    ],
+    outputFormats: deployedAgent.category === 'QE' ? [
+      { value: 'detailed_report', label: 'Detailed Analysis Report' },
+      { value: 'quick_fixes', label: 'Quick Fix Suggestions' },
+      { value: 'json', label: 'JSON Format' }
+    ] : [
+      { value: 'report', label: 'Standard Report' },
+      { value: 'json', label: 'JSON Format' }
+    ],
+    sampleInputs: deployedAgent.category === 'QE' ? [
+      {
+        title: 'Selenium WebDriver Timeout',
+        text: 'Test: LoginTest.testValidLogin\nError: TimeoutException: Expected condition failed: waiting for element to be clickable\nElement: By.id("login-button")\nTimeout: 10 seconds\nBrowser: Chrome 118.0.5993.70\nURL: https://app.example.com/login\nStack trace:\n  at WebDriverWait.until(WebDriverWait.java:95)\n  at LoginPage.clickLoginButton(LoginPage.java:45)\n  at LoginTest.testValidLogin(LoginTest.java:23)'
+      },
+      {
+        title: 'API 500 Server Error',
+        text: 'Test: UserAPITest.testCreateUser\nEndpoint: POST /api/v1/users\nStatus Code: 500 Internal Server Error\nResponse Body: {\n  "error": "Database connection timeout",\n  "message": "Unable to connect to database after 30 seconds",\n  "timestamp": "2024-10-16T10:30:45Z",\n  "requestId": "req-12345"\n}\nRequest Headers: Content-Type: application/json\nExecution time: 30.2s'
+      },
+      {
+        title: 'JavaScript Runtime Error',
+        text: 'Test: CheckoutTest.testPaymentFlow\nError: ReferenceError: paymentProcessor is not defined\nFile: checkout.js:142\nStack trace:\n  ReferenceError: paymentProcessor is not defined\n    at processPayment (checkout.js:142:5)\n    at HTMLButtonElement.<anonymous> (checkout.js:89:12)\n    at HTMLButtonElement.dispatch (jquery.min.js:2:43064)\nBrowser: Firefox 119.0\nURL: https://shop.example.com/checkout'
+      },
+      {
+        title: 'Database Connection Failure',
+        text: 'Test: DataIntegrityTest.testUserCreation\nError: SQLException: Connection to database failed\nDatabase: PostgreSQL 14.2\nHost: db.example.com:5432\nError Code: 08006\nMessage: FATAL: password authentication failed for user "test_user"\nConnection String: jdbc:postgresql://db.example.com:5432/testdb\nAttempted at: 2024-10-16 10:45:23\nRetry attempts: 3/3 failed'
+      },
+      {
+        title: 'Mobile App Crash (Android)',
+        text: 'Test: MobileLoginTest.testBiometricLogin\nDevice: Samsung Galaxy S21 (Android 12)\nApp Version: 2.1.4\nError: java.lang.NullPointerException\nStack trace:\n  at com.example.app.BiometricManager.authenticate(BiometricManager.java:87)\n  at com.example.app.LoginActivity.onBiometricClick(LoginActivity.java:156)\n  at com.example.app.LoginActivity.lambda$onCreate$0(LoginActivity.java:89)\nCrash Time: 2024-10-16 10:30:15\nMemory Usage: 245MB/512MB'
+      },
+      {
+        title: 'CI/CD Pipeline Failure',
+        text: 'Pipeline: feature/user-authentication\nStage: Integration Tests\nJob: run-selenium-tests\nError: Container failed to start\nDocker Image: selenium/standalone-chrome:4.15.0\nExit Code: 125\nError Message: docker: Error response from daemon: failed to create shim task: OCI runtime create failed\nBuild #: 1247\nCommit: a1b2c3d4e5f6\nTriggered by: john.doe@example.com\nDuration: 2m 34s'
+      },
+      {
+        title: 'Network Connectivity Issue',
+        text: 'Test: ExternalAPITest.testWeatherService\nEndpoint: https://api.weather.com/v1/current\nError: ConnectTimeoutException: Connect to api.weather.com:443 timed out\nTimeout: 5000ms\nDNS Resolution: SUCCESS (52.84.230.15)\nSSL Handshake: FAILED\nNetwork Interface: eth0\nProxy: None\nRetry attempts: 3/3 failed\nTest Environment: staging\nTimestamp: 2024-10-16T10:25:30Z'
+      },
+      {
+        title: 'Memory Leak Detection',
+        text: 'Test: PerformanceTest.testMemoryUsage\nApplication: E-commerce Web App\nTest Duration: 30 minutes\nInitial Memory: 128MB\nFinal Memory: 1.2GB\nMemory Growth Rate: 35MB/minute\nGC Collections: 847\nHeap Dump Location: /tmp/heapdump-20241016-1030.hprof\nSuspected Components:\n- ImageCache: 450MB\n- UserSession: 320MB\n- ProductCatalog: 280MB\nBrowser: Chrome 118 (Memory tab shows continuous growth)'
+      }
+    ] : [
+      {
+        title: 'Sample Input',
+        text: 'Enter your sample data here...'
+      }
+    ],
+    capabilities: deployedAgent.capabilities || [],
+    estimatedCost: '$0.15 per execution'
+  } : agentConfigs[agentId || ''] || {
     name: 'Unknown Agent',
     description: 'Agent not found',
     category: 'Unknown',
@@ -1843,7 +1917,56 @@ SPECIAL FEATURES:
   };
 
   const generateQEResults = (analysisType: string, outputFormat: string, executionId: string): ExecutionResult => {
-    // Generate different automation files based on analysis type and output format
+    // Check if this is a deployed QE agent (failure analyzer)
+    const isDeployedQEAgent = deployedAgents.find(agent => agent.id === agentId);
+    if (isDeployedQEAgent) {
+      return {
+        execution_id: executionId,
+        status: 'completed',
+        results: {
+          failure_analysis: {
+            summary: `Analyzed ${analysisType.replace('_', ' ')} for the provided failure data`,
+            root_cause: analysisType === 'failure_analysis' ? 
+              'Element locator strategy failure due to dynamic DOM changes' :
+              analysisType === 'pattern_detection' ?
+              'Recurring timeout pattern detected in authentication flow' :
+              analysisType === 'fix_recommendations' ?
+              'Multiple quick fixes available for this failure type' :
+              'Failure categorized as infrastructure-related issue',
+            confidence_score: Math.floor(Math.random() * 20) + 80,
+            priority: ['High', 'Medium', 'Low'][Math.floor(Math.random() * 3)],
+            category: ['UI Element Issue', 'API Timeout', 'Database Connection', 'Network Error', 'Authentication Failure'][Math.floor(Math.random() * 5)],
+            recommendations: [
+              'Implement explicit wait conditions instead of implicit waits',
+              'Add retry mechanism with exponential backoff',
+              'Update element locators to use more stable selectors',
+              'Add error handling for network connectivity issues',
+              'Implement health check endpoints for dependencies'
+            ],
+            similar_failures: [
+              { test: 'LoginTest.testPasswordReset', similarity: '94%', date: '2024-10-15' },
+              { test: 'UserRegistrationTest.testEmailVerification', similarity: '87%', date: '2024-10-14' },
+              { test: 'CheckoutTest.testPaymentFlow', similarity: '76%', date: '2024-10-13' }
+            ],
+            estimated_fix_time: ['15 minutes', '30 minutes', '1 hour', '2 hours'][Math.floor(Math.random() * 4)],
+            impact_assessment: {
+              affected_tests: Math.floor(Math.random() * 15) + 5,
+              business_impact: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+              user_experience_impact: ['Minimal', 'Moderate', 'Significant'][Math.floor(Math.random() * 3)]
+            }
+          },
+          execution_metadata: {
+            agent_version: '1.0.0',
+            analysis_type: analysisType,
+            output_format: outputFormat,
+            execution_time: new Date().toISOString(),
+            processing_time: '2.3 seconds'
+          }
+        }
+      };
+    }
+    
+    // Original automation code generation for built-in QE agents
     const getAutomationFiles = () => {
       switch (outputFormat) {
         case 'cypress':
@@ -2917,7 +3040,7 @@ class Test${analysisType.replace('-', '').replace(/\b\w/g, l => l.toUpperCase())
                             aria-hidden="true"
                             className="me-2"
                           />
-                          {currentAgent.category === 'QE' && 'Generating Test Cases...'}
+                          {currentAgent.category === 'QE' && (deployedAgents.find(agent => agent.id === agentId) ? 'Analyzing Failures...' : 'Generating Test Cases...')}
                           {currentAgent.category === 'DevOps' && 'Analyzing Infrastructure...'}
                           {currentAgent.category === 'Security' && 'Scanning for Vulnerabilities...'}
                           {currentAgent.category === 'Business' && 'Analyzing Data...'}
@@ -2925,7 +3048,7 @@ class Test${analysisType.replace('-', '').replace(/\b\w/g, l => l.toUpperCase())
                         </>
                       ) : (
                         <>
-                          {currentAgent.category === 'QE' && '🧪 Generate Test Cases'}
+                          {currentAgent.category === 'QE' && (deployedAgents.find(agent => agent.id === agentId) ? '🔍 Analyze Failures' : '🧪 Generate Test Cases')}
                           {currentAgent.category === 'DevOps' && '📊 Analyze Infrastructure'}
                           {currentAgent.category === 'Security' && '🔒 Scan for Vulnerabilities'}
                           {currentAgent.category === 'Business' && '📈 Analyze Data'}
@@ -3168,12 +3291,84 @@ class Test${analysisType.replace('-', '').replace(/\b\w/g, l => l.toUpperCase())
                   </>
                 )}
 
-                {/* QE Automation Files */}
+                {/* QE Results */}
                 {currentAgent.category === 'QE' && (
                   <>
-                    <h6>🤖 Generated Automation Code</h6>
-                    <Row>
-                      {result.results.automation_files.map((file: any, index: number) => (
+                    <h6>{deployedAgents.find(agent => agent.id === agentId) ? '📋 Failure Analysis Report' : '🤖 Generated Automation Code'}</h6>
+                    {deployedAgents.find(agent => agent.id === agentId) ? (
+                      // Failure Analysis Results
+                      <div>
+                        <Row className="mb-4">
+                          <Col md={6}>
+                            <Card className="border-primary">
+                              <Card.Header className="bg-primary text-white">
+                                <h6 className="mb-0">🎯 Root Cause Analysis</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                <p><strong>Category:</strong> {result.results.failure_analysis.category}</p>
+                                <p><strong>Root Cause:</strong> {result.results.failure_analysis.root_cause}</p>
+                                <p><strong>Confidence:</strong> {result.results.failure_analysis.confidence_score}%</p>
+                                <p><strong>Priority:</strong> <Badge bg={result.results.failure_analysis.priority === 'High' ? 'danger' : result.results.failure_analysis.priority === 'Medium' ? 'warning' : 'success'}>{result.results.failure_analysis.priority}</Badge></p>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                          <Col md={6}>
+                            <Card className="border-success">
+                              <Card.Header className="bg-success text-white">
+                                <h6 className="mb-0">⚡ Impact Assessment</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                <p><strong>Affected Tests:</strong> {result.results.failure_analysis.impact_assessment.affected_tests}</p>
+                                <p><strong>Business Impact:</strong> {result.results.failure_analysis.impact_assessment.business_impact}</p>
+                                <p><strong>UX Impact:</strong> {result.results.failure_analysis.impact_assessment.user_experience_impact}</p>
+                                <p><strong>Est. Fix Time:</strong> {result.results.failure_analysis.estimated_fix_time}</p>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                        
+                        <Row className="mb-4">
+                          <Col>
+                            <Card className="border-warning">
+                              <Card.Header className="bg-warning text-dark">
+                                <h6 className="mb-0">💡 Fix Recommendations</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                <ol>
+                                  {result.results.failure_analysis.recommendations.map((rec: string, idx: number) => (
+                                    <li key={idx} className="mb-2">{rec}</li>
+                                  ))}
+                                </ol>
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                        
+                        <Row>
+                          <Col>
+                            <Card className="border-info">
+                              <Card.Header className="bg-info text-white">
+                                <h6 className="mb-0">🔍 Similar Failures</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                {result.results.failure_analysis.similar_failures.map((failure: any, idx: number) => (
+                                  <div key={idx} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                                    <span><strong>{failure.test}</strong></span>
+                                    <div>
+                                      <Badge bg="info" className="me-2">{failure.similarity}</Badge>
+                                      <small className="text-muted">{failure.date}</small>
+                                    </div>
+                                  </div>
+                                ))}
+                              </Card.Body>
+                            </Card>
+                          </Col>
+                        </Row>
+                      </div>
+                    ) : (
+                      // Original automation files for built-in agents
+                      <Row>
+                        {result.results.automation_files.map((file: any, index: number) => (
                         <Col md={12} key={index} className="mb-3">
                           <Card>
                             <Card.Header className="d-flex justify-content-between align-items-center">
@@ -3220,8 +3415,9 @@ class Test${analysisType.replace('-', '').replace(/\b\w/g, l => l.toUpperCase())
                             </Card.Body>
                           </Card>
                         </Col>
-                      ))}
-                    </Row>
+                        ))}
+                      </Row>
+                    )}
                   </>
                 )}
 

@@ -941,10 +941,10 @@ https://api.agenthub.company.com/v1`}
                     Documentation
                   </h6>
                   <ul className="list-unstyled small">
-                    <li><a href="#" className="text-decoration-none">API Reference</a></li>
-                    <li><a href="#" className="text-decoration-none">SDK Documentation</a></li>
-                    <li><a href="#" className="text-decoration-none">Agent Catalog</a></li>
-                    <li><a href="#" className="text-decoration-none">Tutorials</a></li>
+                    <li><a href="https://docs.aws.amazon.com/lambda/latest/api/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Lambda API Reference</a></li>
+                    <li><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/index.html" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS SDK Documentation</a></li>
+                    <li><a href="/agents" className="text-decoration-none">Agent Catalog</a></li>
+                    <li><a href="https://aws.amazon.com/lambda/getting-started/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Lambda Tutorials</a></li>
                   </ul>
                 </Col>
                 <Col md={3}>
@@ -953,10 +953,10 @@ https://api.agenthub.company.com/v1`}
                     Community
                   </h6>
                   <ul className="list-unstyled small">
-                    <li><a href="#" className="text-decoration-none">Discord Server</a></li>
-                    <li><a href="#" className="text-decoration-none">GitHub Discussions</a></li>
-                    <li><a href="#" className="text-decoration-none">Stack Overflow</a></li>
-                    <li><a href="#" className="text-decoration-none">Reddit Community</a></li>
+                    <li><a href="https://discord.gg/aws-developers" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Developers Discord</a></li>
+                    <li><a href="https://github.com/aws/aws-lambda-developers/discussions" target="_blank" rel="noopener noreferrer" className="text-decoration-none">GitHub Discussions</a></li>
+                    <li><a href="https://stackoverflow.com/questions/tagged/aws-lambda" target="_blank" rel="noopener noreferrer" className="text-decoration-none">Stack Overflow</a></li>
+                    <li><a href="https://www.reddit.com/r/aws/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">r/aws Community</a></li>
                   </ul>
                 </Col>
                 <Col md={3}>
@@ -965,10 +965,10 @@ https://api.agenthub.company.com/v1`}
                     Examples
                   </h6>
                   <ul className="list-unstyled small">
-                    <li><a href="#" className="text-decoration-none">Sample Projects</a></li>
-                    <li><a href="#" className="text-decoration-none">Integration Templates</a></li>
-                    <li><a href="#" className="text-decoration-none">Best Practices</a></li>
-                    <li><a href="#" className="text-decoration-none">Use Case Studies</a></li>
+                    <li><a href="https://github.com/aws-samples/aws-lambda-developer-guide" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Lambda Samples</a></li>
+                    <li><a href="https://aws.amazon.com/lambda/resources/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">Integration Templates</a></li>
+                    <li><a href="https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Lambda Best Practices</a></li>
+                    <li><a href="/use-cases" className="text-decoration-none">Use Case Studies</a></li>
                   </ul>
                 </Col>
                 <Col md={3}>
@@ -977,10 +977,10 @@ https://api.agenthub.company.com/v1`}
                     Enterprise
                   </h6>
                   <ul className="list-unstyled small">
-                    <li><a href="#" className="text-decoration-none">Enterprise Sales</a></li>
-                    <li><a href="#" className="text-decoration-none">Custom Integrations</a></li>
-                    <li><a href="#" className="text-decoration-none">SLA & Support</a></li>
-                    <li><a href="#" className="text-decoration-none">Security & Compliance</a></li>
+                    <li><a href="https://aws.amazon.com/contact-us/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">Contact AWS Sales</a></li>
+                    <li><a href="https://aws.amazon.com/professional-services/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Professional Services</a></li>
+                    <li><a href="https://aws.amazon.com/support/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Support Plans</a></li>
+                    <li><a href="https://aws.amazon.com/compliance/" target="_blank" rel="noopener noreferrer" className="text-decoration-none">AWS Compliance</a></li>
                   </ul>
                 </Col>
               </Row>

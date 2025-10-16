@@ -65,7 +65,10 @@
   - Preserve cost tracking functionality in backend
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 3.2 Clean up platform health and metrics sections
+- [x] 3.2 Clean up platform health and metrics sections
+
+
+
   - Remove cost-related badges and indicators
   - Focus metrics on performance and functionality
   - _Requirements: 1.1, 1.2_
@@ -85,7 +88,11 @@
   - Use credible assumptions and measurable outcomes
   - _Requirements: 3.1, 3.2_
 
-- [ ] 4.2 Improve ROI calculator visual presentation
+- [x] 4.2 Improve ROI calculator visual presentation
+
+
+
+
   - Enhance layout with professional formatting
   - Add clear value propositions and realistic timeframes
   - _Requirements: 3.4, 3.5_
@@ -130,9 +137,9 @@
   - Apply clean, professional design standards throughout
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7.1 Apply consistent branding to both frontend applications
-  - Update agenthub-platform/frontend components
+- [ ] 7.1 Apply consistent branding to frontend application
   - Update agent-hub-ui components for consistency
+  - Ensure professional branding throughout all pages
   - _Requirements: 6.1, 6.2, 6.4_
 
 - [ ] 7.2 Implement professional color scheme and typography
