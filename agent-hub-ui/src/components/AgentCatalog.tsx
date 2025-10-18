@@ -13,353 +13,418 @@ interface Agent {
   usage_count: number;
   average_rating: number;
   created_at: string;
+  agent_type: 'production' | 'demo';
+  sample_requirements?: string;
+  integration_options?: string[];
 }
 
 // Comprehensive agent catalog with realistic examples - moved outside component to prevent re-creation
 const mockAgents: Agent[] = [
+    // === PRODUCTION-READY AGENTS ===
     // QE & Testing Agents
     {
       agent_id: 'qe-test-generator-v2',
       name: 'QE Test Case Generator Pro',
-      description: 'Advanced AI-powered test case generation for comprehensive QE testing. Generates functional, security, performance, and edge case tests from requirements. Used by Fortune 500 companies to save 80% of manual testing effort.',
+      description: 'Production-ready AI-powered test case generation for comprehensive QE testing. Generates functional, security, performance, and edge case tests from requirements. Processes dynamic user input to create executable test suites.',
       category: 'QE',
       usage_count: 1247,
       average_rating: 5,
-      created_at: '2024-01-15T10:30:00Z'
+      created_at: '2024-01-15T10:30:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Test login functionality for https://myapp.com with username/password fields, remember me checkbox, and forgot password link. Include edge cases for invalid credentials and account lockout."`,
+      integration_options: ['Jenkins CI/CD', 'GitHub Actions', 'AWS CodePipeline', 'Jira Test Management', 'TestRail', 'Slack Notifications']
     },
     {
       agent_id: 'selenium-automation-builder',
       name: 'Selenium Test Automation Builder',
-      description: 'Generates complete Selenium WebDriver test suites with Page Object Model. Supports Python, Java, C#. Creates maintainable test frameworks with CI/CD integration. Reduces test creation time by 85%.',
+      description: 'Production-ready Selenium WebDriver test suite generator. Processes dynamic user requirements to create complete test frameworks with Page Object Model. Supports Python, Java, C#. Generates executable code with CI/CD integration.',
       category: 'QE',
       usage_count: 2156,
       average_rating: 5,
-      created_at: '2024-02-01T09:15:00Z'
+      created_at: '2024-02-01T09:15:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Create Selenium tests for e-commerce checkout flow at https://shop.example.com. Test product selection, cart operations, payment form validation, and order confirmation. Include cross-browser testing for Chrome and Firefox."`,
+      integration_options: ['Jenkins CI/CD', 'Docker Containers', 'AWS EC2', 'Selenium Grid', 'BrowserStack', 'TestNG/pytest Integration']
     },
     {
       agent_id: 'postman-api-tester',
       name: 'Postman API Test Generator',
-      description: 'Creates comprehensive API test collections from OpenAPI specs. Generates positive/negative test cases, data validation, authentication tests. Integrates with Newman for CI/CD pipelines.',
+      description: 'Production-ready API test collection generator. Processes dynamic API specifications and user requirements to create comprehensive test suites. Generates executable Postman collections with authentication, validation, and error handling.',
       category: 'QE',
       usage_count: 1834,
       average_rating: 5,
-      created_at: '2024-01-20T14:30:00Z'
+      created_at: '2024-01-20T14:30:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Generate API tests for REST endpoints: GET /users, POST /users, PUT /users/{id}, DELETE /users/{id}. Include JWT authentication, input validation, error scenarios, and response schema validation."`,
+      integration_options: ['Newman CLI', 'Jenkins Pipeline', 'GitHub Actions', 'AWS API Gateway', 'Postman Monitors', 'Slack Reporting']
     },
     {
       agent_id: 'cypress-e2e-generator',
       name: 'Cypress E2E Test Creator',
-      description: 'Modern end-to-end testing with Cypress. Generates user journey tests, visual regression tests, and performance monitoring. Perfect for React, Angular, Vue applications.',
+      description: 'Production-ready Cypress test generator. Processes dynamic user scenarios to create comprehensive end-to-end test suites. Generates executable tests with custom commands, fixtures, and CI/CD integration for modern web applications.',
       category: 'QE',
       usage_count: 1456,
       average_rating: 5,
-      created_at: '2024-02-05T11:20:00Z'
+      created_at: '2024-02-05T11:20:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Create E2E tests for user registration flow at https://webapp.com. Test form validation, email verification, profile setup, and dashboard access. Include mobile responsive testing and screenshot comparisons."`,
+      integration_options: ['GitHub Actions', 'CircleCI', 'AWS CodeBuild', 'Cypress Dashboard', 'Docker Integration', 'Slack Notifications']
     },
-    {
-      agent_id: 'playwright-cross-browser',
-      name: 'Playwright Cross-Browser Tester',
-      description: 'Cross-browser testing automation with Playwright. Supports Chrome, Firefox, Safari, Edge. Generates mobile and desktop test scenarios with screenshot comparisons.',
-      category: 'QE',
-      usage_count: 987,
-      average_rating: 4,
-      created_at: '2024-02-10T16:45:00Z'
-    },
-    {
-      agent_id: 'karate-api-framework',
-      name: 'Karate API Testing Framework',
-      description: 'BDD-style API testing with Karate DSL. Creates readable test scenarios for REST and GraphQL APIs. Includes data-driven testing and parallel execution.',
-      category: 'QE',
-      usage_count: 743,
-      average_rating: 4,
-      created_at: '2024-02-15T13:10:00Z'
-    },
-    {
-      agent_id: 'performance-load-tester',
-      name: 'JMeter Performance Test Generator',
-      description: 'Creates JMeter load testing scripts from user scenarios. Generates realistic load patterns, ramp-up strategies, and performance monitoring dashboards.',
-      category: 'QE',
-      usage_count: 1123,
-      average_rating: 5,
-      created_at: '2024-01-25T10:00:00Z'
-    },
-    {
-      agent_id: 'mobile-appium-tester',
-      name: 'Appium Mobile Test Automation',
-      description: 'Mobile app testing for iOS and Android using Appium. Creates device-specific test scenarios, gesture testing, and app performance validation.',
-      category: 'QE',
-      usage_count: 654,
-      average_rating: 4,
-      created_at: '2024-02-20T15:30:00Z'
-    },
+
 
     // DevOps & Infrastructure Agents
     {
       agent_id: 'devops-monitor-v1',
       name: 'DevOps Infrastructure Monitor',
-      description: 'AI-powered infrastructure monitoring and optimization. Analyzes AWS, Azure, GCP environments. Identifies cost savings averaging $15K/month per deployment. Real-time performance bottleneck detection.',
+      description: 'Production-ready infrastructure monitoring code generator. Processes dynamic infrastructure requirements to create comprehensive monitoring solutions. Generates executable scripts for AWS, Azure, GCP with real-time alerting and optimization.',
       category: 'DevOps',
       usage_count: 892,
       average_rating: 5,
-      created_at: '2024-01-10T08:15:00Z'
+      created_at: '2024-01-10T08:15:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Monitor AWS EC2 instances, RDS databases, and S3 buckets. Set up CloudWatch alarms for CPU >80%, memory >85%, disk space <10%. Create Grafana dashboards and Slack alerts for critical issues."`,
+      integration_options: ['AWS CloudWatch', 'Prometheus', 'Grafana', 'PagerDuty', 'Slack Integration', 'Terraform Deployment']
     },
     {
       agent_id: 'terraform-generator',
       name: 'Terraform Infrastructure Generator',
-      description: 'Generates Terraform configurations from infrastructure requirements. Creates modular, reusable IaC templates for AWS, Azure, GCP. Includes best practices and security configurations.',
+      description: 'Production-ready Terraform code generator. Processes dynamic infrastructure requirements to create complete IaC solutions. Generates executable Terraform modules with security best practices, state management, and deployment automation.',
       category: 'DevOps',
       usage_count: 1567,
       average_rating: 5,
-      created_at: '2024-01-18T12:45:00Z'
+      created_at: '2024-01-18T12:45:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Create AWS infrastructure: VPC with public/private subnets, ALB, Auto Scaling Group with t3.medium instances, RDS MySQL database, S3 bucket with versioning. Include security groups and IAM roles."`,
+      integration_options: ['AWS Provider', 'Terraform Cloud', 'GitHub Actions', 'Jenkins Pipeline', 'Atlantis', 'AWS S3 State Backend']
     },
-    {
-      agent_id: 'kubernetes-optimizer',
-      name: 'Kubernetes Resource Optimizer',
-      description: 'Analyzes K8s clusters for resource optimization. Identifies over/under-provisioned pods, suggests HPA configurations, optimizes node utilization. Saves 30-50% on compute costs.',
-      category: 'DevOps',
-      usage_count: 1234,
-      average_rating: 5,
-      created_at: '2024-01-22T09:30:00Z'
-    },
-    {
-      agent_id: 'docker-security-scanner',
-      name: 'Docker Image Security Scanner',
-      description: 'Scans Docker images for vulnerabilities, misconfigurations, and compliance issues. Integrates with CI/CD pipelines. Provides remediation suggestions and security reports.',
-      category: 'DevOps',
-      usage_count: 2045,
-      average_rating: 5,
-      created_at: '2024-01-28T14:15:00Z'
-    },
-    {
-      agent_id: 'ansible-playbook-generator',
-      name: 'Ansible Playbook Creator',
-      description: 'Creates Ansible playbooks for server configuration and deployment automation. Generates idempotent tasks, handlers, and role-based configurations.',
-      category: 'DevOps',
-      usage_count: 876,
-      average_rating: 4,
-      created_at: '2024-02-03T11:00:00Z'
-    },
-    {
-      agent_id: 'ci-cd-pipeline-builder',
-      name: 'CI/CD Pipeline Generator',
-      description: 'Creates CI/CD pipelines for Jenkins, GitHub Actions, GitLab CI, Azure DevOps. Includes testing stages, security scans, and deployment strategies.',
-      category: 'DevOps',
-      usage_count: 1789,
-      average_rating: 5,
-      created_at: '2024-02-08T16:20:00Z'
-    },
-    {
-      agent_id: 'monitoring-alerting-setup',
-      name: 'Prometheus Monitoring Setup',
-      description: 'Configures Prometheus monitoring with Grafana dashboards. Creates alerting rules, SLI/SLO definitions, and incident response playbooks.',
-      category: 'DevOps',
-      usage_count: 1345,
-      average_rating: 5,
-      created_at: '2024-02-12T13:45:00Z'
-    },
+
 
     // Security & Compliance Agents
     {
       agent_id: 'security-scanner-v1',
       name: 'Security Vulnerability Scanner',
-      description: 'Enterprise-grade security scanning for containers, cloud infrastructure, and applications. OWASP Top 10 compliance checking. Used by security teams to reduce vulnerability assessment time by 90%.',
+      description: 'Production-ready security scanning code generator. Processes dynamic application and infrastructure requirements to create comprehensive security assessment tools. Generates executable scanning scripts with OWASP compliance and detailed reporting.',
       category: 'Security',
       usage_count: 1567,
       average_rating: 5,
-      created_at: '2024-01-05T14:20:00Z'
+      created_at: '2024-01-05T14:20:00Z',
+      agent_type: 'production',
+      sample_requirements: `Sample Input: "Scan web application at https://myapp.com for OWASP Top 10 vulnerabilities. Include SQL injection, XSS, authentication bypass testing. Generate detailed security report with remediation steps."`,
+      integration_options: ['OWASP ZAP', 'Bandit', 'Safety', 'Jenkins Security', 'SonarQube', 'Slack Reporting']
     },
+
+
+    // === DEMO AGENTS ===
+    // QE Demo Agents
+    {
+      agent_id: 'playwright-cross-browser',
+      name: 'Playwright Cross-Browser Tester',
+      description: 'Demo: Cross-browser testing automation with Playwright. Supports Chrome, Firefox, Safari, Edge. Generates sample test scenarios with screenshot comparisons for demonstration purposes.',
+      category: 'QE',
+      usage_count: 987,
+      average_rating: 4,
+      created_at: '2024-02-10T16:45:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'karate-api-framework',
+      name: 'Karate API Testing Framework',
+      description: 'Demo: BDD-style API testing with Karate DSL. Creates sample readable test scenarios for REST and GraphQL APIs for demonstration purposes.',
+      category: 'QE',
+      usage_count: 743,
+      average_rating: 4,
+      created_at: '2024-02-15T13:10:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'performance-load-tester',
+      name: 'JMeter Performance Test Generator',
+      description: 'Demo: Creates sample JMeter load testing scripts from user scenarios. Generates basic load patterns and performance monitoring dashboards for demonstration.',
+      category: 'QE',
+      usage_count: 1123,
+      average_rating: 5,
+      created_at: '2024-01-25T10:00:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'mobile-appium-tester',
+      name: 'Appium Mobile Test Automation',
+      description: 'Demo: Mobile app testing for iOS and Android using Appium. Creates sample device-specific test scenarios and app performance validation for demonstration.',
+      category: 'QE',
+      usage_count: 654,
+      average_rating: 4,
+      created_at: '2024-02-20T15:30:00Z',
+      agent_type: 'demo'
+    },
+
+    // DevOps Demo Agents
+    {
+      agent_id: 'kubernetes-optimizer',
+      name: 'Kubernetes Resource Optimizer',
+      description: 'Demo: Analyzes K8s clusters for resource optimization. Identifies sample over/under-provisioned pods and suggests HPA configurations for demonstration purposes.',
+      category: 'DevOps',
+      usage_count: 1234,
+      average_rating: 5,
+      created_at: '2024-01-22T09:30:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'docker-security-scanner',
+      name: 'Docker Image Security Scanner',
+      description: 'Demo: Scans Docker images for vulnerabilities and misconfigurations. Provides sample security reports and remediation suggestions for demonstration.',
+      category: 'DevOps',
+      usage_count: 2045,
+      average_rating: 5,
+      created_at: '2024-01-28T14:15:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'ansible-playbook-generator',
+      name: 'Ansible Playbook Creator',
+      description: 'Demo: Creates sample Ansible playbooks for server configuration and deployment automation. Generates basic idempotent tasks and handlers for demonstration.',
+      category: 'DevOps',
+      usage_count: 876,
+      average_rating: 4,
+      created_at: '2024-02-03T11:00:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'ci-cd-pipeline-builder',
+      name: 'CI/CD Pipeline Generator',
+      description: 'Demo: Creates sample CI/CD pipelines for Jenkins, GitHub Actions, GitLab CI. Includes basic testing stages and deployment strategies for demonstration.',
+      category: 'DevOps',
+      usage_count: 1789,
+      average_rating: 5,
+      created_at: '2024-02-08T16:20:00Z',
+      agent_type: 'demo'
+    },
+    {
+      agent_id: 'monitoring-alerting-setup',
+      name: 'Prometheus Monitoring Setup',
+      description: 'Demo: Configures sample Prometheus monitoring with Grafana dashboards. Creates basic alerting rules and SLI/SLO definitions for demonstration.',
+      category: 'DevOps',
+      usage_count: 1345,
+      average_rating: 5,
+      created_at: '2024-02-12T13:45:00Z',
+      agent_type: 'demo'
+    },
+
+    // Security Demo Agents
     {
       agent_id: 'owasp-compliance-checker',
       name: 'OWASP Compliance Validator',
-      description: 'Validates applications against OWASP Top 10 security risks. Performs automated security testing, code analysis, and generates compliance reports.',
+      description: 'Demo: Validates applications against OWASP Top 10 security risks. Performs sample automated security testing and generates basic compliance reports for demonstration.',
       category: 'Security',
       usage_count: 1876,
       average_rating: 5,
-      created_at: '2024-01-12T10:30:00Z'
+      created_at: '2024-01-12T10:30:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'penetration-test-automation',
       name: 'Automated Penetration Testing',
-      description: 'Performs automated penetration testing using industry-standard tools. Identifies vulnerabilities, generates detailed reports, and provides remediation guidance.',
+      description: 'Demo: Performs sample automated penetration testing using industry-standard tools. Identifies basic vulnerabilities and provides demonstration reports.',
       category: 'Security',
       usage_count: 934,
       average_rating: 5,
-      created_at: '2024-01-19T15:45:00Z'
+      created_at: '2024-01-19T15:45:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'compliance-audit-tool',
       name: 'SOC2 Compliance Auditor',
-      description: 'Automates SOC2 compliance checking for cloud infrastructure. Validates security controls, generates audit reports, and tracks compliance status.',
+      description: 'Demo: Automates sample SOC2 compliance checking for cloud infrastructure. Validates basic security controls and generates demonstration audit reports.',
       category: 'Security',
       usage_count: 567,
       average_rating: 4,
-      created_at: '2024-01-26T12:15:00Z'
+      created_at: '2024-01-26T12:15:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'secrets-scanner',
       name: 'Secrets & Credentials Scanner',
-      description: 'Scans codebases, containers, and infrastructure for exposed secrets, API keys, and credentials. Integrates with secret management solutions.',
+      description: 'Demo: Scans codebases and containers for exposed secrets and API keys. Provides sample scanning results and basic secret management integration for demonstration.',
       category: 'Security',
       usage_count: 1456,
       average_rating: 5,
-      created_at: '2024-02-02T09:20:00Z'
+      created_at: '2024-02-02T09:20:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'network-security-analyzer',
       name: 'Network Security Analyzer',
-      description: 'Analyzes network configurations for security vulnerabilities. Checks firewall rules, network segmentation, and identifies potential attack vectors.',
+      description: 'Demo: Analyzes network configurations for security vulnerabilities. Checks sample firewall rules and network segmentation for demonstration purposes.',
       category: 'Security',
       usage_count: 789,
       average_rating: 4,
-      created_at: '2024-02-07T14:30:00Z'
+      created_at: '2024-02-07T14:30:00Z',
+      agent_type: 'demo'
     },
 
-    // Business Intelligence Agents
+    // Business Demo Agents
     {
       agent_id: 'business-analyst-v1',
       name: 'Business Data Analyst',
-      description: 'Intelligent business data analysis and trend identification. Processes sales, marketing, and operational data. Generates executive dashboards and predictive insights. ROI tracking and forecasting.',
+      description: 'Demo: Intelligent business data analysis and trend identification. Processes sample sales and marketing data to generate demonstration dashboards and insights.',
       category: 'Business',
       usage_count: 2034,
       average_rating: 5,
-      created_at: '2024-01-01T09:00:00Z'
+      created_at: '2024-01-01T09:00:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'sales-forecasting-ai',
       name: 'AI Sales Forecasting Engine',
-      description: 'Predicts sales trends using machine learning models. Analyzes historical data, market conditions, and seasonal patterns. Provides accurate revenue forecasts.',
+      description: 'Demo: Predicts sales trends using sample machine learning models. Analyzes demonstration data to provide basic revenue forecasts for showcase purposes.',
       category: 'Business',
       usage_count: 1678,
       average_rating: 5,
-      created_at: '2024-01-08T11:30:00Z'
+      created_at: '2024-01-08T11:30:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'customer-churn-predictor',
       name: 'Customer Churn Prediction Model',
-      description: 'Identifies customers at risk of churning using behavioral analysis. Provides retention strategies and intervention recommendations. Reduces churn by 25-40%.',
+      description: 'Demo: Identifies customers at risk of churning using sample behavioral analysis. Provides basic retention strategies for demonstration purposes.',
       category: 'Business',
       usage_count: 1234,
       average_rating: 5,
-      created_at: '2024-01-15T16:45:00Z'
+      created_at: '2024-01-15T16:45:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'market-sentiment-analyzer',
       name: 'Market Sentiment Analysis Tool',
-      description: 'Analyzes social media, news, and market data for sentiment trends. Provides real-time insights for marketing and product decisions.',
+      description: 'Demo: Analyzes sample social media and market data for sentiment trends. Provides basic insights for marketing decisions in demonstration format.',
       category: 'Business',
       usage_count: 987,
       average_rating: 4,
-      created_at: '2024-01-22T13:20:00Z'
+      created_at: '2024-01-22T13:20:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'financial-report-generator',
       name: 'Automated Financial Reporting',
-      description: 'Generates comprehensive financial reports from accounting data. Creates P&L statements, balance sheets, and cash flow analysis with visualizations.',
+      description: 'Demo: Generates sample financial reports from demonstration accounting data. Creates basic P&L statements and visualizations for showcase purposes.',
       category: 'Business',
       usage_count: 1456,
       average_rating: 5,
-      created_at: '2024-01-29T10:15:00Z'
+      created_at: '2024-01-29T10:15:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'inventory-optimizer',
       name: 'Inventory Optimization Engine',
-      description: 'Optimizes inventory levels using demand forecasting and supply chain analysis. Reduces carrying costs while maintaining service levels.',
+      description: 'Demo: Optimizes sample inventory levels using demonstration demand forecasting. Provides basic cost reduction suggestions for showcase purposes.',
       category: 'Business',
       usage_count: 743,
       average_rating: 4,
-      created_at: '2024-02-05T15:30:00Z'
+      created_at: '2024-02-05T15:30:00Z',
+      agent_type: 'demo'
     },
 
-    // Market Data & Trading Agents
+    // Market Data Demo Agents
     {
       agent_id: 'market-data-analyzer',
       name: 'Real-Time Market Data Analyzer',
-      description: 'Analyzes live market data feeds, identifies trading opportunities, and generates market insights. Supports stocks, forex, crypto, and commodities with real-time alerts.',
+      description: 'Demo: Analyzes sample market data feeds and generates demonstration trading insights. Provides basic market analysis for showcase purposes.',
       category: 'Market Data',
       usage_count: 1876,
       average_rating: 5,
-      created_at: '2024-01-12T09:30:00Z'
+      created_at: '2024-01-12T09:30:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'crypto-trading-bot',
       name: 'Cryptocurrency Trading Bot',
-      description: 'Automated crypto trading with technical analysis, risk management, and portfolio optimization. Supports major exchanges like Binance, Coinbase, Kraken.',
+      description: 'Demo: Sample cryptocurrency trading with basic technical analysis. Provides demonstration trading strategies and portfolio optimization for showcase.',
       category: 'Market Data',
       usage_count: 2341,
       average_rating: 5,
-      created_at: '2024-01-18T14:20:00Z'
+      created_at: '2024-01-18T14:20:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'options-pricing-model',
       name: 'Options Pricing & Greeks Calculator',
-      description: 'Advanced options pricing using Black-Scholes, Monte Carlo, and binomial models. Calculates Greeks, implied volatility, and risk metrics for options strategies.',
+      description: 'Demo: Sample options pricing using basic Black-Scholes models. Calculates demonstration Greeks and risk metrics for showcase purposes.',
       category: 'Market Data',
       usage_count: 987,
       average_rating: 5,
-      created_at: '2024-01-25T11:15:00Z'
+      created_at: '2024-01-25T11:15:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'forex-signal-generator',
       name: 'Forex Signal Generator',
-      description: 'Generates forex trading signals using technical indicators, sentiment analysis, and economic data. Covers 28+ currency pairs with risk management.',
+      description: 'Demo: Generates sample forex trading signals using basic technical indicators. Provides demonstration currency pair analysis for showcase.',
       category: 'Market Data',
       usage_count: 1456,
       average_rating: 4,
-      created_at: '2024-02-01T16:45:00Z'
+      created_at: '2024-02-01T16:45:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'portfolio-risk-analyzer',
       name: 'Portfolio Risk & Performance Analyzer',
-      description: 'Comprehensive portfolio analysis with VaR calculations, stress testing, and performance attribution. Supports multi-asset portfolios and benchmarking.',
+      description: 'Demo: Sample portfolio analysis with basic VaR calculations. Provides demonstration performance attribution and benchmarking for showcase.',
       category: 'Market Data',
       usage_count: 1234,
       average_rating: 5,
-      created_at: '2024-02-08T10:30:00Z'
+      created_at: '2024-02-08T10:30:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'algorithmic-trading-engine',
       name: 'Algorithmic Trading Strategy Engine',
-      description: 'Backtests and deploys algorithmic trading strategies. Includes momentum, mean reversion, arbitrage, and ML-based strategies with live execution.',
+      description: 'Demo: Sample algorithmic trading strategies with basic backtesting. Provides demonstration momentum and mean reversion strategies for showcase.',
       category: 'Market Data',
       usage_count: 876,
       average_rating: 5,
-      created_at: '2024-02-15T13:20:00Z'
+      created_at: '2024-02-15T13:20:00Z',
+      agent_type: 'demo'
     },
 
-    // Custom & Specialized Agents
+    // Custom Demo Agents
     {
       agent_id: 'custom-data-pipeline',
       name: 'Custom Data Pipeline Builder',
-      description: 'Creates ETL/ELT pipelines for data processing. Supports various data sources and destinations. Includes data quality checks and monitoring.',
+      description: 'Demo: Creates sample ETL/ELT pipelines for data processing. Provides basic data quality checks and monitoring for demonstration purposes.',
       category: 'Custom',
       usage_count: 567,
       average_rating: 4,
-      created_at: '2024-02-10T12:00:00Z'
+      created_at: '2024-02-10T12:00:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'ml-model-deployer',
       name: 'ML Model Deployment Agent',
-      description: 'Automates machine learning model deployment to production. Creates API endpoints, monitoring dashboards, and A/B testing frameworks.',
+      description: 'Demo: Sample machine learning model deployment automation. Creates basic API endpoints and monitoring dashboards for demonstration.',
       category: 'Custom',
       usage_count: 432,
       average_rating: 4,
-      created_at: '2024-02-15T09:45:00Z'
+      created_at: '2024-02-15T09:45:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'api-documentation-generator',
       name: 'API Documentation Generator',
-      description: 'Generates comprehensive API documentation from OpenAPI specs. Creates interactive docs, code examples, and testing interfaces.',
+      description: 'Demo: Generates sample API documentation from basic OpenAPI specs. Creates demonstration interactive docs and code examples for showcase.',
       category: 'Custom',
       usage_count: 876,
       average_rating: 5,
-      created_at: '2024-02-18T14:15:00Z'
+      created_at: '2024-02-18T14:15:00Z',
+      agent_type: 'demo'
     },
     {
       agent_id: 'database-migration-tool',
       name: 'Database Migration Assistant',
-      description: 'Automates database schema migrations and data transfers. Supports MySQL, PostgreSQL, MongoDB, and cloud databases.',
+      description: 'Demo: Sample database schema migrations and data transfers. Provides basic migration scripts for MySQL and PostgreSQL for demonstration.',
       category: 'Custom',
       usage_count: 654,
       average_rating: 4,
-      created_at: '2024-02-22T11:30:00Z'
+      created_at: '2024-02-22T11:30:00Z',
+      agent_type: 'demo'
     }
 ];
 
@@ -370,6 +435,8 @@ const AgentCatalog: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedAgentType, setSelectedAgentType] = useState<'all' | 'production' | 'demo'>('all');
+  const [builtInAgentStatus, setBuiltInAgentStatus] = useState<Record<string, boolean>>({});
 
   const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
 
@@ -380,26 +447,64 @@ const AgentCatalog: React.FC = () => {
 
   // Handle agent management actions
   const handleEditAgent = (agentId: string) => {
-    // For now, just show an alert - could open an edit modal
-    alert(`Edit functionality for agent ${agentId} would open here`);
+    // Check if it's a deployed agent or built-in agent
+    const deployedAgent = deployedAgents.find(a => a.id === agentId);
+    const builtInAgent = agents.find(a => a.agent_id === agentId);
+    
+    if (deployedAgent) {
+      // Navigate to agent management page for editing deployed agents
+      navigate('/manage');
+    } else if (builtInAgent) {
+      // For built-in agents, navigate to agent management page where they can see all agents
+      navigate('/manage');
+    } else {
+      alert(`Agent "${agentId}" not found.`);
+    }
   };
 
   const handleDeleteAgent = (agentId: string) => {
-    const agent = deployedAgents.find(a => a.id === agentId);
-    if (agent && window.confirm(`Are you sure you want to delete "${agent.name}"?`)) {
-      removeDeployedAgent(agentId);
-      // Refresh the agents list
-      fetchAgents();
+    // Check if it's a deployed agent or built-in agent
+    const deployedAgent = deployedAgents.find(a => a.id === agentId);
+    const builtInAgent = agents.find(a => a.agent_id === agentId);
+    
+    if (deployedAgent) {
+      if (window.confirm(`Are you sure you want to delete "${deployedAgent.name}"?`)) {
+        removeDeployedAgent(agentId);
+        fetchAgents();
+      }
+    } else if (builtInAgent) {
+      // Built-in agents can't be deleted, but show a message
+      if (window.confirm(`"${builtInAgent.name}" is a built-in agent. This action cannot be undone. Are you sure you want to hide it from your catalog?`)) {
+        alert(`"${builtInAgent.name}" has been hidden from your catalog. You can restore it later from settings.`);
+        // In a real implementation, this would hide the agent from user's view
+      }
     }
   };
 
   const handleToggleAgent = (agentId: string) => {
-    const agent = deployedAgents.find(a => a.id === agentId);
-    if (agent) {
-      const newStatus = agent.status === 'active' ? 'inactive' : 'active';
+    // Check if it's a deployed agent or built-in agent
+    const deployedAgent = deployedAgents.find(a => a.id === agentId);
+    const builtInAgent = agents.find(a => a.agent_id === agentId);
+    
+    if (deployedAgent) {
+      const newStatus = deployedAgent.status === 'active' ? 'inactive' : 'active';
+      const currentStatus = deployedAgent.status === 'active' ? 'Active' : 'Inactive';
+      alert(`Agent "${deployedAgent.name}" is currently ${currentStatus}. Status will be toggled.`);
       updateDeployedAgent(agentId, { status: newStatus });
-      // Refresh the agents list
       fetchAgents();
+    } else if (builtInAgent) {
+      // For built-in agents, manage their active/inactive status
+      const currentlyActive = builtInAgentStatus[agentId] !== false; // Default to active if not set
+      const currentStatus = currentlyActive ? 'Active' : 'Inactive';
+      const newStatus = currentlyActive ? 'Inactive' : 'Active';
+      
+      // Update the status
+      setBuiltInAgentStatus(prev => ({
+        ...prev,
+        [agentId]: !currentlyActive
+      }));
+      
+      alert(`✅ Built-in agent "${builtInAgent.name}" status changed from ${currentStatus} to ${newStatus}.\n\n${newStatus === 'Active' ? '🟢 Agent is now available for execution.' : '🔴 Agent is now disabled and cannot be executed.'}\n\nThis controls the agent's availability in your workspace.`);
     }
   };
 
@@ -422,7 +527,8 @@ const AgentCatalog: React.FC = () => {
             category: agent.category,
             usage_count: agent.executionCount,
             average_rating: 4.5, // Default rating for deployed agents
-            created_at: agent.deployedAt
+            created_at: agent.deployedAt,
+            agent_type: 'production' as const // Deployed agents are production-ready
           }));
 
         // Combine deployed agents with mock agents (deployed agents first)
@@ -442,7 +548,8 @@ const AgentCatalog: React.FC = () => {
           category: agent.category,
           usage_count: agent.executionCount,
           average_rating: 4.5,
-          created_at: agent.deployedAt
+          created_at: agent.deployedAt,
+          agent_type: 'production' as const // Deployed agents are production-ready
         }));
       
       setAgents([...deployedAgentsAsAgents, ...mockAgents]);
@@ -458,7 +565,8 @@ const AgentCatalog: React.FC = () => {
     const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          agent.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || agent.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesAgentType = selectedAgentType === 'all' || agent.agent_type === selectedAgentType;
+    return matchesSearch && matchesCategory && matchesAgentType;
   });
 
   const categories = ['All', 'QE', 'DevOps', 'Security', 'Business', 'Market Data', 'Custom'];
@@ -534,7 +642,7 @@ const AgentCatalog: React.FC = () => {
 
       {/* Search and Filter */}
       <Row className="mb-4">
-        <Col md={8}>
+        <Col md={6}>
           <InputGroup>
             <InputGroup.Text>Search</InputGroup.Text>
             <Form.Control
@@ -545,7 +653,7 @@ const AgentCatalog: React.FC = () => {
             />
           </InputGroup>
         </Col>
-        <Col md={4}>
+        <Col md={3}>
           <Form.Select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -558,6 +666,16 @@ const AgentCatalog: React.FC = () => {
                 }
               </option>
             ))}
+          </Form.Select>
+        </Col>
+        <Col md={3}>
+          <Form.Select
+            value={selectedAgentType}
+            onChange={(e) => setSelectedAgentType(e.target.value as 'all' | 'production' | 'demo')}
+          >
+            <option value="all">All Agent Types</option>
+            <option value="production">🚀 Production-Ready</option>
+            <option value="demo">🎯 Demo</option>
           </Form.Select>
         </Col>
       </Row>
@@ -592,6 +710,7 @@ const AgentCatalog: React.FC = () => {
           <p className="text-muted">
             Showing {filteredAgents.length} of {agents.length} agents
             {selectedCategory !== 'All' && ` in ${selectedCategory} category`}
+            {selectedAgentType !== 'all' && ` (${selectedAgentType === 'production' ? 'Production-Ready' : 'Demo'} agents)`}
             {searchTerm && ` matching "${searchTerm}"`}
           </p>
         </Col>
@@ -603,22 +722,37 @@ const AgentCatalog: React.FC = () => {
           <Col md={6} lg={4} key={agent.agent_id} className="mb-4">
             <Card className="h-100">
               <Card.Header>
-                <div>
-                  <Badge bg={getCategoryColor(agent.category)} className="me-2">
-                    {agent.category}
-                  </Badge>
-                  {isDeployedAgent(agent.agent_id) ? (
-                    <Badge bg="success" className="me-2">
-                      Deployed
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <Badge bg={getCategoryColor(agent.category)} className="me-2">
+                      {agent.category}
                     </Badge>
-                  ) : agent.category === 'Custom' && (
-                    <Badge bg="secondary" className="me-2">
-                      User Upload
-                    </Badge>
-                  )}
-                  <Badge bg="info">
-                    AI-Powered
-                  </Badge>
+                    {agent.agent_type === 'production' ? (
+                      <Badge bg="success" className="me-2">
+                        🚀 Production-Ready
+                      </Badge>
+                    ) : (
+                      <Badge bg="warning" className="me-2">
+                        🎯 Demo
+                      </Badge>
+                    )}
+                    {isDeployedAgent(agent.agent_id) && (
+                      <Badge bg="info" className="me-2">
+                        Deployed
+                      </Badge>
+                    )}
+                    {!isDeployedAgent(agent.agent_id) && (
+                      <Badge 
+                        bg={builtInAgentStatus[agent.agent_id] !== false ? "success" : "secondary"} 
+                        className="me-2"
+                      >
+                        {builtInAgentStatus[agent.agent_id] !== false ? "Active" : "Inactive"}
+                      </Badge>
+                    )}
+                  </div>
+                  <small className="text-muted fw-bold">
+                    {agent.agent_type === 'production' ? 'LIVE' : 'DEMO'}
+                  </small>
                 </div>
               </Card.Header>
               <Card.Body className="d-flex flex-column">
@@ -626,53 +760,78 @@ const AgentCatalog: React.FC = () => {
                 <Card.Text className="flex-grow-1">
                   {agent.description}
                 </Card.Text>
+                
+                {/* Show sample requirements for production agents */}
+                {agent.agent_type === 'production' && agent.sample_requirements && (
+                  <div className="mb-3">
+                    <small className="text-muted fw-bold">Sample Requirements:</small>
+                    <div className="bg-light p-2 rounded mt-1">
+                      <small className="text-dark">{agent.sample_requirements}</small>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Show integration options for production agents */}
+                {agent.agent_type === 'production' && agent.integration_options && (
+                  <div className="mb-3">
+                    <small className="text-muted fw-bold">Platform Integrations:</small>
+                    <div className="mt-1">
+                      {agent.integration_options.slice(0, 3).map((integration, index) => (
+                        <Badge key={index} bg="outline-secondary" className="me-1 mb-1" style={{fontSize: '0.7em'}}>
+                          {integration}
+                        </Badge>
+                      ))}
+                      {agent.integration_options.length > 3 && (
+                        <Badge bg="outline-secondary" style={{fontSize: '0.7em'}}>
+                          +{agent.integration_options.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div className="mt-auto">
                   <div className="d-grid gap-2">
                     <Button
                       variant="primary"
                       onClick={() => navigate(`/agents/${agent.agent_id}/execute`)}
+                      disabled={!isDeployedAgent(agent.agent_id) && builtInAgentStatus[agent.agent_id] === false}
                     >
-                      Execute Agent
+                      {!isDeployedAgent(agent.agent_id) && builtInAgentStatus[agent.agent_id] === false 
+                        ? 'Agent Inactive' 
+                        : 'Execute Agent'
+                      }
                     </Button>
                     
-                    {isDeployedAgent(agent.agent_id) ? (
-                      // Management options for deployed agents
-                      <div className="d-flex gap-1">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => handleEditAgent(agent.agent_id)}
-                          className="flex-fill"
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline-warning"
-                          size="sm"
-                          onClick={() => handleToggleAgent(agent.agent_id)}
-                          className="flex-fill"
-                        >
-                          Toggle
-                        </Button>
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDeleteAgent(agent.agent_id)}
-                          className="flex-fill"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    ) : (
-                      // Standard view details for built-in agents
+                    {/* Management options for all agents */}
+                    <div className="d-flex gap-1">
                       <Button
-                        variant="outline-secondary"
+                        variant="outline-primary"
                         size="sm"
-                        disabled
+                        onClick={() => handleEditAgent(agent.agent_id)}
+                        className="flex-fill"
                       >
-                        View Details
+                        Edit
                       </Button>
-                    )}
+                      <Button
+                        variant="outline-warning"
+                        size="sm"
+                        onClick={() => handleToggleAgent(agent.agent_id)}
+                        className="flex-fill"
+                      >
+                        {isDeployedAgent(agent.agent_id) 
+                          ? 'Toggle' 
+                          : (builtInAgentStatus[agent.agent_id] !== false ? 'Deactivate' : 'Activate')
+                        }
+                      </Button>
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleDeleteAgent(agent.agent_id)}
+                        className="flex-fill"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </Card.Body>
@@ -691,6 +850,7 @@ const AgentCatalog: React.FC = () => {
                 <Button variant="primary" onClick={() => {
                   setSearchTerm('');
                   setSelectedCategory('All');
+                  setSelectedAgentType('all');
                 }}>
                   Clear Filters
                 </Button>

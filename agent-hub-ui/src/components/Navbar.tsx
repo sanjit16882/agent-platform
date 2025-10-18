@@ -68,6 +68,16 @@ const Navbar: React.FC = () => {
                 <Icon name="activity" size="small" className="me-1" />
                 Metrics
               </Nav.Link>
+
+              <Nav.Link 
+                as={Link} 
+                to="/analytics" 
+                active={location.pathname === '/analytics'}
+                className="d-flex align-items-center px-2 text-success"
+              >
+                <Icon name="chart" size="small" className="me-1" />
+                Analytics
+              </Nav.Link>
             </Nav>
             <Nav>
               <Nav.Link disabled className="text-light small">
