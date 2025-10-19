@@ -17,6 +17,11 @@ import UseCases from './components/UseCases';
 import CloudWatchMetrics from './components/CloudWatchMetrics';
 import APIDocumentation from './components/APIDocumentation';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
+import TemplateLibrary from './components/TemplateLibrary';
+import TemplateDetails from './components/TemplateDetails';
+import TemplateCreate from './components/TemplateCreate';
+import TemplateMarketplace from './components/TemplateMarketplace';
+import WizardContainer from './components/WizardContainer';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 
@@ -42,6 +47,11 @@ function App() {
             <Route path="/metrics" element={<CloudWatchMetrics />} />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
             <Route path="/api-docs" element={<APIDocumentation />} />
+            <Route path="/templates" element={<TemplateLibrary />} />
+            <Route path="/templates/create" element={<TemplateCreate />} />
+            <Route path="/templates/marketplace" element={<TemplateMarketplace />} />
+            <Route path="/templates/:templateId" element={<TemplateDetails />} />
+            <Route path="/templates/:templateId/create" element={<WizardContainer />} />
           </Routes>
         </div>
       </div>

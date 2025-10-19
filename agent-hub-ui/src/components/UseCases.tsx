@@ -60,18 +60,18 @@ const UseCases: React.FC = () => {
                         <strong>Solution:</strong> Generated comprehensive automation:
                       </p>
                       <ul className="small">
-                        <li>✅ 32 API tests for transaction processing</li>
-                        <li>✅ 18 security tests for fraud detection</li>
-                        <li>✅ 12 compliance tests for regulatory requirements</li>
-                        <li>✅ 8 performance tests for high-volume scenarios</li>
+                        <li>32 API tests for transaction processing</li>
+                        <li>18 security tests for fraud detection</li>
+                        <li>12 compliance tests for regulatory requirements</li>
+                        <li>8 performance tests for high-volume scenarios</li>
                       </ul>
                       <div className="bg-light p-2 rounded mt-2">
                         <strong className="text-success">Projected Impact:</strong>
                         <ul className="small mb-0 mt-1">
-                          <li>⏱️ <strong>90% time reduction:</strong> 40 hours → 4 hours</li>
-                          <li>🎯 <strong>Comprehensive coverage:</strong> Edge case automation</li>
-                          <li>🔄 <strong>Consistent quality:</strong> Standardized test patterns</li>
-                          <li>📈 <strong>Faster releases:</strong> 2-week → 1-week sprint cycles</li>
+                          <li><strong>90% time reduction:</strong> 40 hours → 4 hours</li>
+                          <li><strong>Comprehensive coverage:</strong> Edge case automation</li>
+                          <li><strong>Consistent quality:</strong> Standardized test patterns</li>
+                          <li><strong>Faster releases:</strong> 2-week → 1-week sprint cycles</li>
                         </ul>
                       </div>
                     </Card.Body>
@@ -95,18 +95,18 @@ const UseCases: React.FC = () => {
                         <strong>Solution:</strong> AI-powered optimization analysis:
                       </p>
                       <ul className="small">
-                        <li>💰 Right-sizing for HIPAA-compliant instances</li>
-                        <li>📊 Reserved capacity planning for predictable workloads</li>
-                        <li>🗄️ Automated backup optimization</li>
-                        <li>⚡ Performance tuning for patient data access</li>
+                        <li>Right-sizing for HIPAA-compliant instances</li>
+                        <li>Reserved capacity planning for predictable workloads</li>
+                        <li>Automated backup optimization</li>
+                        <li>Performance tuning for patient data access</li>
                       </ul>
                       <div className="bg-light p-2 rounded mt-2">
                         <strong className="text-info">Projected Results:</strong>
                         <ul className="small mb-0 mt-1">
-                          <li>📉 <strong>15-25% cost reduction:</strong> $14K-24K monthly savings</li>
-                          <li>🔍 <strong>100% compliance:</strong> Maintained security standards</li>
-                          <li>🚀 <strong>20-40% performance gain:</strong> Optimized queries</li>
-                          <li>📋 <strong>Automated reporting:</strong> Real-time cost visibility</li>
+                          <li><strong>15-25% cost reduction:</strong> $14K-24K monthly savings</li>
+                          <li><strong>100% compliance:</strong> Maintained security standards</li>
+                          <li><strong>20-40% performance gain:</strong> Optimized queries</li>
+                          <li><strong>Automated reporting:</strong> Real-time cost visibility</li>
                         </ul>
                       </div>
                     </Card.Body>
@@ -132,18 +132,18 @@ const UseCases: React.FC = () => {
                         <strong>Solution:</strong> Comprehensive security automation:
                       </p>
                       <ul className="small">
-                        <li>🔍 OWASP Top 10 vulnerability scanning</li>
-                        <li>🛡️ PCI DSS compliance verification</li>
-                        <li>🔐 Authentication and authorization testing</li>
-                        <li>📊 Security posture reporting</li>
+                        <li>OWASP Top 10 vulnerability scanning</li>
+                        <li>PCI DSS compliance verification</li>
+                        <li>Authentication and authorization testing</li>
+                        <li>Security posture reporting</li>
                       </ul>
                       <div className="bg-light p-2 rounded mt-2">
                         <strong className="text-warning">Projected Benefits:</strong>
                         <ul className="small mb-0 mt-1">
-                          <li>⚡ <strong>95% faster scans:</strong> Weeks → Hours</li>
-                          <li>🎯 <strong>Comprehensive coverage:</strong> Automated edge cases</li>
-                          <li>📈 <strong>Continuous monitoring:</strong> Real-time alerts</li>
-                          <li>💰 <strong>Cost savings:</strong> Reduced consultant fees</li>
+                          <li><strong>95% faster scans:</strong> Weeks → Hours</li>
+                          <li><strong>Comprehensive coverage:</strong> Automated edge cases</li>
+                          <li><strong>Continuous monitoring:</strong> Real-time alerts</li>
+                          <li><strong>Cost savings:</strong> Reduced consultant fees</li>
                         </ul>
                       </div>
                     </Card.Body>
@@ -167,18 +167,18 @@ const UseCases: React.FC = () => {
                         <strong>Solution:</strong> Intelligent analytics automation:
                       </p>
                       <ul className="small">
-                        <li>📊 Customer behavior pattern analysis</li>
-                        <li>💹 Revenue forecasting and trend analysis</li>
-                        <li>🎯 Churn prediction and prevention</li>
-                        <li>📈 Performance dashboard generation</li>
+                        <li>Customer behavior pattern analysis</li>
+                        <li>Revenue forecasting and trend analysis</li>
+                        <li>Churn prediction and prevention</li>
+                        <li>Performance dashboard generation</li>
                       </ul>
                       <div className="bg-light p-2 rounded mt-2">
                         <strong className="text-primary">Projected Impact:</strong>
                         <ul className="small mb-0 mt-1">
-                          <li>⏱️ <strong>85% time savings:</strong> 20 hours → 3 hours weekly</li>
-                          <li>🎯 <strong>Better insights:</strong> AI-powered analysis</li>
-                          <li>📈 <strong>Faster decisions:</strong> Real-time dashboards</li>
-                          <li>💰 <strong>Revenue impact:</strong> Data-driven optimization</li>
+                          <li><strong>85% time savings:</strong> 20 hours → 3 hours weekly</li>
+                          <li><strong>Better insights:</strong> AI-powered analysis</li>
+                          <li><strong>Faster decisions:</strong> Real-time dashboards</li>
+                          <li><strong>Revenue impact:</strong> Data-driven optimization</li>
                         </ul>
                       </div>
                     </Card.Body>

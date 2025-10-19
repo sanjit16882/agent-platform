@@ -113,7 +113,7 @@ const AnalyticsDashboard: React.FC = () => {
       window.URL.revokeObjectURL(url);
     } else {
       // For Excel and PDF, show a simulation message
-      alert(`📊 ${format.toUpperCase()} export initiated!\n\nFile: ${filename}\n\nIn a real implementation, this would generate and download a ${format.toUpperCase()} file with all dashboard data.`);
+      alert(`${format.toUpperCase()} export initiated!\n\nFile: ${filename}\n\nIn a real implementation, this would generate and download a ${format.toUpperCase()} file with all dashboard data.`);
     }
     
     setShowExportModal(false);
@@ -139,11 +139,11 @@ const AnalyticsDashboard: React.FC = () => {
 
   const getCategoryIcon = (category: string): string => {
     switch (category) {
-      case 'QE': return '🧪';
-      case 'DevOps': return '⚙️';
-      case 'Security': return '🔒';
-      case 'Business': return '📊';
-      default: return '🤖';
+      case 'QE': return 'QE';
+      case 'DevOps': return 'OPS';
+      case 'Security': return 'SEC';
+      case 'Business': return 'BIZ';
+      default: return 'GEN';
     }
   };
 
@@ -164,7 +164,7 @@ const AnalyticsDashboard: React.FC = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h1>📊 Analytics Dashboard</h1>
+              <h1>Analytics Dashboard</h1>
               <p className="text-muted mb-0">
                 Comprehensive insights into agent performance and business value
               </p>
@@ -174,7 +174,7 @@ const AnalyticsDashboard: React.FC = () => {
                 Last updated: {lastRefresh.toLocaleTimeString()}
               </small>
               <Button variant="outline-primary" size="sm" onClick={handleRefresh}>
-                🔄 Refresh
+                Refresh
               </Button>
             </div>
           </div>
@@ -219,17 +219,17 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="d-flex gap-2">
                   <Dropdown>
                     <Dropdown.Toggle variant="outline-success" size="sm">
-                      📊 Export Data
+                      Export Data
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       <Dropdown.Item onClick={() => handleExportData('csv')}>
                         📄 Export as CSV
                       </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleExportData('excel')}>
-                        📊 Export as Excel
+                        Export as Excel
                       </Dropdown.Item>
                       <Dropdown.Item onClick={() => handleExportData('pdf')}>
-                        📋 Export as PDF
+                        Export as PDF
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
@@ -245,7 +245,7 @@ const AnalyticsDashboard: React.FC = () => {
 
       {/* Key Metrics Overview */}
       <div className="mb-4">
-        <h4 className="mb-3">📈 Key Performance Indicators</h4>
+        <h4 className="mb-3">Key Performance Indicators</h4>
         <MetricsOverview timeRange={timeRange} refreshTrigger={refreshTrigger} />
       </div>
 
@@ -253,7 +253,7 @@ const AnalyticsDashboard: React.FC = () => {
       {roiData && (
         <Row className="mb-4">
           <Col>
-            <h4 className="mb-3">💰 Return on Investment</h4>
+            <h4 className="mb-3">Return on Investment</h4>
           </Col>
         </Row>
       )}
@@ -281,7 +281,7 @@ const AnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-muted">Total Savings</div>
                 <Badge bg="warning" className="mt-2">
-                  💰 Value Generated
+                  Value Generated
                 </Badge>
               </Card.Body>
             </Card>
@@ -294,7 +294,7 @@ const AnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-muted">Productivity Gain</div>
                 <Badge bg="info" className="mt-2">
-                  📈 Efficiency
+                  Efficiency
                 </Badge>
               </Card.Body>
             </Card>
@@ -307,7 +307,7 @@ const AnalyticsDashboard: React.FC = () => {
                 </div>
                 <div className="text-muted">Hours Automated</div>
                 <Badge bg="primary" className="mt-2">
-                  ⚡ Time Saved
+                  Time Saved
                 </Badge>
               </Card.Body>
             </Card>
@@ -319,7 +319,7 @@ const AnalyticsDashboard: React.FC = () => {
       {categoryMetrics.length > 0 && (
         <Row className="mb-4">
           <Col>
-            <h4 className="mb-3">🏷️ Category Performance</h4>
+            <h4 className="mb-3">Category Performance</h4>
             <Row>
               {categoryMetrics.map(category => (
                 <Col key={category.category} md={6} lg={3} className="mb-3">
@@ -336,13 +336,13 @@ const AnalyticsDashboard: React.FC = () => {
                           {getCategoryIcon(category.category)} {category.category}
                         </h6>
                         <Badge bg={getCategoryColor(category.category)}>
-                          {category.popularityTrend > 0 ? '📈' : '📉'} {Math.abs(category.popularityTrend).toFixed(1)}%
+                          {category.popularityTrend > 0 ? '↗' : '↘'} {Math.abs(category.popularityTrend).toFixed(1)}%
                         </Badge>
                       </div>
                       <div className="small text-muted mb-2">
                         <div>Executions: <strong>{formatNumber(category.executionCount)}</strong></div>
                         <div>Success Rate: <strong>{category.successRate.toFixed(1)}%</strong></div>
-                        <div>Rating: <strong>⭐ {category.averageRating.toFixed(1)}</strong></div>
+                        <div>Rating: <strong>{category.averageRating.toFixed(1)} stars</strong></div>
                         <div>Savings: <strong>{formatCurrency(category.costSavings)}</strong></div>
                       </div>
                     </Card.Body>
@@ -357,7 +357,7 @@ const AnalyticsDashboard: React.FC = () => {
       {/* Usage Trends Chart */}
       <Row className="mb-4">
         <Col>
-          <h4 className="mb-3">📊 Usage Trends</h4>
+          <h4 className="mb-3">Usage Trends</h4>
           <UsageChart refreshTrigger={refreshTrigger} />
         </Col>
       </Row>
@@ -409,7 +409,7 @@ const AnalyticsDashboard: React.FC = () => {
           <Alert variant="info" className="mb-0">
             <div className="d-flex justify-content-between align-items-center">
               <div>
-                <strong>💡 Pro Tip:</strong> Click on category cards for detailed drill-down analysis. 
+                <strong>Pro Tip:</strong> Click on category cards for detailed drill-down analysis. 
                 Use the export options to download data in various formats.
               </div>
               <Badge bg="info">
@@ -472,7 +472,7 @@ const AnalyticsDashboard: React.FC = () => {
           {selectedCategory && (
             <div>
               <Alert variant="info">
-                <strong>🔍 Detailed Analysis for {selectedCategory} Category</strong>
+                <strong>Detailed Analysis for {selectedCategory} Category</strong>
                 <br />
                 This drill-down view would show detailed metrics, trends, and insights specific to the {selectedCategory} category.
               </Alert>
@@ -480,7 +480,7 @@ const AnalyticsDashboard: React.FC = () => {
               <Row>
                 <Col md={6}>
                   <Card>
-                    <Card.Header>📊 Performance Metrics</Card.Header>
+                    <Card.Header>Performance Metrics</Card.Header>
                     <Card.Body>
                       <ul className="list-unstyled">
                         <li>• Average execution time trends</li>
@@ -493,7 +493,7 @@ const AnalyticsDashboard: React.FC = () => {
                 </Col>
                 <Col md={6}>
                   <Card>
-                    <Card.Header>🎯 Insights & Recommendations</Card.Header>
+                    <Card.Header>Insights & Recommendations</Card.Header>
                     <Card.Body>
                       <ul className="list-unstyled">
                         <li>• Peak usage hours</li>
@@ -510,7 +510,7 @@ const AnalyticsDashboard: React.FC = () => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="outline-primary" onClick={() => handleExportData('csv')}>
-            📊 Export Category Data
+            Export Category Data
           </Button>
           <Button variant="secondary" onClick={() => setShowDrillDown(false)}>
             Close

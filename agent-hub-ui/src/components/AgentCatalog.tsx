@@ -14,8 +14,6 @@ interface Agent {
   average_rating: number;
   created_at: string;
   agent_type: 'production' | 'demo';
-  sample_requirements?: string;
-  integration_options?: string[];
 }
 
 // Comprehensive agent catalog with realistic examples - moved outside component to prevent re-creation
@@ -30,9 +28,7 @@ const mockAgents: Agent[] = [
       usage_count: 1247,
       average_rating: 5,
       created_at: '2024-01-15T10:30:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Test login functionality for https://myapp.com with username/password fields, remember me checkbox, and forgot password link. Include edge cases for invalid credentials and account lockout."`,
-      integration_options: ['Jenkins CI/CD', 'GitHub Actions', 'AWS CodePipeline', 'Jira Test Management', 'TestRail', 'Slack Notifications']
+      agent_type: 'production'
     },
     {
       agent_id: 'selenium-automation-builder',
@@ -42,9 +38,7 @@ const mockAgents: Agent[] = [
       usage_count: 2156,
       average_rating: 5,
       created_at: '2024-02-01T09:15:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Create Selenium tests for e-commerce checkout flow at https://shop.example.com. Test product selection, cart operations, payment form validation, and order confirmation. Include cross-browser testing for Chrome and Firefox."`,
-      integration_options: ['Jenkins CI/CD', 'Docker Containers', 'AWS EC2', 'Selenium Grid', 'BrowserStack', 'TestNG/pytest Integration']
+      agent_type: 'production'
     },
     {
       agent_id: 'postman-api-tester',
@@ -54,9 +48,7 @@ const mockAgents: Agent[] = [
       usage_count: 1834,
       average_rating: 5,
       created_at: '2024-01-20T14:30:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Generate API tests for REST endpoints: GET /users, POST /users, PUT /users/{id}, DELETE /users/{id}. Include JWT authentication, input validation, error scenarios, and response schema validation."`,
-      integration_options: ['Newman CLI', 'Jenkins Pipeline', 'GitHub Actions', 'AWS API Gateway', 'Postman Monitors', 'Slack Reporting']
+      agent_type: 'production'
     },
     {
       agent_id: 'cypress-e2e-generator',
@@ -66,9 +58,7 @@ const mockAgents: Agent[] = [
       usage_count: 1456,
       average_rating: 5,
       created_at: '2024-02-05T11:20:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Create E2E tests for user registration flow at https://webapp.com. Test form validation, email verification, profile setup, and dashboard access. Include mobile responsive testing and screenshot comparisons."`,
-      integration_options: ['GitHub Actions', 'CircleCI', 'AWS CodeBuild', 'Cypress Dashboard', 'Docker Integration', 'Slack Notifications']
+      agent_type: 'production'
     },
 
 
@@ -81,9 +71,7 @@ const mockAgents: Agent[] = [
       usage_count: 892,
       average_rating: 5,
       created_at: '2024-01-10T08:15:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Monitor AWS EC2 instances, RDS databases, and S3 buckets. Set up CloudWatch alarms for CPU >80%, memory >85%, disk space <10%. Create Grafana dashboards and Slack alerts for critical issues."`,
-      integration_options: ['AWS CloudWatch', 'Prometheus', 'Grafana', 'PagerDuty', 'Slack Integration', 'Terraform Deployment']
+      agent_type: 'production'
     },
     {
       agent_id: 'terraform-generator',
@@ -93,9 +81,7 @@ const mockAgents: Agent[] = [
       usage_count: 1567,
       average_rating: 5,
       created_at: '2024-01-18T12:45:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Create AWS infrastructure: VPC with public/private subnets, ALB, Auto Scaling Group with t3.medium instances, RDS MySQL database, S3 bucket with versioning. Include security groups and IAM roles."`,
-      integration_options: ['AWS Provider', 'Terraform Cloud', 'GitHub Actions', 'Jenkins Pipeline', 'Atlantis', 'AWS S3 State Backend']
+      agent_type: 'production'
     },
 
 
@@ -108,9 +94,7 @@ const mockAgents: Agent[] = [
       usage_count: 1567,
       average_rating: 5,
       created_at: '2024-01-05T14:20:00Z',
-      agent_type: 'production',
-      sample_requirements: `Sample Input: "Scan web application at https://myapp.com for OWASP Top 10 vulnerabilities. Include SQL injection, XSS, authentication bypass testing. Generate detailed security report with remediation steps."`,
-      integration_options: ['OWASP ZAP', 'Bandit', 'Safety', 'Jenkins Security', 'SonarQube', 'Slack Reporting']
+      agent_type: 'production'
     },
 
 
@@ -504,7 +488,7 @@ const AgentCatalog: React.FC = () => {
         [agentId]: !currentlyActive
       }));
       
-      alert(`✅ Built-in agent "${builtInAgent.name}" status changed from ${currentStatus} to ${newStatus}.\n\n${newStatus === 'Active' ? '🟢 Agent is now available for execution.' : '🔴 Agent is now disabled and cannot be executed.'}\n\nThis controls the agent's availability in your workspace.`);
+      alert(`Built-in agent "${builtInAgent.name}" status changed from ${currentStatus} to ${newStatus}.\n\n${newStatus === 'Active' ? 'Agent is now available for execution.' : 'Agent is now disabled and cannot be executed.'}\n\nThis controls the agent's availability in your workspace.`);
     }
   };
 
@@ -674,8 +658,8 @@ const AgentCatalog: React.FC = () => {
             onChange={(e) => setSelectedAgentType(e.target.value as 'all' | 'production' | 'demo')}
           >
             <option value="all">All Agent Types</option>
-            <option value="production">🚀 Production-Ready</option>
-            <option value="demo">🎯 Demo</option>
+            <option value="production">Production-Ready</option>
+            <option value="demo">Demo</option>
           </Form.Select>
         </Col>
       </Row>
@@ -729,11 +713,11 @@ const AgentCatalog: React.FC = () => {
                     </Badge>
                     {agent.agent_type === 'production' ? (
                       <Badge bg="success" className="me-2">
-                        🚀 Production-Ready
+                        Production-Ready
                       </Badge>
                     ) : (
                       <Badge bg="warning" className="me-2">
-                        🎯 Demo
+                        Demo
                       </Badge>
                     )}
                     {isDeployedAgent(agent.agent_id) && (
@@ -761,34 +745,7 @@ const AgentCatalog: React.FC = () => {
                   {agent.description}
                 </Card.Text>
                 
-                {/* Show sample requirements for production agents */}
-                {agent.agent_type === 'production' && agent.sample_requirements && (
-                  <div className="mb-3">
-                    <small className="text-muted fw-bold">Sample Requirements:</small>
-                    <div className="bg-light p-2 rounded mt-1">
-                      <small className="text-dark">{agent.sample_requirements}</small>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Show integration options for production agents */}
-                {agent.agent_type === 'production' && agent.integration_options && (
-                  <div className="mb-3">
-                    <small className="text-muted fw-bold">Platform Integrations:</small>
-                    <div className="mt-1">
-                      {agent.integration_options.slice(0, 3).map((integration, index) => (
-                        <Badge key={index} bg="outline-secondary" className="me-1 mb-1" style={{fontSize: '0.7em'}}>
-                          {integration}
-                        </Badge>
-                      ))}
-                      {agent.integration_options.length > 3 && (
-                        <Badge bg="outline-secondary" style={{fontSize: '0.7em'}}>
-                          +{agent.integration_options.length - 3} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                )}
+
                 <div className="mt-auto">
                   <div className="d-grid gap-2">
                     <Button

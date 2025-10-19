@@ -201,7 +201,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ refreshTrigger = 0 }) => {
     return (
       <Card>
         <Card.Header>
-          <h5>📈 Usage Trends</h5>
+          <h5>Usage Trends</h5>
         </Card.Header>
         <Card.Body className="text-center py-5">
           <Spinner animation="border" />
@@ -214,7 +214,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ refreshTrigger = 0 }) => {
   return (
     <Card>
       <Card.Header className="d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">📈 Usage Trends - {getMetricLabel()}</h5>
+        <h5 className="mb-0">Usage Trends - {getMetricLabel()}</h5>
         <div className="d-flex gap-2">
           <ButtonGroup size="sm">
             <Button
@@ -270,7 +270,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ refreshTrigger = 0 }) => {
                 bg={trend.direction === 'up' ? 'success' : trend.direction === 'down' ? 'danger' : 'secondary'}
                 className="me-2"
               >
-                {trend.direction === 'up' ? '📈' : trend.direction === 'down' ? '📉' : '➡️'} 
+                {trend.direction === 'up' ? '↗' : trend.direction === 'down' ? '↘' : '→'}
                 {trend.direction === 'up' ? 'Increasing' : trend.direction === 'down' ? 'Decreasing' : 'Stable'}
               </Badge>
               {trend.percentage > 0 && (

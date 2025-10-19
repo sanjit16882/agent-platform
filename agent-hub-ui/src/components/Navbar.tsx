@@ -9,7 +9,7 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Main Navigation */}
-      <BootstrapNavbar bg="dark" variant="dark" expand="lg" sticky="top" className="main-navbar">
+      <BootstrapNavbar expand="lg" className="main-navbar" style={{background: 'linear-gradient(135deg, #003d82 0%, #002a5c 100%)'}}>
         <Container>
           <BootstrapNavbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center">
             <Icon name="agentHub" size="large" color="primary" className="me-2" />
@@ -37,6 +37,16 @@ const Navbar: React.FC = () => {
               >
                 <Icon name="grid" size="small" className="me-1" />
                 Agents
+              </Nav.Link>
+
+              <Nav.Link 
+                as={Link} 
+                to="/templates" 
+                active={location.pathname === '/templates'}
+                className="d-flex align-items-center px-2"
+              >
+                <Icon name="file" size="small" className="me-1" />
+                Templates
               </Nav.Link>
 
               <Nav.Link 
