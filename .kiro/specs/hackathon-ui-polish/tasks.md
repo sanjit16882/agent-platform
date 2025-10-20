@@ -62,7 +62,10 @@
   - Remove pricing indicators while preserving backend functionality
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 3.1 Remove cost displays from Dashboard components
+- [x] 3.1 Remove cost displays from Dashboard components
+
+
+
   - Hide "Cost Today: $2.47" and similar cost metrics
   - Remove costPerExecution from stats display
   - Preserve cost tracking functionality in backend

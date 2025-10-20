@@ -147,20 +147,6 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ timeRange, refreshTri
         </Card>
       </Col>
 
-      {/* Cost Savings */}
-      <Col md={4} lg={2} className="mb-4">
-        <Card className="h-100 border-warning">
-          <Card.Body className="text-center">
-            <div className="display-6 text-warning fw-bold">
-              {formatCurrency(metrics.costSavings)}
-            </div>
-            <div className="text-muted small">Cost Savings</div>
-            <Badge bg="warning" className="mt-2">
-              💰 ROI
-            </Badge>
-          </Card.Body>
-        </Card>
-      </Col>
 
       {/* Average Response Time */}
       <Col md={4} lg={2} className="mb-4">

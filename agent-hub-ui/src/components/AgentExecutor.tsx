@@ -3861,14 +3861,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                         </Card.Body>
                       </Card>
                     </Col>
-                    <Col md={3}>
-                      <Card className="text-center">
-                        <Card.Body>
-                          <h4 className="text-success">{result.results.summary.estimated_cost_savings}</h4>
-                          <small>Potential Savings</small>
-                        </Card.Body>
-                      </Card>
-                    </Col>
+
                   </Row>
                 ) : (
                   <Row className="mb-4">
@@ -3956,7 +3949,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                               <div className="small">
                                 <p><strong>Impact:</strong> {rec.impact}</p>
                                 <p><strong>Solution:</strong> {rec.solution}</p>
-                                <p><strong>Savings:</strong> <span className="text-success">{rec.estimated_savings}</span></p>
+
                                 <p><strong>Effort:</strong> {rec.implementation_effort}</p>
                               </div>
                             </Card.Body>

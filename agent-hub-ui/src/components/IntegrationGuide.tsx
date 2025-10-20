@@ -58,9 +58,9 @@ async function main() {
         analysis_type: 'cost'
     });
     
-    console.log(\`Monthly savings: $\${result.monthly_savings}\`);
+    console.log(\`Analysis completed: \${result.recommendations?.length || 0} recommendations\`);
     result.recommendations.forEach(rec => {
-        console.log(\`- \${rec.title}: \${rec.potential_savings}\`);
+        console.log(\`- \${rec.title}: \${rec.description}\`);
     });
 }
 
@@ -886,8 +886,8 @@ https://api.agenthub.company.com/v1`}
           <Card>
             <Card.Header className="bg-success text-white">
               <h5 className="mb-0">
-                <Icon name="cost" size="small" className="me-2" />
-                Usage & Billing
+                <Icon name="chart" size="small" className="me-2" />
+                Performance Metrics
               </h5>
             </Card.Header>
             <Card.Body>
@@ -896,27 +896,27 @@ https://api.agenthub.company.com/v1`}
                   <thead>
                     <tr>
                       <th>Agent Type</th>
-                      <th>Cost per Execution</th>
+                      <th>Avg Execution Time</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>QE Test Generator</td>
-                      <td>$0.10 - $0.50</td>
+                      <td>30s - 2min</td>
                     </tr>
                     <tr>
                       <td>DevOps Monitor</td>
-                      <td>$0.25 - $1.00</td>
+                      <td>1min - 5min</td>
                     </tr>
                     <tr>
                       <td>Security Scanner</td>
-                      <td>$0.15 - $0.75</td>
+                      <td>45s - 3min</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <Alert variant="light" className="small mb-0">
-                <strong>Note:</strong> Pricing varies by complexity and execution time.
+                <strong>Note:</strong> Execution time varies by complexity and data size.
               </Alert>
             </Card.Body>
           </Card>

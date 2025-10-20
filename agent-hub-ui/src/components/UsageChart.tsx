@@ -34,8 +34,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ refreshTrigger = 0 }) => {
         return trend.executions;
       case 'users':
         return trend.uniqueUsers;
-      case 'savings':
-        return trend.costSavings;
+
       default:
         return trend.executions;
     }
@@ -47,8 +46,7 @@ const UsageChart: React.FC<UsageChartProps> = ({ refreshTrigger = 0 }) => {
         return 'Executions';
       case 'users':
         return 'Active Users';
-      case 'savings':
-        return 'Cost Savings ($)';
+
       default:
         return 'Executions';
     }

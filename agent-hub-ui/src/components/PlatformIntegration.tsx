@@ -18,7 +18,6 @@ interface PlatformMetrics {
   activeConnections: number;
   dailyExecutions: number;
   monthlyUsage: number;
-  costSavings: number;
 }
 
 const PlatformIntegration: React.FC = () => {
@@ -165,8 +164,7 @@ app.post('/webhook/agent-factory', (req, res) => {
     totalIntegrations: 47,
     activeConnections: 23,
     dailyExecutions: 1247,
-    monthlyUsage: 28934,
-    costSavings: 125000
+    monthlyUsage: 28934
   };
 
   const getTypeColor = (type: string) => {
@@ -223,14 +221,7 @@ app.post('/webhook/agent-factory', (req, res) => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <h3 className="text-warning">${platformMetrics.costSavings.toLocaleString()}</h3>
-              <p className="mb-0">Monthly Savings</p>
-            </Card.Body>
-          </Card>
-        </Col>
+
       </Row>
 
       {/* Integration Tabs */}
@@ -486,7 +477,7 @@ const result = await client.executeAgent('devops-monitor-v1', {
   analysis_type: 'cost-optimization'
 });
 
-console.log(\`Savings: $\${result.monthly_savings}\`);
+console.log(\`Analysis completed: \${result.recommendations?.length || 0} recommendations\`);
 
 // Real-time monitoring
 const eventSource = client.watchExecution(result.executionId);

@@ -145,17 +145,11 @@ const TemplateAnalytics: React.FC<TemplateAnalyticsProps> = ({ templateId, analy
           <Card.Body>
             <div className="mb-2">
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <small className="text-muted">Total Cost Savings</small>
-                <strong className="text-success">
-                  {formatCurrency(roiData.totalCostSavings)}
-                </strong>
-              </div>
-              <div className="d-flex justify-content-between align-items-center mb-1">
                 <small className="text-muted">Time Saved</small>
                 <strong>{roiData.totalTimeSaved.toFixed(0)} hours</strong>
               </div>
               <div className="d-flex justify-content-between align-items-center mb-1">
-                <small className="text-muted">ROI</small>
+                <small className="text-muted">Efficiency Gain</small>
                 <strong className="text-success">{roiData.roi.toFixed(0)}%</strong>
               </div>
             </div>
@@ -164,10 +158,10 @@ const TemplateAnalytics: React.FC<TemplateAnalyticsProps> = ({ templateId, analy
               <small className="text-muted d-block">Per Use Impact</small>
               <div className="d-flex justify-content-between">
                 <span className="small">
-                  💰 {formatCurrency(roiData.costSavingsPerUse)}
+                  ⏱️ {roiData.timeSavedPerUse.toFixed(0)}min saved
                 </span>
                 <span className="small">
-                  ⏱️ {roiData.timeSavedPerUse.toFixed(0)}min
+                  📈 Productivity boost
                 </span>
               </div>
             </div>

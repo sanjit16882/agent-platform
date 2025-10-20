@@ -138,7 +138,7 @@ export class AnalyticsService {
         failedExecutions: Math.floor(Math.random() * 20) + 2,
         uniqueUsers: Math.floor(Math.random() * 80) + 20,
         averageResponseTime: Math.random() * 3 + 1.5,
-        costSavings: Math.floor(Math.random() * 3500) + 2000 // $2K - $5.5K per day
+        costSavings: Math.floor(Math.random() * 35) + 20 // $20 - $55 per day
       });
     }
     
@@ -149,8 +149,8 @@ export class AnalyticsService {
   async getROIMetrics(): Promise<ROIData> {
     await new Promise(resolve => setTimeout(resolve, 180));
     
-    const totalCostSavings = 1250000; // $1.25M - Realistic annual savings
-    const platformCost = 180000; // $180K annually - Realistic platform cost
+    const totalCostSavings = 12500; // $12.5K - Realistic annual savings
+    const platformCost = 1800; // $1.8K annually - Realistic platform cost
     
     return {
       totalCostSavings,
@@ -171,34 +171,34 @@ export class AnalyticsService {
     return [
       {
         category: 'QE',
-        executionCount: 3247,
+        executionCount: 1247,
         successRate: 94.2,
         averageRating: 4.7,
-        costSavings: 485000, // $485K - QE automation saves the most
+        costSavings: 2850, // Updated to match realistic values
         popularityTrend: 15.3
       },
       {
         category: 'DevOps',
-        executionCount: 2156,
+        executionCount: 892,
         successRate: 91.8,
         averageRating: 4.5,
-        costSavings: 365000, // $365K - Infrastructure optimization
+        costSavings: 1890, // Updated to match realistic values
         popularityTrend: 8.7
       },
       {
         category: 'Security',
-        executionCount: 1834,
+        executionCount: 634,
         successRate: 96.1,
         averageRating: 4.8,
-        costSavings: 245000, // $245K - Security compliance and breach prevention
+        costSavings: 1240, // Updated to match realistic values
         popularityTrend: 22.1
       },
       {
         category: 'Business',
-        executionCount: 1456,
+        executionCount: 456,
         successRate: 89.3,
         averageRating: 4.4,
-        costSavings: 155000, // $155K - Business process automation
+        costSavings: 780, // Updated to match realistic values
         popularityTrend: 12.4
       }
     ];
@@ -225,7 +225,7 @@ export class AnalyticsService {
         averageExecutionTime: 3.4,
         userRating: 4.7,
         costPerExecution: 0.35,
-        totalCostSavings: 285000, // $285K
+        totalCostSavings: 2850, // $2.85K
         popularityScore: 98,
         lastUsed: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
         trendDirection: 'up',
@@ -240,7 +240,7 @@ export class AnalyticsService {
         averageExecutionTime: 4.7,
         userRating: 4.5,
         costPerExecution: 0.42,
-        totalCostSavings: 225000, // $225K
+        totalCostSavings: 1890, // $1.89K
         popularityScore: 87,
         lastUsed: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
         trendDirection: 'up',
@@ -255,7 +255,7 @@ export class AnalyticsService {
         averageExecutionTime: 6.2,
         userRating: 4.8,
         costPerExecution: 0.58,
-        totalCostSavings: 165000, // $165K
+        totalCostSavings: 1240, // $1.24K
         popularityScore: 92,
         lastUsed: new Date(Date.now() - 20 * 60 * 1000), // 20 minutes ago
         trendDirection: 'up',
@@ -270,7 +270,7 @@ export class AnalyticsService {
         averageExecutionTime: 5.1,
         userRating: 4.4,
         costPerExecution: 0.48,
-        totalCostSavings: 95000, // $95K
+        totalCostSavings: 780, // $780
         popularityScore: 76,
         lastUsed: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
         trendDirection: 'stable',
@@ -326,7 +326,7 @@ export class AnalyticsService {
         status: Math.random() > 0.08 ? 'success' : 'failed', // 92% success rate
         executionTime: Math.random() * 8 + 1, // 1-9 seconds
         timestamp: executionDate,
-        costSavings: Math.floor(Math.random() * 1200) + 800 // $800 - $2K per execution
+        costSavings: Math.floor(Math.random() * 12) + 8 // $8 - $20 per execution
       });
     }
     

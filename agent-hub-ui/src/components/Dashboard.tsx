@@ -18,8 +18,7 @@ const Dashboard: React.FC = () => {
     categories: 6,
     frameworks: 12,
     avgResponseTime: 1.1,
-    uptime: 99.98,
-    costPerExecution: 0.25
+    uptime: 99.98
   };
 
   const availableAgents = [

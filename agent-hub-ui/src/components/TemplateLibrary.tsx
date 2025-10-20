@@ -450,10 +450,7 @@ const TemplateLibrary: React.FC = () => {
                 and compliance automation. Create production-ready agents in minutes instead of hours.
               </p>
               <div className="row">
-                <div className="col-md-3">
-                  <h5 className="text-dark">$1.25M</h5>
-                  <small className="text-muted">Annual Cost Savings</small>
-                </div>
+
                 <div className="col-md-3">
                   <h5 className="text-dark">594%</h5>
                   <small className="text-muted">Return on Investment</small>
