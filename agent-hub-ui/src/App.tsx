@@ -13,7 +13,7 @@ import AgentManagement from './components/AgentManagement';
 import PlatformIntegration from './components/PlatformIntegration';
 import EnterpriseIntegration from './components/EnterpriseIntegration';
 import IntegrationGuide from './components/IntegrationGuide';
-import UseCases from './components/UseCases';
+
 import CloudWatchMetrics from './components/CloudWatchMetrics';
 import APIDocumentation from './components/APIDocumentation';
 import AnalyticsDashboard from './components/AnalyticsDashboard';
@@ -22,6 +22,7 @@ import TemplateDetails from './components/TemplateDetails';
 import TemplateCreate from './components/TemplateCreate';
 import TemplateMarketplace from './components/TemplateMarketplace';
 import WizardContainer from './components/WizardContainer';
+import NLPTester from './components/NLPTester';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 
@@ -43,7 +44,7 @@ function App() {
             <Route path="/integration" element={<PlatformIntegration />} />
             <Route path="/enterprise" element={<EnterpriseIntegration />} />
             <Route path="/integration-guide" element={<IntegrationGuide />} />
-            <Route path="/use-cases" element={<UseCases />} />
+
             <Route path="/metrics" element={<CloudWatchMetrics />} />
             <Route path="/analytics" element={<AnalyticsDashboard />} />
             <Route path="/api-docs" element={<APIDocumentation />} />
@@ -52,6 +53,7 @@ function App() {
             <Route path="/templates/marketplace" element={<TemplateMarketplace />} />
             <Route path="/templates/:templateId" element={<TemplateDetails />} />
             <Route path="/templates/:templateId/create" element={<WizardContainer />} />
+            <Route path="/nlp-tester" element={<NLPTester />} />
           </Routes>
         </div>
       </div>

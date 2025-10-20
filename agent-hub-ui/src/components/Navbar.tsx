@@ -51,6 +51,16 @@ const Navbar: React.FC = () => {
 
               <Nav.Link 
                 as={Link} 
+                to="/nlp-tester" 
+                active={location.pathname === '/nlp-tester'}
+                className="d-flex align-items-center px-2 text-success"
+              >
+                <Icon name="agent" size="small" className="me-1" />
+                NLP Creator
+              </Nav.Link>
+
+              <Nav.Link 
+                as={Link} 
                 to="/upload" 
                 active={location.pathname === '/upload'}
                 className="d-flex align-items-center px-2 text-warning"
@@ -92,7 +102,7 @@ const Navbar: React.FC = () => {
             <Nav>
               <Nav.Link disabled className="text-light small">
                 <Icon name="users" size="small" className="me-1" />
-                Demo User
+                User
               </Nav.Link>
             </Nav>
           </BootstrapNavbar.Collapse>
@@ -113,15 +123,7 @@ const Navbar: React.FC = () => {
               Integration Guide
             </Nav.Link>
 
-            <Nav.Link 
-              as={Link} 
-              to="/use-cases" 
-              active={location.pathname === '/use-cases'}
-              className="d-flex align-items-center px-3 small"
-            >
-              <Icon name="target" size="small" className="me-1" />
-              Use Cases
-            </Nav.Link>
+
 
             <Nav.Link 
               as={Link} 

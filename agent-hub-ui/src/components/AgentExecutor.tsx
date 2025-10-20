@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useAgentContext } from '../context/AgentContext';
 import { useProgress } from '../context/ProgressContext';
 import { progressService } from '../services/progressService';
-import { websocketService } from '../services/websocketService';
+// Removed websocketService import - was mock implementation
 import ProgressTracker from './ProgressTracker';
 import StreamingOutput from './StreamingOutput';
 import IncrementalResults from './IncrementalResults';
@@ -2052,8 +2052,7 @@ SPECIAL FEATURES:
       // Start progress tracking
       startExecution(executionId, agentId || 'unknown', currentAgent.category);
       
-      // Start streaming simulation
-      websocketService.simulateExecutionStream(executionId, currentAgent.category);
+      // Removed websocketService simulation - was mock implementation
 
       // Simulate realistic execution with progress updates
       await simulateRealisticExecution(executionId);

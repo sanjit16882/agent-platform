@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form, InputGroup } from 'react-bootstrap';
+import { Row, Col, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 import { useAgentContext } from '../context/AgentContext';
+import Button from './common/Button';
+import Card from './common/Card';
+import Badge from './common/Badge';
+import { theme, icons } from '../styles/theme';
 
 interface Agent {
   agent_id: string;
@@ -436,11 +440,21 @@ const AgentCatalog: React.FC = () => {
     const builtInAgent = agents.find(a => a.agent_id === agentId);
     
     if (deployedAgent) {
-      // Navigate to agent management page for editing deployed agents
-      navigate('/manage');
+      // Navigate to agent management page with the deployed agent data
+      navigate('/manage', { 
+        state: { 
+          editAgent: deployedAgent,
+          agentType: 'deployed'
+        } 
+      });
     } else if (builtInAgent) {
-      // For built-in agents, navigate to agent management page where they can see all agents
-      navigate('/manage');
+      // For built-in agents, navigate to agent management page with agent data
+      navigate('/manage', { 
+        state: { 
+          editAgent: builtInAgent,
+          agentType: 'builtin'
+        } 
+      });
     } else {
       alert(`Agent "${agentId}" not found.`);
     }
@@ -581,88 +595,197 @@ const AgentCatalog: React.FC = () => {
 
   if (loading) {
     return (
-      <Container>
-        <div className="text-center mt-5">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <div style={{ 
+        padding: theme.spacing['3xl'], 
+        backgroundColor: theme.colors.backgroundSecondary,
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize.xl,
+            marginBottom: theme.spacing.lg
+          }}>
+            {icons.clock}
           </div>
-          <p className="mt-2">Loading agents...</p>
+          <p style={{ 
+            fontSize: theme.typography.fontSize.base,
+            color: theme.colors.textSecondary
+          }}>
+            Loading agents...
+          </p>
         </div>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <Row className="mb-4">
-        <Col md={8}>
-          <h1 className="display-5 fw-bold text-primary">Agent Catalog</h1>
-          <p className="lead">Discover and deploy AI agents for any business function</p>
-        </Col>
-        <Col md={4} className="text-end">
-          <Button 
-            variant="success" 
-            size="lg"
-            onClick={() => navigate('/upload')}
-            className="mb-2"
-          >
-            Upload Agent
-          </Button>
-          <Button 
-            variant="outline-primary" 
-            size="sm"
-            onClick={() => {
-              setLoading(true);
-              fetchAgents();
-            }}
-            className="mb-2 ms-2"
-          >
-            Refresh
-          </Button>
-          <br />
-          <small className="text-muted">Add your custom agents to the marketplace</small>
-        </Col>
-      </Row>
+    <div style={{ 
+      padding: theme.spacing['3xl'], 
+      backgroundColor: theme.colors.backgroundSecondary,
+      minHeight: '100vh'
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: theme.spacing['3xl'],
+        flexWrap: 'wrap',
+        gap: theme.spacing.xl
+      }}>
+        <div>
+          <h1 style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.primary,
+            marginBottom: theme.spacing.sm,
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing.sm
+          }}>
+            {icons.catalog} Agent Catalog
+          </h1>
+          <p style={{ 
+            fontSize: theme.typography.fontSize.lg,
+            color: theme.colors.textSecondary,
+            margin: 0
+          }}>
+            Discover and deploy AI agents for any business function
+          </p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+          <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+            <Button 
+              variant="success" 
+              size="lg"
+              icon={icons.upload}
+              onClick={() => navigate('/upload')}
+            >
+              Upload Agent
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="lg"
+              icon={icons.refresh}
+              onClick={() => {
+                setLoading(true);
+                fetchAgents();
+              }}
+            >
+              Refresh
+            </Button>
+          </div>
+          <small style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.xs,
+            textAlign: 'center'
+          }}>
+            Add your custom agents to the marketplace
+          </small>
+        </div>
+      </div>
 
       {/* Search and Filter */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <InputGroup>
-            <InputGroup.Text>Search</InputGroup.Text>
-            <Form.Control
-              type="text"
-              placeholder="Search agents by name or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </InputGroup>
-        </Col>
-        <Col md={3}>
-          <Form.Select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category === 'All' 
-                  ? `All Categories (${getCategoryCount(category)})` 
-                  : `${category} Agents (${getCategoryCount(category)})`
-                }
-              </option>
-            ))}
-          </Form.Select>
-        </Col>
-        <Col md={3}>
-          <Form.Select
-            value={selectedAgentType}
-            onChange={(e) => setSelectedAgentType(e.target.value as 'all' | 'production' | 'demo')}
-          >
-            <option value="all">All Agent Types</option>
-            <option value="production">Production-Ready</option>
-            <option value="demo">Demo</option>
-          </Form.Select>
-        </Col>
-      </Row>
+      <Card style={{ marginBottom: theme.spacing.xl }}>
+        <Card.Body>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: theme.spacing.xl,
+            alignItems: 'end'
+          }}>
+            <div>
+              <label style={{ 
+                display: 'block',
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.textPrimary,
+                marginBottom: theme.spacing.sm
+              }}>
+                {icons.search} Search Agents
+              </label>
+              <input
+                type="text"
+                placeholder="Search agents by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.md,
+                  fontSize: theme.typography.fontSize.sm,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: theme.colors.white,
+                  color: theme.colors.textPrimary
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ 
+                display: 'block',
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.textPrimary,
+                marginBottom: theme.spacing.sm
+              }}>
+                {icons.filter} Category
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.md,
+                  fontSize: theme.typography.fontSize.sm,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: theme.colors.white,
+                  color: theme.colors.textPrimary
+                }}
+              >
+                {categories.map(category => (
+                  <option key={category} value={category}>
+                    {category === 'All' 
+                      ? `All Categories (${getCategoryCount(category)})` 
+                      : `${category} Agents (${getCategoryCount(category)})`
+                    }
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ 
+                display: 'block',
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.medium,
+                color: theme.colors.textPrimary,
+                marginBottom: theme.spacing.sm
+              }}>
+                {icons.agents} Agent Type
+              </label>
+              <select
+                value={selectedAgentType}
+                onChange={(e) => setSelectedAgentType(e.target.value as 'all' | 'production' | 'demo')}
+                style={{
+                  width: '100%',
+                  padding: theme.spacing.md,
+                  fontSize: theme.typography.fontSize.sm,
+                  border: `1px solid ${theme.colors.border}`,
+                  borderRadius: theme.borderRadius.md,
+                  backgroundColor: theme.colors.white,
+                  color: theme.colors.textPrimary
+                }}
+              >
+                <option value="all">All Agent Types</option>
+                <option value="production">Production-Ready</option>
+                <option value="demo">Demo</option>
+              </select>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
 
       {/* Platform Innovation Banner */}
       <Row className="mb-4">
@@ -750,6 +873,7 @@ const AgentCatalog: React.FC = () => {
                   <div className="d-grid gap-2">
                     <Button
                       variant="primary"
+                      icon={icons.right}
                       onClick={() => navigate(`/agents/${agent.agent_id}/execute`)}
                       disabled={!isDeployedAgent(agent.agent_id) && builtInAgentStatus[agent.agent_id] === false}
                     >
@@ -764,6 +888,7 @@ const AgentCatalog: React.FC = () => {
                       <Button
                         variant="outline-primary"
                         size="sm"
+                        icon={icons.edit}
                         onClick={() => handleEditAgent(agent.agent_id)}
                         className="flex-fill"
                       >
@@ -772,6 +897,7 @@ const AgentCatalog: React.FC = () => {
                       <Button
                         variant="outline-warning"
                         size="sm"
+                        icon={icons.refresh}
                         onClick={() => handleToggleAgent(agent.agent_id)}
                         className="flex-fill"
                       >
@@ -783,6 +909,7 @@ const AgentCatalog: React.FC = () => {
                       <Button
                         variant="outline-danger"
                         size="sm"
+                        icon={icons.delete}
                         onClick={() => handleDeleteAgent(agent.agent_id)}
                         className="flex-fill"
                       >
@@ -804,7 +931,7 @@ const AgentCatalog: React.FC = () => {
               <Card.Body>
                 <h5>No agents found</h5>
                 <p>Try adjusting your search terms or category filter.</p>
-                <Button variant="primary" onClick={() => {
+                <Button variant="primary" icon={icons.refresh} onClick={() => {
                   setSearchTerm('');
                   setSelectedCategory('All');
                   setSelectedAgentType('all');
@@ -816,7 +943,7 @@ const AgentCatalog: React.FC = () => {
           </Col>
         </Row>
       )}
-    </Container>
+    </div>
   );
 };
 

@@ -1,21 +1,14 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Modal, Form, Table, Alert } from 'react-bootstrap';
+import React from 'react';
+import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from './Icon';
-import { calculateConservativeROI, formatCurrency, type ROIInputs } from '../utils/roiCalculator';
+// Removed roiCalculator import - was demo/marketing content
 import { useAgentContext } from '../context/AgentContext';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { getActiveAgentsCount } = useAgentContext();
-  const [showROICalculator, setShowROICalculator] = useState(false);
-  const [showMethodology, setShowMethodology] = useState(false);
-  const [roiInputs, setROIInputs] = useState<ROIInputs>({
-    teamSize: 5,
-    avgSalary: 80000,
-    infraCost: 50000,
-    companySize: 'midsize'
-  });
+  // Removed ROI calculator state - was demo/marketing content
 
   const baseAgentCount = 38;
   const deployedAgentCount = getActiveAgentsCount();
@@ -210,10 +203,10 @@ const Dashboard: React.FC = () => {
                     variant="outline-warning" 
                     size="lg" 
                     className="w-100 mb-2 d-flex align-items-center justify-content-center"
-                    onClick={() => setShowROICalculator(true)}
+                    onClick={() => navigate('/analytics')}
                   >
                     <Icon name="chart" size="small" className="me-2" />
-                    Calculate ROI
+                    Analytics
                   </Button>
                 </Col>
                 <Col md={3}>
@@ -370,19 +363,25 @@ const Dashboard: React.FC = () => {
                 </Col>
                 <Col md={4} className="text-center">
                   <div className="bg-light p-3 rounded">
-                    <h4 className="text-primary">753%</h4>
-                    <small>Year 1 ROI</small>
-                    <hr />
-                    <h4 className="text-success">1.4mo</h4>
-                    <small>Payback Period</small>
-                    <hr />
+                    <h5 className="text-primary">Enterprise Ready</h5>
+                    <p className="small text-muted">
+                      Production-grade API integration with comprehensive documentation and support
+                    </p>
                     <Button 
                       variant="primary" 
                       size="lg" 
-                      className="w-100"
+                      className="w-100 mb-2"
                       onClick={() => navigate('/integration-guide')}
                     >
                       View Integration Guide
+                    </Button>
+                    <Button 
+                      variant="outline-primary" 
+                      size="sm" 
+                      className="w-100"
+                      onClick={() => navigate('/enterprise')}
+                    >
+                      Enterprise API
                     </Button>
                   </div>
                 </Col>
@@ -478,99 +477,7 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      {/* ROI Calculator */}
-      <Row className="mb-4">
-        <Col>
-          <Card className="border-primary">
-            <Card.Header className="bg-primary text-white">
-              <h5 className="mb-0">Realistic ROI Projections</h5>
-              <small className="text-light">Conservative estimates based on industry benchmarks</small>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={8}>
-                  <h6>Conservative Savings for Mid-Size Company (100-1000 employees):</h6>
-                  <Row className="mt-3">
-                    <Col md={6}>
-                      <div className="border rounded p-3 mb-3">
-                        <h6 className="text-primary">QE Team Efficiency</h6>
-                        <ul className="small mb-2">
-                          <li><strong>Baseline:</strong> 5 QE engineers × $80K avg salary</li>
-                          <li><strong>Time savings:</strong> 25% automation efficiency gain</li>
-                          <li><strong>Risk-adjusted:</strong> 20% buffer applied</li>
-                        </ul>
-                        <Badge bg="success">$80K saved annually</Badge>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="border rounded p-3 mb-3">
-                        <h6 className="text-warning">Infrastructure Optimization</h6>
-                        <ul className="small mb-2">
-                          <li><strong>Baseline:</strong> $50K/month infrastructure spend</li>
-                          <li><strong>Optimization:</strong> 15% cost reduction potential</li>
-                          <li><strong>Conservative:</strong> 12% after risk adjustment</li>
-                        </ul>
-                        <Badge bg="success">$72K saved annually</Badge>
-                      </div>
-                    </Col>
-                  </Row>
-                  <div className="bg-light border p-3 rounded">
-                    <h6 className="mb-2">Conservative Annual Impact</h6>
-                    <div className="row">
-                      <div className="col-6">
-                        <p className="mb-1 small"><strong>Total Savings:</strong> $152K/year</p>
-                        <p className="mb-1 small"><strong>Platform Cost:</strong> $60K/year</p>
-                        <p className="mb-0 small"><strong>Net Benefit:</strong> $92K/year</p>
-                      </div>
-                      <div className="col-6">
-                        <p className="mb-1 small"><strong>ROI:</strong> <span className="text-success">153%</span></p>
-                        <p className="mb-1 small"><strong>Payback:</strong> 4.7 months</p>
-                        <p className="mb-0 small"><strong>Implementation:</strong> 8 weeks</p>
-                      </div>
-                    </div>
-                  </div>
-                </Col>
-                <Col md={4}>
-                  <div className="text-center">
-                    <h6>Conservative Payback</h6>
-                    <div className="display-4 text-success">4.7</div>
-                    <p className="lead">months</p>
-                    <small className="text-muted">Includes implementation time & risk buffer</small>
-                    <hr />
-                    <Button 
-                      variant="success" 
-                      size="lg" 
-                      className="w-100 mb-2"
-                      onClick={() => setShowROICalculator(true)}
-                    >
-                      <Icon name="chart" size="small" className="me-2" />
-                      Calculate Your ROI
-                    </Button>
-                    <Button 
-                      variant="outline-primary" 
-                      size="sm" 
-                      className="w-100"
-                      onClick={() => setShowMethodology(true)}
-                    >
-                      <Icon name="view" size="small" className="me-2" />
-                      View Methodology
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-              <Row className="mt-3">
-                <Col>
-                  <div className="alert alert-info small mb-0">
-                    <strong>Methodology:</strong> Projections based on industry automation studies, 
-                    with conservative 20% risk buffer and realistic 8-week implementation timeline. 
-                    Actual results may vary based on team size, existing processes, and adoption rates.
-                  </div>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+
 
       {/* Recent Activity */}
       <Row>
@@ -633,285 +540,7 @@ const Dashboard: React.FC = () => {
 
       </Row>
 
-      {/* ROI Calculator Modal */}
-      <Modal show={showROICalculator} onHide={() => setShowROICalculator(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Icon name="chart" size="small" className="me-2" />
-            AgentHub ROI Calculator
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="info">
-            <strong>Industry-Standard ROI Analysis</strong><br />
-            Calculate your return on investment using conservative estimates based on real automation studies and industry benchmarks.
-          </Alert>
 
-          <Row>
-            <Col md={6}>
-              <h6>Input Parameters</h6>
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>Company Size</Form.Label>
-                  <Form.Select 
-                    value={roiInputs.companySize} 
-                    onChange={(e) => setROIInputs({...roiInputs, companySize: e.target.value as any})}
-                  >
-                    <option value="startup">Startup (10-100 employees)</option>
-                    <option value="midsize">Mid-size (100-1000 employees)</option>
-                    <option value="enterprise">Enterprise (1000+ employees)</option>
-                  </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Engineering Team Size: {roiInputs.teamSize}</Form.Label>
-                  <Form.Range
-                    min={1}
-                    max={50}
-                    value={roiInputs.teamSize}
-                    onChange={(e) => setROIInputs({...roiInputs, teamSize: parseInt(e.target.value)})}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Average Engineer Salary: ${roiInputs.avgSalary.toLocaleString()}</Form.Label>
-                  <Form.Range
-                    min={60000}
-                    max={200000}
-                    step={5000}
-                    value={roiInputs.avgSalary}
-                    onChange={(e) => setROIInputs({...roiInputs, avgSalary: parseInt(e.target.value)})}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Monthly Infrastructure Cost: ${roiInputs.infraCost.toLocaleString()}</Form.Label>
-                  <Form.Range
-                    min={5000}
-                    max={200000}
-                    step={2500}
-                    value={roiInputs.infraCost}
-                    onChange={(e) => setROIInputs({...roiInputs, infraCost: parseInt(e.target.value)})}
-                  />
-                </Form.Group>
-              </Form>
-            </Col>
-
-            <Col md={6}>
-              {(() => {
-                const results = calculateConservativeROI(roiInputs);
-                return (
-                  <>
-                    <h6>ROI Analysis Results</h6>
-                    <Table striped bordered size="sm">
-                      <tbody>
-                        <tr>
-                          <td><strong>QE Time Savings</strong></td>
-                          <td>{formatCurrency(results.monthlyQESavings)}/month</td>
-                        </tr>
-                        <tr>
-                          <td><strong>Infrastructure Optimization</strong></td>
-                          <td>{formatCurrency(results.monthlyInfraSavings)}/month</td>
-                        </tr>
-                        <tr className="table-primary">
-                          <td><strong>Total Monthly Savings</strong></td>
-                          <td><strong>{formatCurrency(results.monthlyTotalSavings)}/month</strong></td>
-                        </tr>
-                        <tr>
-                          <td><strong>Annual Savings (Year 1)</strong></td>
-                          <td>{formatCurrency(results.annualSavings)}/year</td>
-                        </tr>
-                        <tr>
-                          <td><strong>Platform Investment</strong></td>
-                          <td>{formatCurrency(results.platformCost)}/year</td>
-                        </tr>
-                        <tr className="table-success">
-                          <td><strong>Net ROI</strong></td>
-                          <td><strong>{results.roi > 0 ? '+' : ''}{results.roi.toFixed(0)}%</strong></td>
-                        </tr>
-                        <tr className="table-warning">
-                          <td><strong>Payback Period</strong></td>
-                          <td><strong>{results.paybackMonths.toFixed(1)} months</strong></td>
-                        </tr>
-                      </tbody>
-                    </Table>
-
-                    <Alert variant="light" className="small">
-                      <strong>Conservative Assumptions Applied:</strong>
-                      <ul className="mb-0 mt-1">
-                        <li>QE efficiency gain: {(results.assumptions.qeTimeSavingsPercent * 100).toFixed(0)}%</li>
-                        <li>Infrastructure optimization: {(results.assumptions.infraOptimizationPercent * 100).toFixed(0)}%</li>
-                        <li>Team adoption rate: {(results.assumptions.adoptionRatePercent * 100).toFixed(0)}%</li>
-                        <li>Risk adjustment: {((1 - results.assumptions.riskAdjustmentFactor) * 100).toFixed(0)}% buffer</li>
-                        <li>Implementation time: {results.assumptions.implementationTimeWeeks} weeks</li>
-                      </ul>
-                    </Alert>
-                  </>
-                );
-              })()}
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowROICalculator(false)}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={() => navigate('/business-case')}>
-            View Detailed Business Case
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Methodology Modal */}
-      <Modal show={showMethodology} onHide={() => setShowMethodology(false)} size="xl">
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Icon name="view" size="small" className="me-2" />
-            ROI Calculation Methodology
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            <Col md={8}>
-              <h5>Industry-Standard ROI Methodology</h5>
-              <p>
-                Our ROI calculations are based on established industry research, conservative estimates, 
-                and real-world automation deployment data from enterprise customers.
-              </p>
-
-              <h6 className="mt-4">1. QE Time Savings Calculation</h6>
-              <div className="bg-light p-3 rounded mb-3">
-                <strong>Formula:</strong> Monthly QE Savings = (Team Size × Average Salary ÷ 12) × Time Savings % × Adoption Rate × Risk Adjustment
-                <br /><br />
-                <strong>Industry Benchmarks:</strong>
-                <ul className="mb-0">
-                  <li><strong>Startup:</strong> 20% time savings (smaller teams, simpler processes)</li>
-                  <li><strong>Mid-size:</strong> 25% time savings (established processes, good adoption)</li>
-                  <li><strong>Enterprise:</strong> 30% time savings (mature processes, dedicated resources)</li>
-                </ul>
-              </div>
-
-              <h6>2. Infrastructure Optimization Calculation</h6>
-              <div className="bg-light p-3 rounded mb-3">
-                <strong>Formula:</strong> Monthly Infrastructure Savings = Monthly Infrastructure Cost × Optimization % × Risk Adjustment
-                <br /><br />
-                <strong>Optimization Rates:</strong>
-                <ul className="mb-0">
-                  <li><strong>Right-sizing:</strong> 8-15% typical savings (AWS Well-Architected Framework)</li>
-                  <li><strong>Reserved Instances:</strong> 20-40% on committed usage</li>
-                  <li><strong>Unused Resources:</strong> 5-12% waste elimination</li>
-                  <li><strong>Performance Tuning:</strong> 10-25% efficiency gains</li>
-                </ul>
-              </div>
-
-              <h6>3. Risk Adjustment Factors</h6>
-              <div className="bg-light p-3 rounded mb-3">
-                <strong>Conservative Buffers Applied:</strong>
-                <ul className="mb-0">
-                  <li><strong>Startup:</strong> 15% risk buffer (higher uncertainty)</li>
-                  <li><strong>Mid-size:</strong> 20% risk buffer (organizational complexity)</li>
-                  <li><strong>Enterprise:</strong> 25% risk buffer (change management challenges)</li>
-                </ul>
-              </div>
-
-              <h6>4. Implementation Timeline</h6>
-              <div className="bg-light p-3 rounded mb-3">
-                <strong>Realistic Implementation Periods:</strong>
-                <ul className="mb-0">
-                  <li><strong>Startup:</strong> 6 weeks (faster decision-making, smaller scope)</li>
-                  <li><strong>Mid-size:</strong> 8 weeks (moderate complexity, established processes)</li>
-                  <li><strong>Enterprise:</strong> 12 weeks (compliance, security reviews, change management)</li>
-                </ul>
-              </div>
-
-              <h6>5. Data Sources & Validation</h6>
-              <Alert variant="info">
-                <strong>Research Sources:</strong>
-                <ul className="mb-0">
-                  <li>Forrester Total Economic Impact studies on test automation</li>
-                  <li>Gartner Magic Quadrant for Application Testing Services</li>
-                  <li>AWS Well-Architected Framework cost optimization guidelines</li>
-                  <li>DevOps Research and Assessment (DORA) State of DevOps reports</li>
-                  <li>Internal customer case studies and deployment data</li>
-                </ul>
-              </Alert>
-            </Col>
-
-            <Col md={4}>
-              <h6>ROI Formula Breakdown</h6>
-              <Card className="mb-3">
-                <Card.Header className="bg-primary text-white">
-                  <strong>Total ROI Calculation</strong>
-                </Card.Header>
-                <Card.Body className="small">
-                  <strong>ROI = (Annual Savings - Platform Cost) ÷ Platform Cost × 100</strong>
-                  <hr />
-                  <strong>Where:</strong>
-                  <ul className="mb-0">
-                    <li><strong>Annual Savings</strong> = (QE Savings + Infrastructure Savings) × 12 × (12 - Implementation Months) ÷ 12</li>
-                    <li><strong>Platform Cost</strong> = Annual subscription fee</li>
-                  </ul>
-                </Card.Body>
-              </Card>
-
-              <h6>Payback Period</h6>
-              <Card className="mb-3">
-                <Card.Header className="bg-success text-white">
-                  <strong>Time to Break Even</strong>
-                </Card.Header>
-                <Card.Body className="small">
-                  <strong>Payback = Platform Cost ÷ Monthly Savings + Implementation Time</strong>
-                  <hr />
-                  Includes implementation delay and ramp-up period for realistic timeline.
-                </Card.Body>
-              </Card>
-
-              <h6>Industry Comparisons</h6>
-              <Table striped size="sm">
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th>Industry Avg</th>
-                    <th>AgentHub</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Test Automation ROI</td>
-                    <td>200-400%</td>
-                    <td>150-300%</td>
-                  </tr>
-                  <tr>
-                    <td>Payback Period</td>
-                    <td>6-18 months</td>
-                    <td>4-8 months</td>
-                  </tr>
-                  <tr>
-                    <td>Time Savings</td>
-                    <td>40-70%</td>
-                    <td>20-30%</td>
-                  </tr>
-                </tbody>
-              </Table>
-
-              <Alert variant="warning" className="small">
-                <strong>Note:</strong> Our projections are intentionally conservative compared to industry averages to ensure realistic expectations and successful implementations.
-              </Alert>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setShowMethodology(false)}>
-            Close
-          </Button>
-          <Button variant="success" onClick={() => {
-            setShowMethodology(false);
-            setShowROICalculator(true);
-          }}>
-            Try ROI Calculator
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 };

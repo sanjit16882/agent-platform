@@ -514,8 +514,7 @@ app.post('/webhook/agent-factory', (req, res) => {
                       <li>Commit generated tests back to the repository</li>
                       <li>Run tests in CI/CD pipeline</li>
                     </ul>
-                    <Badge bg="success">95% time reduction</Badge>
-                    <Badge bg="info" className="ms-2">Cypress, Selenium, Playwright support</Badge>
+                    <Badge bg="info">Cypress, Selenium, Playwright support</Badge>
                   </Accordion.Body>
                 </Accordion.Item>
                 
@@ -532,8 +531,7 @@ app.post('/webhook/agent-factory', (req, res) => {
                       <li>Generate automated reports for management</li>
                       <li>Alert on unusual spending patterns</li>
                     </ul>
-                    <Badge bg="success">$25K+ monthly savings</Badge>
-                    <Badge bg="info" className="ms-2">AWS, Azure, GCP support</Badge>
+                    <Badge bg="info">AWS, Azure, GCP support</Badge>
                   </Accordion.Body>
                 </Accordion.Item>
                 
@@ -550,8 +548,7 @@ app.post('/webhook/agent-factory', (req, res) => {
                       <li>Generate security reports for audits</li>
                       <li>Block deployments that fail security checks</li>
                     </ul>
-                    <Badge bg="success">60% faster compliance</Badge>
-                    <Badge bg="info" className="ms-2">Kubernetes, Docker, Code scanning</Badge>
+                    <Badge bg="info">Kubernetes, Docker, Code scanning</Badge>
                   </Accordion.Body>
                 </Accordion.Item>
                 
@@ -568,8 +565,7 @@ app.post('/webhook/agent-factory', (req, res) => {
                       <li>Customer churn prediction and analysis</li>
                       <li>Automated executive dashboards</li>
                     </ul>
-                    <Badge bg="success">80% faster insights</Badge>
-                    <Badge bg="info" className="ms-2">SQL, Excel, PowerBI integration</Badge>
+                    <Badge bg="info">SQL, Excel, PowerBI integration</Badge>
                   </Accordion.Body>
                 </Accordion.Item>
               </Accordion>
@@ -624,28 +620,36 @@ app.post('/webhook/agent-factory', (req, res) => {
             <Card.Header className="bg-success text-white">
               <h6 className="mb-0 d-flex align-items-center">
                 <Icon name="analytics" size="small" className="me-2" />
-                Expected ROI
+                Integration Features
               </h6>
             </Card.Header>
             <Card.Body>
-              <div className="row text-center">
-                <div className="col-6 mb-3">
-                  <h4 className="text-primary">95%</h4>
-                  <small>Time Reduction</small>
-                </div>
-                <div className="col-6 mb-3">
-                  <h4 className="text-success">$150K+</h4>
-                  <small>Annual Savings</small>
-                </div>
-                <div className="col-6">
-                  <h4 className="text-info">753%</h4>
-                  <small>Year 1 ROI</small>
-                </div>
-                <div className="col-6">
-                  <h4 className="text-warning">1.4mo</h4>
-                  <small>Payback Period</small>
-                </div>
-              </div>
+              <ul className="list-unstyled">
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="activity" size="small" className="me-2" />
+                  <strong>Multi-Language:</strong> Python, JavaScript, Java, cURL
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="settings" size="small" className="me-2" />
+                  <strong>CI/CD Ready:</strong> GitHub Actions, Jenkins
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="chart" size="small" className="me-2" />
+                  <strong>Event-Driven:</strong> Webhook notifications
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="security" size="small" className="me-2" />
+                  <strong>Enterprise:</strong> API key authentication
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="target" size="small" className="me-2" />
+                  <strong>Scalable:</strong> REST API architecture
+                </li>
+                <li className="mb-2 d-flex align-items-center">
+                  <Icon name="view" size="small" className="me-2" />
+                  <strong>Documented:</strong> Complete integration guides
+                </li>
+              </ul>
             </Card.Body>
           </Card>
         </Col>

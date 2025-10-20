@@ -1509,3 +1509,288 @@ late Library Filter Fixes */
   border: 1px solid #dee2e6;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* Modal fixes for overlapping issues */
+.modal {
+  z-index: 1050 !important;
+}
+
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+.modal-dialog {
+  margin: 1rem auto;
+  max-width: 90vw;
+  height: auto;
+  max-height: calc(100vh - 2rem);
+}
+
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 2rem);
+  pointer-events: auto;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0,0,0,.2);
+  border-radius: 0.5rem;
+  outline: 0;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Fix for agent status modal tabs */
+.modal .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+  margin: 0 1.5rem;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal .nav-tabs .nav-link {
+  border: 1px solid transparent;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.modal .nav-tabs .nav-link.active {
+  color: var(--lseg-blue);
+  background-color: #fff;
+  border-color: #dee2e6 #dee2e6 #fff;
+  font-weight: 600;
+}
+
+.modal .tab-content {
+  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Ensure modal cards don't have conflicting positioning */
+.modal .card {
+  position: relative;
+  z-index: auto;
+  margin-bottom: 1rem;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.modal .card:last-child {
+  margin-bottom: 0;
+}
+
+.modal .card-header {
+  background: linear-gradient(135deg, var(--lseg-blue-lighter) 0%, #f8f9fa 100%);
+  border-bottom: 1px solid var(--lseg-blue);
+  color: var(--lseg-blue);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+}
+
+.modal .card-body {
+  padding: 1rem;
+}
+
+/* Fix for row and column spacing in modal */
+.modal .row {
+  margin: 0 -0.5rem;
+}
+
+.modal .col,
+.modal .col-md-4,
+.modal .col-md-6 {
+  padding: 0 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Specific styles for agent status modal */
+.agent-status-modal {
+  max-width: 1200px;
+}
+
+.agent-status-modal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.agent-status-modal .card {
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments for agent status modal */
+@media (max-width: 1200px) {
+  .agent-status-modal {
+    max-width: 95vw !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .agent-status-modal {
+    max-width: 98vw !important;
+  }
+  
+  .agent-status-modal .modal-content {
+    height: 90vh !important;
+    max-height: 90vh !important;
+  }
+  
+  .agent-status-modal .modal-header {
+    padding: 0.75rem 1rem !important;
+  }
+  
+  .agent-status-modal .nav-tabs {
+    padding: 0 1rem !important;
+  }
+  
+  .agent-status-modal .tab-content {
+    padding: 1rem !important;
+  }
+  
+  .agent-status-modal .col-md-6,
+  .agent-status-modal .col-md-4 {
+    padding: 0 0.5rem !important;
+  }
+}
+
+/* Fix for modal header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  border-top-left-radius: calc(0.5rem - 1px);
+  border-top-right-radius: calc(0.5rem - 1px);
+  background: linear-gradient(135deg, var(--lseg-blue-lighter) 0%, #f8f9fa 100%);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  margin-bottom: 0;
+  line-height: 1.5;
+  color: var(--lseg-blue);
+  font-weight: 600;
+}
+
+/* Fix for modal content overflow */
+.modal-xl {
+  max-width: 1140px;
+  width: 90vw;
+}
+
+@media (max-width: 1200px) {
+  .modal-xl {
+    max-width: 95vw;
+    width: 95vw;
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-xl {
+    max-width: 98vw;
+    width: 98vw;
+    margin: 0.5rem auto;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem auto;
+  }
+}
+
+/* Ensure proper spacing in modal cards */
+.modal .card {
+  margin-bottom: 1rem;
+}
+
+.modal .card:last-child {
+  margin-bottom: 0;
+}
+
+/* Fix for tab content spacing */
+.modal .tab-pane {
+  padding: 0;
+}
+
+.modal .tab-pane .row {
+  margin: 0;
+}
+
+.modal .tab-pane .col-md-6,
+.modal .tab-pane .col-md-4,
+.modal .tab-pane .col {
+  padding: 0.5rem;
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .modal-body {
+    padding: 0.75rem;
+  }
+  
+  .modal .tab-pane .col-md-6,
+  .modal .tab-pane .col-md-4 {
+    padding: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Additional modal content fixes */
+.modal .tab-content {
+  position: relative;
+  z-index: 1;
+  background: white;
+}
+
+.modal .tab-pane {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure modal backdrop doesn't interfere */
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+/* Fix for Bootstrap tab content */
+.modal .nav-tabs {
+  background: white;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure proper modal positioning */
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+/* Fix for modal content positioning */
+.modal-content {
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
