@@ -13,7 +13,7 @@ import {
   DataFlowConfig
 } from '../types/hybridAgent';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE_URL || 'https://gnqhk06mvd.execute-api.us-east-1.amazonaws.com/prod';
+const API_BASE_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_API_BASE_URL || 'http://localhost:3002';
 
 export interface ComponentTemplate {
   id: string;

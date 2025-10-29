@@ -49,7 +49,7 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
 
   const loadTemplates = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://gnqhk06mvd.execute-api.us-east-1.amazonaws.com/prod'}/api/v1/nlp/templates`);
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/nlp/templates`);
       const data = await response.json();
       if (data.success) {
         setTemplates(data.data.templates);
@@ -177,7 +177,7 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
         };
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://gnqhk06mvd.execute-api.us-east-1.amazonaws.com/prod'}/api/v1/agents/create`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

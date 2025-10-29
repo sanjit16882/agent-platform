@@ -16,7 +16,7 @@ import './HybridAgentBuilder.css';
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'https://gnqhk06mvd.execute-api.us-east-1.amazonaws.com/prod';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
 
 
