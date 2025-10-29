@@ -131,7 +131,13 @@ const AgentCard: React.FC<AgentCardProps> = ({
             {/* Primary Action Button */}
             <Button
               variant={styles.primaryButton}
-              onClick={() => navigate(`/agents/${agent.agent_id}/execute`)}
+              onClick={() => navigate(`/agents/${agent.agent_id}/execute`, { 
+                state: { 
+                  agentName: agent.name,
+                  agentDescription: agent.description,
+                  agentCategory: agent.category 
+                } 
+              })}
               disabled={!isDeployed && !isActive}
               style={{ fontWeight: 'bold' }}
             >

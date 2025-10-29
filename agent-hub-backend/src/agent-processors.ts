@@ -12,11 +12,11 @@ export interface ProcessingResult {
 }
 
 export class AgentProcessor {
-  
+
   static async processEmailRephrasing(inputs: any, template: AgentTemplate): Promise<ProcessingResult> {
     const emailContent = inputs.email_content || inputs.input || '';
     const tone = inputs.tone || 'professional';
-    
+
     if (!emailContent.trim()) {
       return {
         success: false,
@@ -38,9 +38,9 @@ export class AgentProcessor {
       // Professional appointment/meeting rephrasing
       const timeMatch = emailContent.match(/(\w+day,?\s+\w+\s+\d+|\d+:\d+\s*(am|pm)?|\d+\s*(am|pm))/i);
       const dateInfo = timeMatch ? timeMatch[0] : 'scheduled time';
-      
+
       rephrasedContent = `Subject: Appointment Confirmation\n\nDear Valued Customer,\n\nI hope this message finds you well.\n\nI am writing to confirm your upcoming appointment scheduled for ${dateInfo}. We have reserved this time slot specifically for you and look forward to providing you with excellent service.\n\nPlease let us know if you need to make any changes to this appointment. We appreciate your business and thank you for choosing our services.\n\nBest regards,\nCustomer Service Team`;
-      
+
       improvements = [
         'Added professional subject line',
         'Structured with proper greeting and closing',
@@ -51,7 +51,7 @@ export class AgentProcessor {
     } else if (emailContent.toLowerCase().includes('follow up') || emailContent.toLowerCase().includes('followup')) {
       // Professional follow-up rephrasing
       rephrasedContent = `Subject: Follow-Up on Our Previous Communication\n\nDear [Recipient Name],\n\nI hope you are doing well.\n\nI wanted to follow up on our previous conversation regarding [topic]. I understand that you may be busy, but I wanted to ensure that you have all the information you need to move forward.\n\nIf you have any questions or require additional details, please don't hesitate to reach out. I am here to assist you in any way possible.\n\nThank you for your time and consideration.\n\nBest regards,\n[Your Name]`;
-      
+
       improvements = [
         'Added clear subject line',
         'Professional opening',
@@ -64,22 +64,22 @@ export class AgentProcessor {
       const sentences = emailContent.split(/[.!?]+/).filter((s: string) => s.trim());
       const rephrasedSentences = sentences.map((sentence: string) => {
         let rephrased = sentence.trim();
-        
+
         // Capitalize first letter
         rephrased = rephrased.charAt(0).toUpperCase() + rephrased.slice(1);
-        
+
         // Replace casual language
         rephrased = rephrased.replace(/\bhey\b/gi, 'Hello');
         rephrased = rephrased.replace(/\bthanks\b/gi, 'Thank you');
         rephrased = rephrased.replace(/\bplz\b/gi, 'please');
         rephrased = rephrased.replace(/\bu\b/gi, 'you');
         rephrased = rephrased.replace(/\br\b/gi, 'are');
-        
+
         return rephrased;
       });
-      
+
       rephrasedContent = `Subject: Professional Communication\n\nDear Recipient,\n\n${rephrasedSentences.join('. ')}.\n\nThank you for your attention to this matter.\n\nBest regards,\n[Your Name]`;
-      
+
       improvements = [
         'Added professional email structure',
         'Replaced casual language with formal alternatives',
@@ -173,13 +173,13 @@ public class GeneratedSeleniumTest {
         }
     }
 }`;
-        
+
         dependencies = [
           'org.seleniumhq.selenium:selenium-java:4.15.0',
           'org.junit.jupiter:junit-jupiter:5.9.2',
           'io.github.bonigarcia:webdrivermanager:5.3.2'
         ];
-        
+
         setupInstructions = `1. Add dependencies to your pom.xml or build.gradle
 2. Download ChromeDriver and update the path in setUp() method
 3. Run the test using: mvn test or gradle test`;
@@ -223,12 +223,12 @@ class GeneratedSeleniumTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()`;
-        
+
         dependencies = [
           'selenium==4.15.0',
           'webdriver-manager==4.0.1'
         ];
-        
+
         setupInstructions = `1. Install dependencies: pip install selenium webdriver-manager
 2. Update chromedriver path in setUp() method
 3. Run the test using: python test_file.py`;
@@ -276,13 +276,13 @@ describe('Generated Selenium Test', function() {
         }
     });
 });`;
-        
+
         dependencies = [
           'selenium-webdriver',
           'mocha',
           'chromedriver'
         ];
-        
+
         setupInstructions = `1. Install dependencies: npm install selenium-webdriver mocha chromedriver
 2. Run the test using: npx mocha test_file.js`;
         break;
@@ -473,10 +473,10 @@ spec:
   static async processCustomAgent(inputs: any, agent: any): Promise<ProcessingResult> {
     const processingLogic = agent.customProcessingLogic || '';
     const inputText = inputs.input || inputs.text || inputs.content || inputs.code || '';
-    
+
     // Enhanced custom processing based on the user's processing logic description
     let processedOutput = '';
-    
+
     if (processingLogic.toLowerCase().includes('code') || processingLogic.toLowerCase().includes('analyze') && inputText.includes('function')) {
       // Code Analysis Logic
       processedOutput = this.analyzeCode(inputText, processingLogic);
@@ -581,9 +581,9 @@ This ${language} code appears to be ${complexity.toLowerCase()} complexity with 
     if (templateId === 'custom' && agent) {
       return this.processCustomAgent(inputs, agent);
     }
-    
+
     const template = require('./agent-templates').AGENT_TEMPLATES.find((t: AgentTemplate) => t.id === templateId);
-    
+
     if (!template) {
       return {
         success: false,

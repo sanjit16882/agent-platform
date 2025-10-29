@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+const S3AgentStorage = require('./services/s3AgentStorage');
 
 // Load environment variables
 dotenv.config();
@@ -264,6 +265,12 @@ pytest==7.4.0`;
 
 const executionService = AgentExecutionService.getInstance();
 
+// Initialize S3 storage
+const s3Storage = new S3AgentStorage();
+
+// Initialize S3 bucket on startup
+s3Storage.initializeBucket().catch(console.error);
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({
@@ -272,6 +279,167 @@ app.get('/health', (_req, res) => {
     version: '1.0.0'
   });
 });
+
+// ===== S3 AGENT STORAGE ENDPOINTS (MUST BE BEFORE GENERIC ROUTES) =====
+
+// Get all agents from S3
+app.get('/api/v1/agents/s3', async (req, res): Promise<void> => {
+  try {
+    console.log('🔍 S3 API: Fetching all agents from S3...');
+    const agents = await s3Storage.listAgents();
+    console.log('✅ S3 API: Found agents:', agents.length);
+    
+    res.json({
+      success: true,
+      data: agents,
+      count: agents.length
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agents from S3',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get specific agent from S3
+app.get('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    console.log('🔍 S3 API: Fetching agent:', agentId);
+    
+    const agent = await s3Storage.getAgent(agentId);
+    
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found in S3'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: agent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agent from S3'
+    });
+  }
+});
+
+// Save agent to S3
+app.post('/api/v1/agents/s3', async (req, res): Promise<void> => {
+  try {
+    const agentData = req.body;
+    console.log('💾 S3 API: Saving agent to S3:', agentData.name);
+    
+    const savedAgent = await s3Storage.saveAgent(agentData);
+    
+    res.json({
+      success: true,
+      data: savedAgent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save agent to S3'
+    });
+  }
+});
+
+// Update agent in S3
+app.put('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    const updates = req.body;
+    console.log('🔄 S3 API: Updating agent:', agentId);
+    
+    const updatedAgent = await s3Storage.updateAgent(agentId, updates);
+    
+    res.json({
+      success: true,
+      data: updatedAgent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update agent in S3'
+    });
+  }
+});
+
+// Delete agent from S3
+app.delete('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    console.log('🗑️ S3 API: Deleting agent:', agentId);
+    
+    await s3Storage.deleteAgent(agentId);
+    
+    res.json({
+      success: true,
+      message: 'Agent deleted successfully'
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete agent from S3'
+    });
+  }
+});
+
+// Migrate agents from localStorage to S3
+app.post('/api/v1/agents/s3/migrate', async (req, res): Promise<void> => {
+  try {
+    const { agents } = req.body;
+    console.log('📦 S3 API: Migrating agents to S3:', agents.length);
+    
+    const migratedAgents = await s3Storage.migrateAgentsFromLocalStorage(agents);
+    
+    res.json({
+      success: true,
+      data: migratedAgents,
+      migrated: migratedAgents.length,
+      total: agents.length
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to migrate agents to S3'
+    });
+  }
+});
+
+// Get agent statistics from S3
+app.get('/api/v1/agents/s3/stats', async (req, res): Promise<void> => {
+  try {
+    console.log('📊 S3 API: Fetching agent stats...');
+    const stats = await s3Storage.getAgentStats();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agent stats from S3'
+    });
+  }
+});
+
+// ===== REGULAR AGENT ENDPOINTS =====
 
 // Get all agents
 app.get('/api/v1/agents', (_req, res) => {
@@ -410,6 +578,8 @@ app.get('/api/v1/executions/:executionId', (req, res): void => {
   }
 });
 
+
+
 // Error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Server error:', err);
@@ -424,6 +594,7 @@ app.listen(PORT, () => {
   console.log(`🚀 AgentHub API started on port ${PORT}`);
   console.log(`📚 Health Check: http://localhost:${PORT}/health`);
   console.log(`🤖 Agents API: http://localhost:${PORT}/api/v1/agents`);
+  console.log(`📦 S3 Agents API: http://localhost:${PORT}/api/v1/agents/s3`);
   console.log(`⚡ REAL EXECUTION READY!`);
 });
 

@@ -6,6 +6,10 @@ import { config } from 'dotenv';
 import { AGENT_TEMPLATES } from './agent-templates';
 import { AgentProcessor } from './agent-processors';
 
+// S3 Agent Storage
+const S3AgentStorage = require('./services/s3AgentStorage');
+const s3Storage = new S3AgentStorage();
+
 // Bedrock integration for real AI processing
 let callBedrock: any;
 try {
@@ -68,6 +72,16 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Initialize S3 storage
+(async () => {
+  try {
+    await s3Storage.initializeBucket();
+    console.log('✅ S3 Agent Storage initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize S3 storage:', error);
+  }
+})();
+
 // Health check endpoint
 app.get('/health', (_req, res): void => {
   res.json({
@@ -76,28 +90,214 @@ app.get('/health', (_req, res): void => {
     version: '1.0.0',
     environment: 'local',
     ai_provider: callBedrock ? 'AWS Bedrock (Real AI)' : 'Mock responses',
-    bedrock_available: !!callBedrock
+    bedrock_available: !!callBedrock,
+    s3_storage: 'enabled'
   });
 });
 
-// API routes
-app.get('/api/v1/agents', (_req, res): void => {
-  // Get created hybrid agents
-  const hybridAgents = Array.from(createdAgents.values()).map(agent => ({
-    id: agent.id,
-    agent_id: agent.id,
-    name: agent.name,
-    category: agent.category,
-    description: agent.description,
-    status: 'active',
-    agent_type: 'hybrid',
-    usage_count: agent.usage_count || 0,
-    average_rating: agent.average_rating || 0,
-    created_at: agent.created,
-    tags: agent.tags || []
-  }));
+// ===== S3 AGENT STORAGE ENDPOINTS (MUST BE BEFORE GENERIC ROUTES) =====
 
-  // Combine with built-in agents
+// Get all agents from S3
+app.get('/api/v1/agents/s3', async (req, res): Promise<void> => {
+  try {
+    console.log('🔍 S3 API: Fetching all agents from S3...');
+    const agents = await s3Storage.listAgents();
+    console.log('✅ S3 API: Found agents:', agents.length);
+    
+    res.json({
+      success: true,
+      data: agents,
+      count: agents.length
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agents from S3',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Get specific agent from S3
+app.get('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    console.log('🔍 S3 API: Fetching agent:', agentId);
+    
+    const agent = await s3Storage.getAgent(agentId);
+    
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found in S3'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      data: agent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agent from S3'
+    });
+  }
+});
+
+// Save agent to S3
+app.post('/api/v1/agents/s3', async (req, res): Promise<void> => {
+  try {
+    const agentData = req.body;
+    console.log('💾 S3 API: Saving agent to S3:', agentData.name);
+    
+    const savedAgent = await s3Storage.saveAgent(agentData);
+    
+    res.json({
+      success: true,
+      data: savedAgent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to save agent to S3'
+    });
+  }
+});
+
+// Update agent in S3
+app.put('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    const updates = req.body;
+    console.log('🔄 S3 API: Updating agent:', agentId);
+    
+    const updatedAgent = await s3Storage.updateAgent(agentId, updates);
+    
+    res.json({
+      success: true,
+      data: updatedAgent
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update agent in S3'
+    });
+  }
+});
+
+// Delete agent from S3
+app.delete('/api/v1/agents/s3/:agentId', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    console.log('🗑️ S3 API: Deleting agent:', agentId);
+    
+    await s3Storage.deleteAgent(agentId);
+    
+    res.json({
+      success: true,
+      message: 'Agent deleted successfully'
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete agent from S3'
+    });
+  }
+});
+
+// Migrate agents from localStorage to S3
+app.post('/api/v1/agents/s3/migrate', async (req, res): Promise<void> => {
+  try {
+    const { agents } = req.body;
+    console.log('📦 S3 API: Migrating agents to S3:', agents.length);
+    
+    const migratedAgents = await s3Storage.migrateAgentsFromLocalStorage(agents);
+    
+    res.json({
+      success: true,
+      data: migratedAgents,
+      migrated: migratedAgents.length,
+      total: agents.length
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to migrate agents to S3'
+    });
+  }
+});
+
+// Get agent statistics from S3
+app.get('/api/v1/agents/s3/stats', async (req, res): Promise<void> => {
+  try {
+    console.log('📊 S3 API: Fetching agent stats...');
+    const stats = await s3Storage.getAgentStats();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ S3 API Error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agent stats from S3'
+    });
+  }
+});
+
+// ===== REGULAR API ROUTES =====
+
+// API routes
+app.get('/api/v1/agents', async (_req, res): Promise<void> => {
+  try {
+    // Get created hybrid agents
+    const hybridAgents = Array.from(createdAgents.values()).map(agent => ({
+      id: agent.id,
+      agent_id: agent.id,
+      name: agent.name,
+      category: agent.category,
+      description: agent.description,
+      status: 'active',
+      agent_type: 'hybrid',
+      usage_count: agent.usage_count || 0,
+      average_rating: agent.average_rating || 0,
+      created_at: agent.created,
+      tags: agent.tags || []
+    }));
+
+    // Get S3 stored agents
+    let s3Agents: any[] = [];
+    try {
+      const s3AgentList = await s3Storage.listAgents();
+      s3Agents = s3AgentList.map((agent: any) => ({
+        id: agent.id,
+        agent_id: agent.id,
+        name: agent.name,
+        category: agent.category,
+        description: agent.description,
+        status: agent.status || 'active',
+        agent_type: 's3_custom',
+        usage_count: 0, // Could be enhanced with real usage tracking
+        average_rating: 5, // Default rating for custom agents
+        created_at: agent.createdAt,
+        tags: [...(agent.capabilities || []), 'custom', 's3']
+      }));
+      console.log(`✅ Loaded ${s3Agents.length} S3 agents for catalog`);
+    } catch (error) {
+      console.error('⚠️ Failed to load S3 agents for catalog:', error);
+      // Continue without S3 agents if there's an error
+    }
+
+    // Combine with built-in agents
   const builtInAgents = [
     {
       id: 'security-scanner',
@@ -162,12 +362,19 @@ app.get('/api/v1/agents', (_req, res): void => {
       };
     });
 
-  const allAgents = [...hybridAgents, ...builtInAgents, ...marketplaceAgents];
+    const allAgents = [...hybridAgents, ...s3Agents, ...builtInAgents, ...marketplaceAgents];
 
-  res.json({
-    success: true,
-    data: allAgents
-  });
+    res.json({
+      success: true,
+      data: allAgents
+    });
+  } catch (error) {
+    console.error('❌ Error fetching agents for catalog:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agents'
+    });
+  }
 });
 
 app.get('/api/v1/agents/:agentId', (req, res): void => {
@@ -2724,11 +2931,14 @@ app.use((_req, res): void => {
   });
 });
 
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Agent Factory Backend Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`🔗 API base URL: http://localhost:${PORT}/api/v1`);
+  console.log(`📦 Unified Catalog: http://localhost:${PORT}/api/v1/agents`);
   
   if (callBedrock) {
     console.log(`🤖 AI Provider: AWS Bedrock (REAL AI) ✅`);

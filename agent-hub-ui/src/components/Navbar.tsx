@@ -37,8 +37,7 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/" 
-                active={location.pathname === '/'}
-                className="px-2"
+                className={`px-2 ${location.pathname === '/' ? 'active' : ''}`}
               >
                 Dashboard
               </Nav.Link>
@@ -46,8 +45,7 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/agents" 
-                active={location.pathname === '/agents'}
-                className="px-2"
+                className={`px-2 ${location.pathname === '/agents' ? 'active' : ''}`}
               >
                 Agents
               </Nav.Link>
@@ -59,8 +57,7 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/agent-builder" 
-                active={location.pathname === '/agent-builder'}
-                className="px-2"
+                className={`px-2 ${(location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? 'active' : ''}`}
               >
                 Agent Builder
               </Nav.Link>
@@ -86,8 +83,7 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/manage" 
-                active={location.pathname === '/manage'}
-                className="px-2"
+                className={`px-2 ${location.pathname === '/manage' ? 'active' : ''}`}
               >
                 Manage
               </Nav.Link>
@@ -200,8 +196,7 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/deployment" 
-                active={location.pathname === '/deployment'}
-                className="px-3 text-warning small"
+                className={`px-3 text-warning small ${location.pathname === '/deployment' ? 'active' : ''}`}
               >
                 Deployment
               </Nav.Link>

@@ -18,7 +18,7 @@ import AgentCatalog from './components/AgentCatalog';
 import AgentExecutor from './components/AgentExecutor';
 import ResultsViewer from './components/ResultsViewer';
 import AgentUpload from './components/AgentUpload';
-import AgentManagement from './components/AgentManagement';
+import AgentManagementSimple from './components/AgentManagementSimple';
 import PlatformIntegration from './components/PlatformIntegration';
 import EnterpriseIntegration from './components/EnterpriseIntegration';
 import IntegrationGuide from './components/IntegrationGuide';
@@ -30,6 +30,7 @@ import AnalyticsDashboard from './components/AnalyticsDashboard';
 
 import NLPTester from './components/NLPTester';
 import PurposeDrivenAgentBuilder from './components/PurposeDrivenAgentBuilder';
+import NLPAgentBuilder from './components/NLPAgentBuilder';
 
 import NaturalLanguageAgentGenerator from './components/NaturalLanguageAgentGenerator';
 import ButtonTest from './components/ButtonTest';
@@ -74,7 +75,7 @@ function App() {
             <Route path="/agents/:agentId/execute" element={<AgentExecutor />} />
             <Route path="/results/:executionId" element={<ResultsViewer />} />
             <Route path="/upload" element={<AgentUpload />} />
-            <Route path="/manage" element={<AgentManagement />} />
+            <Route path="/manage" element={<AgentManagementSimple />} />
             <Route path="/integration" element={<PlatformIntegration />} />
             <Route path="/enterprise" element={<EnterpriseIntegration />} />
             <Route path="/integration-guide" element={<IntegrationGuide />} />
@@ -83,7 +84,8 @@ function App() {
             <Route path="/analytics" element={<AnalyticsDashboard />} />
             <Route path="/api-docs" element={<APIDocumentation />} />
 
-            <Route path="/agent-builder" element={<PurposeDrivenAgentBuilder />} />
+            <Route path="/agent-builder" element={<NLPAgentBuilder />} />
+            <Route path="/agent-builder-classic" element={<PurposeDrivenAgentBuilder />} />
             <Route path="/agent-builder-old" element={<NLPTester />} />
             <Route path="/button-test" element={<ButtonTest />} />
             <Route path="/users" element={<UserManagement />} />

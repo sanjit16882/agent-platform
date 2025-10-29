@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion } from 'react-bootstrap';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAgentContext } from '../context/AgentContext';
+import { nlpExecutionService, ExecutionAnalysis } from '../services/nlpExecutionService';
 import { useProgress } from '../context/ProgressContext';
 import { progressService } from '../services/progressService';
 import ProgressTracker from './ProgressTracker';
@@ -40,16 +41,23 @@ interface AgentConfig {
 const AgentExecutor: React.FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { deployedAgents } = useAgentContext();
   
   const [inputData, setInputData] = useState('');
+  const [executionRequest, setExecutionRequest] = useState('');
   const [analysisType, setAnalysisType] = useState('');
   const [outputFormat, setOutputFormat] = useState('');
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showIntegration, setShowIntegration] = useState(false);
+
   const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
+  
+  // NLP Execution Analysis
+  const [executionAnalysis, setExecutionAnalysis] = useState<ExecutionAnalysis | null>(null);
+  const [isAnalyzingExecution, setIsAnalyzingExecution] = useState(false);
+  const [showAdvancedExecution, setShowAdvancedExecution] = useState(false);
   
   // Progress hooks
   const { startExecution, getExecution } = useProgress();
@@ -58,7 +66,7 @@ const AgentExecutor: React.FC = () => {
   const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
 
   // Generate agent configuration dynamically based on agent ID
-  const generateAgentConfig = (agentId: string): AgentConfig => {
+  const generateAgentConfig = (agentId: string, navigationState?: any): AgentConfig => {
     // Default configuration that works for all agents
     const defaultConfig: AgentConfig = {
       name: 'Unknown Agent',
@@ -80,6 +88,13 @@ const AgentExecutor: React.FC = () => {
       capabilities: ['General analysis'],
       estimatedCost: '$0.10 - $0.25 per execution'
     };
+
+    // Use navigation state if available (for custom agents)
+    if (navigationState?.agentName) {
+      defaultConfig.name = navigationState.agentName;
+      defaultConfig.description = navigationState.agentDescription || 'Custom agent for specialized tasks';
+      defaultConfig.category = navigationState.agentCategory || 'Custom';
+    }
 
     // Specific configurations for known agents
     const specificConfigs: { [key: string]: Partial<AgentConfig> } = {
@@ -2170,7 +2185,7 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
     capabilities: deployedAgent.capabilities || [],
     estimatedCost: '$0.15 per execution',
     agent_type: 'production' as const // Deployed agents are production-ready
-  } : generateAgentConfig(agentId || '');
+  } : generateAgentConfig(agentId || '', location.state);
 
   // Initialize default values when agent changes
   useEffect(() => {
@@ -2182,6 +2197,42 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
     }
   }, [agentId]);
 
+  // NLP Execution Analysis
+  const analyzeExecutionRequest = useCallback(
+    async (request: string) => {
+      if (request.length < 10) {
+        setExecutionAnalysis(null);
+        return;
+      }
+
+      setIsAnalyzingExecution(true);
+      try {
+        const analysis = await nlpExecutionService.analyzeExecutionRequest(request, currentAgent.category);
+        setExecutionAnalysis(analysis);
+        
+        // Auto-set the detected parameters
+        setAnalysisType(analysis.analysisType);
+        setOutputFormat(analysis.outputFormat);
+      } catch (error) {
+        console.error('Execution analysis failed:', error);
+      } finally {
+        setIsAnalyzingExecution(false);
+      }
+    },
+    [currentAgent.category]
+  );
+
+  // Debounce the execution analysis
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (executionRequest) {
+        analyzeExecutionRequest(executionRequest);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [executionRequest, analyzeExecutionRequest]);
+
   const executeAgent = async () => {
     if (!inputData.trim()) {
       const actionText = currentAgent.category === 'QE' ? 'generating test cases' : 
@@ -2189,6 +2240,11 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
                         currentAgent.category === 'Security' ? 'scanning for vulnerabilities' :
                         currentAgent.category === 'Business' ? 'analyzing data' : 'executing the agent';
       setError(`Please enter ${currentAgent.inputLabel.toLowerCase()} before ${actionText}.`);
+      return;
+    }
+
+    if (!executionRequest.trim()) {
+      setError('Please describe what you want this agent to do.');
       return;
     }
 
@@ -2240,22 +2296,32 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
           executionRequest.inputs = {
             ...customInputs,
             input: inputData.trim(),
+            executionRequest: executionRequest.trim(),
             parameters: {
               analysisType: analysisType,
-              outputFormat: outputFormat
+              outputFormat: outputFormat,
+              nlpAnalysis: executionAnalysis
             }
           };
         }
       } else if (currentAgent.category === 'QE') {
         executionRequest.inputs.requirements = inputData.trim();
+        executionRequest.inputs.executionRequest = executionRequest.trim();
         executionRequest.inputs.framework = outputFormat;
+        executionRequest.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'DevOps') {
         executionRequest.inputs.infrastructureData = inputData.trim();
+        executionRequest.inputs.executionRequest = executionRequest.trim();
+        executionRequest.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'Security') {
         executionRequest.inputs.codeOrConfig = inputData.trim();
+        executionRequest.inputs.executionRequest = executionRequest.trim();
         executionRequest.inputs.scanType = analysisType;
+        executionRequest.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'Business') {
         executionRequest.inputs.businessData = inputData.trim();
+        executionRequest.inputs.executionRequest = executionRequest.trim();
+        executionRequest.inputs.nlpAnalysis = executionAnalysis;
       }
 
       console.log('Executing agent with real API:', agentId, executionRequest);
@@ -3823,6 +3889,103 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
               </Card.Header>
               <Card.Body>
                 <Form>
+                  {/* NLP Execution Request */}
+                  <Form.Group className="mb-4">
+                    <Form.Label>
+                      <h5>🎯 What do you want this agent to do?</h5>
+                      <small className="text-muted">
+                        Describe your request in natural language. Be specific about what you want to analyze and the type of output you need.
+                      </small>
+                    </Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={4}
+                      placeholder={`Example: ${nlpExecutionService.getExecutionSuggestions(currentAgent.category)[0]}`}
+                      value={executionRequest}
+                      onChange={(e) => setExecutionRequest(e.target.value)}
+                      className="mb-2"
+                    />
+                    <div className="d-flex justify-content-between">
+                      <small className="text-muted">
+                        {executionRequest.length}/300 characters
+                      </small>
+                      {isAnalyzingExecution && (
+                        <small className="text-primary">
+                          <Spinner animation="border" size="sm" className="me-1" />
+                          Analyzing request...
+                        </small>
+                      )}
+                    </div>
+                  </Form.Group>
+
+                  {/* NLP Analysis Results */}
+                  {executionAnalysis && (
+                    <Alert variant="info" className="mb-4">
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>🔍 Detected Parameters</strong>
+                        <Badge bg={executionAnalysis.confidence >= 0.7 ? 'success' : executionAnalysis.confidence >= 0.5 ? 'warning' : 'danger'}>
+                          {executionAnalysis.confidence >= 0.7 ? 'High Confidence' : executionAnalysis.confidence >= 0.5 ? 'Medium Confidence' : 'Low Confidence'}
+                        </Badge>
+                      </div>
+                      <Row>
+                        <Col md={6}>
+                          <div className="mb-2">
+                            <strong>Analysis Type:</strong>
+                            <Badge bg="primary" className="ms-2">
+                              {currentAgent.analysisTypes?.find(t => t.value === executionAnalysis.analysisType)?.label || executionAnalysis.analysisType}
+                            </Badge>
+                          </div>
+                          <div className="mb-2">
+                            <strong>Output Format:</strong>
+                            <Badge bg="secondary" className="ms-2">
+                              {currentAgent.outputFormats?.find(f => f.value === executionAnalysis.outputFormat)?.label || executionAnalysis.outputFormat}
+                            </Badge>
+                          </div>
+                        </Col>
+                        <Col md={6}>
+                          {Object.keys(executionAnalysis.parameters).length > 0 && (
+                            <div className="mb-2">
+                              <strong>Parameters:</strong>
+                              <div className="mt-1">
+                                {Object.entries(executionAnalysis.parameters).map(([key, value]) => (
+                                  <Badge key={key} bg="outline-info" className="me-1 mb-1" style={{fontSize: '0.7rem'}}>
+                                    {key}: {String(value)}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {executionAnalysis.detectedIntent && (
+                            <div className="mb-2">
+                              <strong>Intent:</strong>
+                              <small className="text-muted d-block">{executionAnalysis.detectedIntent}</small>
+                            </div>
+                          )}
+                        </Col>
+                      </Row>
+                    </Alert>
+                  )}
+
+                  {/* Suggested Inputs */}
+                  {executionAnalysis?.suggestedInputs && executionAnalysis.suggestedInputs.length > 0 && (
+                    <Alert variant="success" className="mb-4">
+                      <Alert.Heading className="h6">💡 Try These Examples</Alert.Heading>
+                      <div className="d-flex gap-2 flex-wrap">
+                        {executionAnalysis.suggestedInputs.slice(0, 2).map((suggestion, index) => (
+                          <Button 
+                            key={index}
+                            variant="outline-success" 
+                            size="sm"
+                            onClick={() => setExecutionRequest(suggestion)}
+                          >
+                            {suggestion.substring(0, 50)}...
+                          </Button>
+                        ))}
+                      </div>
+                    </Alert>
+                  )}
+
+                  {/* Input Data */}
                   <Form.Group className="mb-3">
                     <Form.Label>{currentAgent.inputLabel}</Form.Label>
                     <Form.Control
@@ -3837,60 +4000,48 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     </Form.Text>
                   </Form.Group>
 
-                  <Row>
-                    {/* Hide Test Type field for production agents */}
-                    {(currentAgent.agent_type || 'demo') !== 'production' && (
-                      <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            {currentAgent.category === 'QE' ? 'Test Type' :
-                             currentAgent.category === 'DevOps' ? 'Analysis Type' :
-                             currentAgent.category === 'Security' ? 'Scan Type' :
-                             currentAgent.category === 'Business' ? 'Analysis Type' :
-                             currentAgent.category === 'Market Data' ? 'Strategy Type' :
-                             'Analysis Type'}
-                          </Form.Label>
-                          <Form.Select
-                            value={analysisType}
-                            onChange={(e) => setAnalysisType(e.target.value)}
-                          >
-                            {(currentAgent.analysisTypes || []).map(type => (
-                              <option key={type.value} value={type.value}>
-                                {type.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                          {currentAgent.category === 'DevOps' && (
-                            <Form.Text className="text-muted">
-                              💡 <strong>Tip:</strong> Choose "Complete Health Check" if you have multiple issues or aren't sure what's wrong
-                            </Form.Text>
-                          )}
-                        </Form.Group>
-                      </Col>
-                    )}
-                    <Col md={(currentAgent.agent_type || 'demo') === 'production' ? 12 : 6}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          {currentAgent.category === 'QE' ? 'Framework & Language' :
-                           currentAgent.category === 'DevOps' ? 'Report Format' :
-                           currentAgent.category === 'Security' ? 'Report Format' :
-                           currentAgent.category === 'Business' ? 'Report Type' :
-                           currentAgent.category === 'Market Data' ? 'Output Format' :
-                           'Output Format'}
-                        </Form.Label>
-                        <Form.Select
-                          value={outputFormat}
-                          onChange={(e) => setOutputFormat(e.target.value)}
-                        >
-                          {(currentAgent.outputFormats || []).map(format => (
-                            <option key={format.value} value={format.value}>
-                              {format.label}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                  </Row>
+                  {/* Advanced Configuration */}
+                  <Accordion className="mb-3">
+                    <Accordion.Item eventKey="0">
+                      <Accordion.Header>
+                        ⚙️ Advanced Configuration (Optional)
+                      </Accordion.Header>
+                      <Accordion.Body>
+                        <Row>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Override Analysis Type</Form.Label>
+                              <Form.Select
+                                value={analysisType}
+                                onChange={(e) => setAnalysisType(e.target.value)}
+                              >
+                                {(currentAgent.analysisTypes || []).map(type => (
+                                  <option key={type.value} value={type.value}>
+                                    {type.label}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                          <Col md={6}>
+                            <Form.Group className="mb-3">
+                              <Form.Label>Override Output Format</Form.Label>
+                              <Form.Select
+                                value={outputFormat}
+                                onChange={(e) => setOutputFormat(e.target.value)}
+                              >
+                                {(currentAgent.outputFormats || []).map(format => (
+                                  <option key={format.value} value={format.value}>
+                                    {format.label}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+                        </Row>
+                      </Accordion.Body>
+                    </Accordion.Item>
+                  </Accordion>
 
                   {/* Production Agent Info Banner */}
                   {(currentAgent.agent_type || 'demo') === 'production' && (
@@ -3905,170 +4056,31 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     </Alert>
                   )}
 
-                  {/* Integration Options Section */}
-                  <Card className={`mb-3 ${(currentAgent.agent_type || 'demo') === 'production' ? 'border-success' : 'border-info'}`}>
-                    <Card.Header className={`${(currentAgent.agent_type || 'demo') === 'production' ? 'bg-success' : 'bg-info'} text-white d-flex justify-content-between align-items-center`}>
-                      <h6 className="mb-0">
-                        {(currentAgent.agent_type || 'demo') === 'production' ? '🔗 Integration Options' : '🔗 Real Application Integration (Optional)'}
-                      </h6>
-                      <Button 
-                        variant="outline-light" 
-                        size="sm"
-                        onClick={() => setShowIntegration(!showIntegration)}
-                      >
-                        {showIntegration ? 'Hide' : 'Show'} Options
-                      </Button>
-                    </Card.Header>
-                    {showIntegration && (
-                      <Card.Body>
-                        <p className="small mb-3">
-                          Connect to your real systems for live analysis instead of using sample data
-                        </p>
-                      
-                      {currentAgent.category === 'DevOps' && (
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>AWS Integration</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="AWS Access Key ID"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Connect to AWS CloudWatch, EC2, RDS for live metrics
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Kubernetes Integration</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="Kubernetes API Endpoint"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Connect to K8s cluster for real-time pod/node analysis
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                      )}
-
-                      {currentAgent.category === 'QE' && (
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Application URL</Form.Label>
-                              <Form.Control
-                                type="url"
-                                placeholder="https://your-app.com"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Generate tests by crawling your live application
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>API Documentation</Form.Label>
-                              <Form.Control
-                                type="url"
-                                placeholder="OpenAPI/Swagger URL"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Auto-generate API tests from OpenAPI specs
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                      )}
-
-                      {currentAgent.category === 'Security' && (
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>GitHub Repository</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="github.com/user/repo"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Scan your code repository for vulnerabilities
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Container Registry</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="Docker Hub / ECR URL"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Scan container images for security issues
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                      )}
-
-                      {currentAgent.category === 'Business' && (
-                        <Row>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Database Connection</Form.Label>
-                              <Form.Control
-                                type="text"
-                                placeholder="Database connection string"
-                                disabled
-                              />
-                              <Form.Text className="text-muted">
-                                Connect to your database for live sales/customer data
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                          <Col md={6}>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Analytics Integration</Form.Label>
-                              <Form.Select disabled>
-                                <option>Select Analytics Platform</option>
-                                <option>Google Analytics</option>
-                                <option>Mixpanel</option>
-                                <option>Amplitude</option>
-                                <option>Custom API</option>
-                              </Form.Select>
-                              <Form.Text className="text-muted">
-                                Pull data from your analytics platform
-                              </Form.Text>
-                            </Form.Group>
-                          </Col>
-                        </Row>
-                      )}
-
-                      {(currentAgent.agent_type || 'demo') === 'production' ? (
-                        <Alert variant="info" className="mb-0">
-                          <small>
-                            ⚡ <strong>Production Integration:</strong> This agent can process live application data and requirements. 
-                            Connect your systems above or provide detailed requirements in the main input field for production-ready code generation.
+                  {/* Developer Integration Info */}
+                  <Alert variant="info" className="mb-3">
+                    <div className="d-flex align-items-center">
+                      <div className="me-3">💻</div>
+                      <div>
+                        <strong>Developer Integration Available:</strong> Use our CLI tool or VS Code extension to integrate this agent directly into your development workflow.
+                        <div className="mt-1">
+                          <small className="text-muted">
+                            • <strong>CLI:</strong> <code>agenthub execute {agentId}</code><br/>
+                            • <strong>VS Code:</strong> Right-click → "Run with AgentHub"
                           </small>
-                        </Alert>
-                      ) : (
-                        <Alert variant="warning" className="mb-0">
-                          <small>
-                            🚧 <strong>Coming Soon:</strong> Real application integrations are currently in development. 
-                            For now, use the sample data or paste your own data in the main input field above.
-                          </small>
-                        </Alert>
-                      )}
-                      </Card.Body>
-                    )}
-                  </Card>
+                        </div>
+                      </div>
+                    </div>
+                  </Alert>
+
+                  {/* NLP Interface Help */}
+                  <Alert variant="success" className="mb-3">
+                    <div className="d-flex align-items-center">
+                      <div className="me-3">🎯</div>
+                      <div>
+                        <strong>New Natural Language Interface:</strong> Simply describe what you want this agent to do instead of selecting from dropdowns. The system will automatically detect the analysis type and output format.
+                      </div>
+                    </div>
+                  </Alert>
 
                   {error && (
                     <Alert variant="danger" className="mb-3">
@@ -4093,19 +4105,11 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                             aria-hidden="true"
                             className="me-2"
                           />
-                          {currentAgent.category === 'QE' && (deployedAgents.find(agent => agent.id === agentId) ? 'Analyzing Failures...' : 'Generating Test Cases...')}
-                          {currentAgent.category === 'DevOps' && 'Analyzing Infrastructure...'}
-                          {currentAgent.category === 'Security' && 'Scanning for Vulnerabilities...'}
-                          {currentAgent.category === 'Business' && 'Analyzing Data...'}
-                          {!['QE', 'DevOps', 'Security', 'Business'].includes(currentAgent.category) && 'Processing...'}
+                          Executing Agent...
                         </>
                       ) : (
                         <>
-                          {currentAgent.category === 'QE' && (deployedAgents.find(agent => agent.id === agentId) ? '🔍 Analyze Failures' : '🧪 Generate Test Cases')}
-                          {currentAgent.category === 'DevOps' && '📊 Analyze Infrastructure'}
-                          {currentAgent.category === 'Security' && '🔒 Scan for Vulnerabilities'}
-                          {currentAgent.category === 'Business' && '📈 Analyze Data'}
-                          {!['QE', 'DevOps', 'Security', 'Business'].includes(currentAgent.category) && '🚀 Execute Agent'}
+                          🚀 Execute Agent
                         </>
                       )}
                     </Button>
@@ -4116,41 +4120,97 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
           </Col>
 
           <Col md={4}>
+            {/* NLP Execution Tips */}
             <Card>
               <Card.Header>
-                <h5>💡 Sample {currentAgent.category === 'DevOps' ? 'Infrastructure Data' : 'Requirements'}</h5>
+                <h6>💡 How to Describe Your Request</h6>
               </Card.Header>
               <Card.Body>
-                <p className="small text-muted mb-3">
-                  Click any sample below to load it into the input field:
+                <ul className="small mb-0">
+                  <li><strong>Be specific:</strong> Include what you want to analyze and the expected output</li>
+                  <li><strong>Mention format:</strong> "detailed report", "JSON data", "summary", etc.</li>
+                  <li><strong>Include scope:</strong> "comprehensive scan", "basic analysis", "critical issues only"</li>
+                  <li><strong>Add context:</strong> Technologies, frameworks, or specific focus areas</li>
+                </ul>
+              </Card.Body>
+            </Card>
+
+            {/* Example Requests */}
+            <Card className="mt-3">
+              <Card.Header>
+                <h6>📋 Example Requests</h6>
+              </Card.Header>
+              <Card.Body>
+                <div className="small">
+                  {nlpExecutionService.getExecutionSuggestions(currentAgent.category).map((suggestion, index) => (
+                    <div key={index} className="mb-2">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="w-100 text-start"
+                        onClick={() => setExecutionRequest(suggestion)}
+                        style={{ 
+                          fontSize: '0.7rem', 
+                          padding: '0.4rem 0.6rem',
+                          lineHeight: '1.2',
+                          whiteSpace: 'normal',
+                          height: 'auto',
+                          textAlign: 'left'
+                        }}
+                      >
+                        {suggestion.length > 80 ? `${suggestion.substring(0, 80)}...` : suggestion}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </Card.Body>
+            </Card>
+
+            {/* Sample Input Data */}
+            <Card className="mt-3">
+              <Card.Header>
+                <h6>📄 Sample {currentAgent.category === 'DevOps' ? 'Infrastructure Data' : 'Input Data'}</h6>
+              </Card.Header>
+              <Card.Body>
+                <p className="small text-muted mb-2">
+                  Click to load sample data:
                 </p>
-                {(currentAgent.sampleInputs || []).map((sample, index) => (
-                  <div key={index} className="mb-3">
+                {(currentAgent.sampleInputs || []).slice(0, 3).map((sample, index) => (
+                  <div key={index} className="mb-2">
                     <Button
-                      variant="outline-primary"
+                      variant="outline-secondary"
                       size="sm"
                       className="w-100 text-start"
                       onClick={() => loadSampleInput(sample)}
+                      style={{ 
+                        fontSize: '0.7rem', 
+                        padding: '0.3rem 0.5rem',
+                        lineHeight: '1.2'
+                      }}
                     >
-                      {sample.title}
+                      {sample.title.length > 40 ? `${sample.title.substring(0, 40)}...` : sample.title}
                     </Button>
                   </div>
                 ))}
               </Card.Body>
             </Card>
 
+            {/* Agent Info */}
             <Card className="mt-3">
               <Card.Header>
-                <h5>ℹ️ Agent Info</h5>
+                <h6>ℹ️ Agent Info</h6>
               </Card.Header>
               <Card.Body>
                 <p className="small">
                   <strong>Capabilities:</strong>
                 </p>
                 <ul className="small">
-                  {(currentAgent.capabilities || []).map((capability, index) => (
+                  {(currentAgent.capabilities || []).slice(0, 4).map((capability, index) => (
                     <li key={index}>{capability}</li>
                   ))}
+                  {currentAgent.capabilities && currentAgent.capabilities.length > 4 && (
+                    <li className="text-muted">+{currentAgent.capabilities.length - 4} more...</li>
+                  )}
                 </ul>
                 <p className="small">
                   <strong>Estimated Cost:</strong> {currentAgent.estimatedCost}
@@ -4381,7 +4441,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     )}
 
                     {/* Generic Purpose-Driven Results - Fallback */}
-                    {!result.results?.rephrased_content && !result.results?.test_code && !result.results?.monitoring_config && !result.results?.result && (
+                    {!result.results?.rephrased_content && !result.results?.test_code && !result.results?.monitoring_config && !result.results?.result && !result.results?.ai_response && (
                       <Card className="mb-4">
                         <Card.Header>
                           <h6 className="mb-0">Processing Results</h6>
@@ -4783,6 +4843,50 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                       </Row>
                     )}
                   </>
+                )}
+
+                {/* General AI Response Display - for agents that return ai_response */}
+                {result.results?.ai_response && (
+                  <Card className="mb-4">
+                    <Card.Header className="bg-primary text-white">
+                      <h6 className="mb-0">🤖 AI Analysis Results</h6>
+                    </Card.Header>
+                    <Card.Body>
+                      <div style={{ 
+                        backgroundColor: '#f8f9fa', 
+                        padding: '1rem', 
+                        borderRadius: '0.375rem',
+                        whiteSpace: 'pre-wrap',
+                        border: '1px solid #dee2e6',
+                        fontSize: '0.9rem',
+                        lineHeight: '1.6'
+                      }}>
+                        {result.results.ai_response}
+                      </div>
+                    </Card.Body>
+                  </Card>
+                )}
+
+                {/* Summary Display - for agents that return summary */}
+                {result.results?.summary && !result.results?.ai_response && (
+                  <Card className="mb-4">
+                    <Card.Header className="bg-info text-white">
+                      <h6 className="mb-0">📋 Execution Summary</h6>
+                    </Card.Header>
+                    <Card.Body>
+                      <div style={{ 
+                        backgroundColor: '#f8f9fa', 
+                        padding: '1rem', 
+                        borderRadius: '0.375rem',
+                        fontSize: '0.9rem'
+                      }}>
+                        {typeof result.results.summary === 'string' ? 
+                          result.results.summary : 
+                          JSON.stringify(result.results.summary, null, 2)
+                        }
+                      </div>
+                    </Card.Body>
+                  </Card>
                 )}
 
                 {/* Actions - Simplified for Production Agents */}

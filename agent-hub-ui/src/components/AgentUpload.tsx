@@ -118,6 +118,7 @@ const AgentUpload: React.FC = () => {
       version: '1.0.0',
       status: 'active',
       deployedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       category: 'qa',
       executionCount: 0,
       author: 'Debug Test',
@@ -127,7 +128,9 @@ const AgentUpload: React.FC = () => {
         costPerExecution: 0.10,
         estimatedRuntime: '10s'
       },
-      capabilities: ['test_capability']
+      capabilities: ['test_capability'],
+      purpose: 'Testing purposes',
+      customProcessingLogic: 'Test processing logic'
     };
     
     console.log('Adding test agent:', testAgent);
@@ -391,6 +394,7 @@ const AgentUpload: React.FC = () => {
         version: storedMetadata.version || '1.0.0',
         status: 'active', // Set directly to active like the test
         deployedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
         category: storedMetadata.category || 'QE',
         executionCount: 0,
         dockerImage: storedDockerImage,
@@ -406,7 +410,9 @@ const AgentUpload: React.FC = () => {
           'root_cause_analysis',
           'fix_recommendations',
           'pattern_detection'
-        ]
+        ],
+        purpose: storedMetadata.purpose,
+        customProcessingLogic: storedMetadata.customProcessingLogic
       };
 
       addDeployedAgent(newDeployedAgent);
