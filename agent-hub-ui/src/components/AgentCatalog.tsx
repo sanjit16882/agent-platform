@@ -1,24 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Form, InputGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Location } from 'react-router-dom';
 import axios from 'axios';
 
 import { useAgentContext } from '../context/AgentContext';
 import Button from './common/Button';
 import Card from './common/Card';
 import Badge from './common/Badge';
-import { theme, icons } from '../styles/theme';
+import AgentSectionHeader from './common/AgentSectionHeader';
+import AgentStatusIndicator from './common/AgentStatusIndicator';
+import AgentCard from './common/AgentCard';
+import AgentDetailsModal from './common/AgentDetailsModal';
+import { theme } from '../styles/theme';
+import { Agent } from '../types/agent';
+import { 
+  categorizeAgents, 
+  getAgentCategories, 
+  filterAgents, 
+  sortAgentsByPriority 
+} from '../utils/agentCategorization';
 
-interface Agent {
-  agent_id: string;
-  name: string;
-  description: string;
-  category: string;
-  usage_count: number;
-  average_rating: number;
-  created_at: string;
-  agent_type: 'production' | 'demo';
-}
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+console.log('AgentCatalog API_BASE_URL:', API_BASE_URL);
+
+// Agent interface is now imported from types/agent.ts
 
 // Comprehensive agent catalog with realistic examples - moved outside component to prevent re-creation
 const mockAgents: Agent[] = [
@@ -55,19 +60,6 @@ const mockAgents: Agent[] = [
       agent_type: 'production'
     },
     {
-      agent_id: 'cypress-e2e-generator',
-      name: 'Cypress E2E Test Creator',
-      description: 'Production-ready Cypress test generator. Processes dynamic user scenarios to create comprehensive end-to-end test suites. Generates executable tests with custom commands, fixtures, and CI/CD integration for modern web applications.',
-      category: 'QE',
-      usage_count: 1456,
-      average_rating: 5,
-      created_at: '2024-02-05T11:20:00Z',
-      agent_type: 'production'
-    },
-
-
-    // DevOps & Infrastructure Agents
-    {
       agent_id: 'devops-monitor-v1',
       name: 'DevOps Infrastructure Monitor',
       description: 'Production-ready infrastructure monitoring code generator. Processes dynamic infrastructure requirements to create comprehensive monitoring solutions. Generates executable scripts for AWS, Azure, GCP with real-time alerting and optimization.',
@@ -77,33 +69,20 @@ const mockAgents: Agent[] = [
       created_at: '2024-01-10T08:15:00Z',
       agent_type: 'production'
     },
-    {
-      agent_id: 'terraform-generator',
-      name: 'Terraform Infrastructure Generator',
-      description: 'Production-ready Terraform code generator. Processes dynamic infrastructure requirements to create complete IaC solutions. Generates executable Terraform modules with security best practices, state management, and deployment automation.',
-      category: 'DevOps',
-      usage_count: 1567,
-      average_rating: 5,
-      created_at: '2024-01-18T12:45:00Z',
-      agent_type: 'production'
-    },
-
-
-    // Security & Compliance Agents
-    {
-      agent_id: 'security-scanner-v1',
-      name: 'Security Vulnerability Scanner',
-      description: 'Production-ready security scanning code generator. Processes dynamic application and infrastructure requirements to create comprehensive security assessment tools. Generates executable scanning scripts with OWASP compliance and detailed reporting.',
-      category: 'Security',
-      usage_count: 1567,
-      average_rating: 5,
-      created_at: '2024-01-05T14:20:00Z',
-      agent_type: 'production'
-    },
 
 
     // === DEMO AGENTS ===
     // QE Demo Agents
+    {
+      agent_id: 'cypress-e2e-generator',
+      name: 'Cypress E2E Test Creator',
+      description: 'Demo: Cypress test generator for end-to-end testing scenarios. Creates sample test suites with custom commands and fixtures for demonstration purposes.',
+      category: 'QE',
+      usage_count: 1456,
+      average_rating: 4,
+      created_at: '2024-02-05T11:20:00Z',
+      agent_type: 'demo'
+    },
     {
       agent_id: 'playwright-cross-browser',
       name: 'Playwright Cross-Browser Tester',
@@ -146,6 +125,16 @@ const mockAgents: Agent[] = [
     },
 
     // DevOps Demo Agents
+    {
+      agent_id: 'terraform-generator',
+      name: 'Terraform Infrastructure Generator',
+      description: 'Demo: Terraform code generator for infrastructure as code. Creates sample Terraform modules with basic security practices for demonstration purposes.',
+      category: 'DevOps',
+      usage_count: 1567,
+      average_rating: 4,
+      created_at: '2024-01-18T12:45:00Z',
+      agent_type: 'demo'
+    },
     {
       agent_id: 'kubernetes-optimizer',
       name: 'Kubernetes Resource Optimizer',
@@ -198,6 +187,16 @@ const mockAgents: Agent[] = [
     },
 
     // Security Demo Agents
+    {
+      agent_id: 'security-scanner-v1',
+      name: 'Security Vulnerability Scanner',
+      description: 'Demo: Security scanning for applications and infrastructure. Performs sample vulnerability assessments and generates basic security reports for demonstration purposes.',
+      category: 'Security',
+      usage_count: 1567,
+      average_rating: 4,
+      created_at: '2024-01-05T14:20:00Z',
+      agent_type: 'demo'
+    },
     {
       agent_id: 'owasp-compliance-checker',
       name: 'OWASP Compliance Validator',
@@ -418,6 +417,7 @@ const mockAgents: Agent[] = [
 
 const AgentCatalog: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { deployedAgents, updateDeployedAgent, removeDeployedAgent } = useAgentContext();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -425,8 +425,10 @@ const AgentCatalog: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedAgentType, setSelectedAgentType] = useState<'all' | 'production' | 'demo'>('all');
   const [builtInAgentStatus, setBuiltInAgentStatus] = useState<Record<string, boolean>>({});
+  const [selectedAgentForDetails, setSelectedAgentForDetails] = useState<Agent | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
+
 
   // Check if an agent is a deployed (custom) agent
   const isDeployedAgent = (agentId: string) => {
@@ -460,23 +462,47 @@ const AgentCatalog: React.FC = () => {
     }
   };
 
-  const handleDeleteAgent = (agentId: string) => {
-    // Check if it's a deployed agent or built-in agent
+  const handleDeleteAgent = async (agentId: string) => {
+    // Check if it's a deployed agent, hybrid agent, or built-in agent
     const deployedAgent = deployedAgents.find(a => a.id === agentId);
-    const builtInAgent = agents.find(a => a.agent_id === agentId);
+    const agent = agents.find(a => a.agent_id === agentId);
+    const isHybridAgent = agent && agent.agent_type === 'hybrid';
     
     if (deployedAgent) {
       if (window.confirm(`Are you sure you want to delete "${deployedAgent.name}"?`)) {
         removeDeployedAgent(agentId);
         fetchAgents();
       }
-    } else if (builtInAgent) {
+    } else if (isHybridAgent) {
+      // Hybrid agents can be deleted from the backend
+      if (window.confirm(`Are you sure you want to delete "${agent.name}"? This action cannot be undone.`)) {
+        try {
+          await axios.delete(`${API_BASE_URL}/api/v1/agents/hybrid/${agentId}`);
+          console.log(`Hybrid agent ${agentId} deleted successfully`);
+          // Refresh the agents list
+          fetchAgents();
+        } catch (error) {
+          console.error('Failed to delete hybrid agent:', error);
+          alert('Failed to delete agent. Please try again.');
+        }
+      }
+    } else if (agent) {
       // Built-in agents can't be deleted, but show a message
-      if (window.confirm(`"${builtInAgent.name}" is a built-in agent. This action cannot be undone. Are you sure you want to hide it from your catalog?`)) {
-        alert(`"${builtInAgent.name}" has been hidden from your catalog. You can restore it later from settings.`);
+      if (window.confirm(`"${agent.name}" is a built-in agent. This action cannot be undone. Are you sure you want to hide it from your catalog?`)) {
+        alert(`"${agent.name}" has been hidden from your catalog. You can restore it later from settings.`);
         // In a real implementation, this would hide the agent from user's view
       }
     }
+  };
+
+  const handleViewDetails = (agent: Agent) => {
+    setSelectedAgentForDetails(agent);
+    setShowDetailsModal(true);
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedAgentForDetails(null);
   };
 
   const handleToggleAgent = (agentId: string) => {
@@ -509,33 +535,68 @@ const AgentCatalog: React.FC = () => {
   const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
-      // Try to fetch from API, but use mock data for demo
-      // const response = await axios.get(`${API_BASE_URL}/agents`);
-      // setAgents(response.data.agents);
+      console.log('Fetching agents from API...');
+      console.log('API_BASE_URL:', API_BASE_URL);
       
-      // For demo, use mock data with a slight delay to simulate API call
-      setTimeout(() => {
-        // Convert deployed agents to Agent format and combine with mock agents
-        const deployedAgentsAsAgents: Agent[] = deployedAgents
-          .filter(agent => agent.status === 'active')
-          .map(agent => ({
-            agent_id: agent.id,
-            name: agent.name,
-            description: agent.description,
-            category: agent.category,
-            usage_count: agent.executionCount,
-            average_rating: 4.5, // Default rating for deployed agents
-            created_at: agent.deployedAt,
-            agent_type: 'production' as const // Deployed agents are production-ready
-          }));
-
-        // Combine deployed agents with mock agents (deployed agents first)
-        const allAgents = [...deployedAgentsAsAgents, ...mockAgents];
+      // Fetch from actual API
+      const response = await axios.get(`${API_BASE_URL}/api/v1/agents`);
+      console.log('API response status:', response.status);
+      console.log('API response:', response.data);
+      console.log('API response success:', response.data?.success);
+      console.log('API response data:', response.data?.data);
+      console.log('API response data length:', response.data?.data?.length);
+      
+      if (response.data && response.data.success && response.data.data && Array.isArray(response.data.data)) {
+        const apiAgents = response.data.data.map((agent: any) => ({
+          agent_id: agent.id || agent.agent_id,
+          name: agent.name,
+          description: agent.description,
+          category: agent.category,
+          usage_count: agent.usage_count || 0,
+          average_rating: agent.average_rating || 0,
+          created_at: agent.created_at || agent.created,
+          agent_type: agent.agent_type || 'hybrid'
+        }));
+        
+        // Combine API agents with mock agents for a complete catalog
+        const allAgents = [...apiAgents, ...mockAgents];
+        console.log('Combined agents (API + Mock):', allAgents.length);
+        console.log('API agents:', apiAgents.length);
+        console.log('Mock agents:', mockAgents.length);
         setAgents(allAgents);
         setLoading(false);
-      }, 500);
+        return;
+      } else {
+        console.log('API response not successful or no data, falling back to mock data');
+        console.log('Response data structure:', typeof response.data, response.data);
+      }
+      
+      // Fallback to mock data if API fails
+      console.log('API failed, using mock data');
+      // Convert deployed agents to Agent format and combine with mock agents
+      const deployedAgentsAsAgents: Agent[] = deployedAgents
+        .filter(agent => agent.status === 'active')
+        .map(agent => ({
+          agent_id: agent.id,
+          name: agent.name,
+          description: agent.description,
+          category: agent.category,
+          usage_count: agent.executionCount,
+          average_rating: 4.5, // Default rating for deployed agents
+          created_at: agent.deployedAt,
+          agent_type: 'demo' as const // Deployed agents are custom/demo agents
+        }));
+
+      // Combine deployed agents with mock agents (deployed agents first)
+      const allAgents = [...deployedAgentsAsAgents, ...mockAgents];
+      console.log('Setting fallback agents:', allAgents.length, 'agents');
+      console.log('Mock agents:', mockAgents.length);
+      console.log('Deployed agents:', deployedAgentsAsAgents.length);
+      setAgents(allAgents);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching agents:', error);
+      console.log('Using fallback mock data due to error');
       // Fallback to mock data with deployed agents
       const deployedAgentsAsAgents: Agent[] = deployedAgents
         .filter(agent => agent.status === 'active')
@@ -547,7 +608,7 @@ const AgentCatalog: React.FC = () => {
           usage_count: agent.executionCount,
           average_rating: 4.5,
           created_at: agent.deployedAt,
-          agent_type: 'production' as const // Deployed agents are production-ready
+          agent_type: 'demo' as const // Deployed agents are custom/demo agents
         }));
       
       setAgents([...deployedAgentsAsAgents, ...mockAgents]);
@@ -559,13 +620,57 @@ const AgentCatalog: React.FC = () => {
     fetchAgents();
   }, [fetchAgents, deployedAgents.length]);
 
-  const filteredAgents = agents.filter(agent => {
-    const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         agent.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || agent.category === selectedCategory;
-    const matchesAgentType = selectedAgentType === 'all' || agent.agent_type === selectedAgentType;
-    return matchesSearch && matchesCategory && matchesAgentType;
-  });
+  useEffect(() => {
+    // Check if we need to refresh after creating an agent
+    const stateData = (location as any).state;
+    if (stateData && stateData.refresh) {
+      console.log('Refreshing agents after creation');
+      fetchAgents();
+      // Clear the state to prevent repeated refreshes
+      window.history.replaceState({}, document.title);
+    }
+  }, [(location as any).state, fetchAgents]);
+
+  // Categorize agents into active and available groups
+  console.log('All agents before categorization:', agents);
+  const categorizedAgents = categorizeAgents(agents);
+  console.log('Categorized agents:', categorizedAgents);
+  const agentCategories = getAgentCategories();
+
+  // Filter agents based on search and category
+  console.log('Before filtering - Active agents:', categorizedAgents.activeAgents.length);
+  console.log('Before filtering - Available agents:', categorizedAgents.availableAgents.length);
+  console.log('Search term:', searchTerm);
+  console.log('Selected category:', selectedCategory);
+  console.log('Selected agent type:', selectedAgentType);
+  
+  // Temporarily disable filtering to test if that's the issue
+  const filteredActiveAgents = categorizedAgents.activeAgents;
+  const filteredAvailableAgents = categorizedAgents.availableAgents;
+  
+  // const filteredActiveAgents = filterAgents(
+  //   categorizedAgents.activeAgents, 
+  //   searchTerm, 
+  //   selectedCategory, 
+  //   selectedAgentType === 'all' ? 'production' : selectedAgentType
+  // );
+  
+  // const filteredAvailableAgents = filterAgents(
+  //   categorizedAgents.availableAgents, 
+  //   searchTerm, 
+  //   selectedCategory, 
+  //   selectedAgentType === 'all' ? 'demo' : selectedAgentType
+  // );
+  
+  console.log('After filtering - Active agents:', filteredActiveAgents.length);
+  console.log('After filtering - Available agents:', filteredAvailableAgents.length);
+
+  // Sort agents by priority
+  const sortedActiveAgents = sortAgentsByPriority(filteredActiveAgents);
+  const sortedAvailableAgents = sortAgentsByPriority(filteredAvailableAgents);
+
+  // Combined filtered agents for backward compatibility
+  const filteredAgents = [...sortedActiveAgents, ...sortedAvailableAgents];
 
   const categories = ['All', 'QE', 'DevOps', 'Security', 'Business', 'Market Data', 'Custom'];
 
@@ -575,15 +680,8 @@ const AgentCatalog: React.FC = () => {
   };
 
   const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      'QE': 'primary',
-      'DevOps': 'success',
-      'Security': 'danger',
-      'Business': 'warning',
-      'Market Data': 'dark',
-      'Custom': 'info'
-    };
-    return colors[category] || 'secondary';
+    // Use neutral colors for all categories to reduce visual noise
+    return 'light';
   };
 
   const getTechnicalBadges = (agent: Agent) => {
@@ -606,9 +704,10 @@ const AgentCatalog: React.FC = () => {
         <div style={{ textAlign: 'center' }}>
           <div style={{ 
             fontSize: theme.typography.fontSize.xl,
-            marginBottom: theme.spacing.lg
+            marginBottom: theme.spacing.lg,
+            fontWeight: 'bold'
           }}>
-            {icons.clock}
+            Loading...
           </div>
           <p style={{ 
             fontSize: theme.typography.fontSize.base,
@@ -645,7 +744,18 @@ const AgentCatalog: React.FC = () => {
             alignItems: 'center',
             gap: theme.spacing.sm
           }}>
-            {icons.catalog} Agent Catalog
+            Agent Catalog
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => {
+                console.log('Manual refresh triggered');
+                fetchAgents();
+              }}
+              style={{ marginLeft: theme.spacing.md }}
+            >
+              Refresh
+            </Button>
           </h1>
           <p style={{ 
             fontSize: theme.typography.fontSize.lg,
@@ -658,23 +768,18 @@ const AgentCatalog: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
           <div style={{ display: 'flex', gap: theme.spacing.sm }}>
             <Button 
-              variant="success" 
+              variant="primary" 
               size="lg"
-              icon={icons.upload}
               onClick={() => navigate('/upload')}
             >
               Upload Agent
             </Button>
             <Button 
-              variant="secondary" 
+              variant="outline-primary" 
               size="lg"
-              icon={icons.refresh}
-              onClick={() => {
-                setLoading(true);
-                fetchAgents();
-              }}
+              onClick={() => navigate('/publish-agent')}
             >
-              Refresh
+              Publish to Marketplace
             </Button>
           </div>
           <small style={{ 
@@ -704,7 +809,7 @@ const AgentCatalog: React.FC = () => {
                 color: theme.colors.textPrimary,
                 marginBottom: theme.spacing.sm
               }}>
-                {icons.search} Search Agents
+                Search Agents
               </label>
               <input
                 type="text"
@@ -730,7 +835,7 @@ const AgentCatalog: React.FC = () => {
                 color: theme.colors.textPrimary,
                 marginBottom: theme.spacing.sm
               }}>
-                {icons.filter} Category
+                Category
               </label>
               <select
                 value={selectedCategory}
@@ -763,7 +868,7 @@ const AgentCatalog: React.FC = () => {
                 color: theme.colors.textPrimary,
                 marginBottom: theme.spacing.sm
               }}>
-                {icons.agents} Agent Type
+                Agent Type
               </label>
               <select
                 value={selectedAgentType}
@@ -802,8 +907,8 @@ const AgentCatalog: React.FC = () => {
                   </p>
                 </Col>
                 <Col md={4} className="text-end">
-                  <Badge bg="success" className="me-2">AI-Powered</Badge>
-                  <Badge bg="info">Cloud-Native</Badge>
+                  <Badge bg="light" text="dark" className="me-2">AI-Powered</Badge>
+                  <Badge bg="light" text="dark">Cloud-Native</Badge>
                 </Col>
               </Row>
             </Card.Body>
@@ -823,106 +928,65 @@ const AgentCatalog: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Agent Cards */}
-      <Row>
-        {filteredAgents.map((agent) => (
-          <Col md={6} lg={4} key={agent.agent_id} className="mb-4">
-            <Card className="h-100">
-              <Card.Header>
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <Badge bg={getCategoryColor(agent.category)} className="me-2">
-                      {agent.category}
-                    </Badge>
-                    {agent.agent_type === 'production' ? (
-                      <Badge bg="success" className="me-2">
-                        Production-Ready
-                      </Badge>
-                    ) : (
-                      <Badge bg="warning" className="me-2">
-                        Demo
-                      </Badge>
-                    )}
-                    {isDeployedAgent(agent.agent_id) && (
-                      <Badge bg="info" className="me-2">
-                        Deployed
-                      </Badge>
-                    )}
-                    {!isDeployedAgent(agent.agent_id) && (
-                      <Badge 
-                        bg={builtInAgentStatus[agent.agent_id] !== false ? "success" : "secondary"} 
-                        className="me-2"
-                      >
-                        {builtInAgentStatus[agent.agent_id] !== false ? "Active" : "Inactive"}
-                      </Badge>
-                    )}
-                  </div>
-                  <small className="text-muted fw-bold">
-                    {agent.agent_type === 'production' ? 'LIVE' : 'DEMO'}
-                  </small>
-                </div>
-              </Card.Header>
-              <Card.Body className="d-flex flex-column">
-                <Card.Title>{agent.name}</Card.Title>
-                <Card.Text className="flex-grow-1">
-                  {agent.description}
-                </Card.Text>
-                
+      {/* Active Agents Section */}
+      {(selectedAgentType === 'all' || selectedAgentType === 'production') && sortedActiveAgents.length > 0 && (
+        <>
+          <AgentSectionHeader
+            title={agentCategories.active.title}
+            count={sortedActiveAgents.length}
+            description={agentCategories.active.description}
+            icon={agentCategories.active.icon}
+            variant={agentCategories.active.variant}
+          />
+          <Row className="mb-5">
+            {sortedActiveAgents.map((agent) => (
+              <Col md={6} lg={4} key={agent.agent_id} className="mb-4">
+                <AgentCard
+                  agent={agent}
+                  variant="active"
+                  isDeployed={isDeployedAgent(agent.agent_id)}
+                  isActive={builtInAgentStatus[agent.agent_id] !== false}
+                  onEdit={handleEditAgent}
+                  onToggle={handleToggleAgent}
+                  onDelete={handleDeleteAgent}
+                  onViewDetails={handleViewDetails}
+                  getCategoryColor={getCategoryColor}
+                />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
 
-                <div className="mt-auto">
-                  <div className="d-grid gap-2">
-                    <Button
-                      variant="primary"
-                      icon={icons.right}
-                      onClick={() => navigate(`/agents/${agent.agent_id}/execute`)}
-                      disabled={!isDeployedAgent(agent.agent_id) && builtInAgentStatus[agent.agent_id] === false}
-                    >
-                      {!isDeployedAgent(agent.agent_id) && builtInAgentStatus[agent.agent_id] === false 
-                        ? 'Agent Inactive' 
-                        : 'Execute Agent'
-                      }
-                    </Button>
-                    
-                    {/* Management options for all agents */}
-                    <div className="d-flex gap-1">
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        icon={icons.edit}
-                        onClick={() => handleEditAgent(agent.agent_id)}
-                        className="flex-fill"
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline-warning"
-                        size="sm"
-                        icon={icons.refresh}
-                        onClick={() => handleToggleAgent(agent.agent_id)}
-                        className="flex-fill"
-                      >
-                        {isDeployedAgent(agent.agent_id) 
-                          ? 'Toggle' 
-                          : (builtInAgentStatus[agent.agent_id] !== false ? 'Deactivate' : 'Activate')
-                        }
-                      </Button>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        icon={icons.delete}
-                        onClick={() => handleDeleteAgent(agent.agent_id)}
-                        className="flex-fill"
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {/* Available Agents Section */}
+      {(selectedAgentType === 'all' || selectedAgentType === 'demo') && sortedAvailableAgents.length > 0 && (
+        <>
+          <AgentSectionHeader
+            title={agentCategories.available.title}
+            count={sortedAvailableAgents.length}
+            description={agentCategories.available.description}
+            icon={agentCategories.available.icon}
+            variant={agentCategories.available.variant}
+          />
+          <Row className="mb-5">
+            {sortedAvailableAgents.map((agent) => (
+              <Col md={6} lg={4} key={agent.agent_id} className="mb-4">
+                <AgentCard
+                  agent={agent}
+                  variant="available"
+                  isDeployed={isDeployedAgent(agent.agent_id)}
+                  isActive={builtInAgentStatus[agent.agent_id] !== false}
+                  onEdit={handleEditAgent}
+                  onToggle={handleToggleAgent}
+                  onDelete={handleDeleteAgent}
+                  onViewDetails={handleViewDetails}
+                  getCategoryColor={getCategoryColor}
+                />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
 
       {filteredAgents.length === 0 && (
         <Row>
@@ -931,7 +995,7 @@ const AgentCatalog: React.FC = () => {
               <Card.Body>
                 <h5>No agents found</h5>
                 <p>Try adjusting your search terms or category filter.</p>
-                <Button variant="primary" icon={icons.refresh} onClick={() => {
+                <Button variant="primary" onClick={() => {
                   setSearchTerm('');
                   setSelectedCategory('All');
                   setSelectedAgentType('all');
@@ -943,6 +1007,14 @@ const AgentCatalog: React.FC = () => {
           </Col>
         </Row>
       )}
+
+      {/* Agent Details Modal */}
+      <AgentDetailsModal
+        agent={selectedAgentForDetails}
+        isOpen={showDetailsModal}
+        onClose={handleCloseDetailsModal}
+        mode="view"
+      />
     </div>
   );
 };

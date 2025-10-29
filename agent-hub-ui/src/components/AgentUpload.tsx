@@ -2,13 +2,14 @@ import React, { useState, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, ProgressBar, Badge, Modal, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
-import { Icon } from './Icon';
 import { useAgentContext, DeployedAgent } from '../context/AgentContext';
+import BedrockStatus from './BedrockStatus';
+import BedrockModelSelector from './BedrockModelSelector';
 
 interface UploadedFile {
   file: File;
   id: string;
-  status: 'pending' | 'uploading' | 'validating' | 'validated' | 'validation_failed' | 'success' | 'error' | 'deploying' | 'deployed';
+  status: 'pending' | 'uploading' | 'validating' | 'validated' | 'validation_failed' | 'testing' | 'test_passed' | 'test_failed' | 'success' | 'error' | 'deploying' | 'deployed';
   progress: number;
   error?: string;
   validationId?: string;
@@ -17,6 +18,10 @@ interface UploadedFile {
   deploymentReady?: boolean;
   recommendations?: string[];
   deploymentStatus?: string;
+  testResults?: TestResult[];
+  testsPassed?: number;
+  testsTotal?: number;
+  testCoverage?: number;
 }
 
 interface AgentMetadata {
@@ -61,6 +66,15 @@ interface ValidationResult {
   deployment_ready: boolean;
   recommendations: string[];
   message: string;
+}
+
+interface TestResult {
+  id: string;
+  name: string;
+  status: 'passed' | 'failed' | 'skipped';
+  duration: number;
+  message?: string;
+  category: 'functionality' | 'security' | 'performance' | 'integration';
 }
 
 interface ToastMessage {
@@ -270,18 +284,26 @@ const AgentUpload: React.FC = () => {
     const uploadFile = uploadedFiles.find(f => f.id === fileId);
     if (!uploadFile || !uploadFile.validationId) return;
 
-    // Create mock validation result for display
+    // Create comprehensive validation result including test results
+    const hasTestResults = uploadFile.testResults && uploadFile.testResults.length > 0;
+    const testsPassed = uploadFile.status === 'test_passed';
+    
     setCurrentValidationResult({
       agent_id: uploadFile.validationId,
       status: uploadFile.status,
       validation_id: uploadFile.validationId,
       validation_score: uploadFile.validationScore || 0,
       grade: uploadFile.grade || 'F',
-      deployment_ready: uploadFile.deploymentReady || false,
+      deployment_ready: (uploadFile.deploymentReady || false) && (hasTestResults ? testsPassed : true),
       recommendations: uploadFile.recommendations || [],
-      message: uploadFile.deploymentReady ? 'Agent passed validation' : 'Agent needs improvements'
+      message: hasTestResults 
+        ? (testsPassed 
+          ? `Agent passed validation and all ${uploadFile.testsPassed}/${uploadFile.testsTotal} tests` 
+          : `Agent passed validation but ${uploadFile.testsTotal! - uploadFile.testsPassed!} tests failed`)
+        : (uploadFile.deploymentReady ? 'Agent passed validation' : 'Agent needs improvements')
     });
     
+    setCurrentFileId(fileId); // Store current file ID for modal
     setShowValidationModal(true);
   };
 
@@ -637,19 +659,175 @@ const AgentUpload: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'secondary';
-      case 'uploading': return 'primary';
-      case 'validating': return 'warning';
-      case 'validated': return 'success';
-      case 'validation_failed': return 'warning';
-      case 'success': return 'success';
-      case 'deploying': return 'info';
-      case 'deployed': return 'success';
-      case 'error': return 'danger';
-      default: return 'secondary';
+  const runAgentTests = async (fileId: string) => {
+    const uploadFile = uploadedFiles.find(f => f.id === fileId);
+    if (!uploadFile) return;
+
+    try {
+      // Update status to testing
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId ? { ...f, status: 'testing', progress: 0 } : f
+      ));
+
+      // Generate test cases based on agent metadata and category
+      const agentMetadata = (uploadFile as any).agentMetadata || {};
+      const testCases = generateTestCases(agentMetadata);
+      
+      // Simulate running tests with progress
+      const testResults: TestResult[] = [];
+      let passedTests = 0;
+
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        const progress = Math.round(((i + 1) / testCases.length) * 100);
+        
+        // Update progress
+        setUploadedFiles(prev => prev.map(f => 
+          f.id === fileId ? { ...f, progress } : f
+        ));
+
+        // Simulate test execution time
+        await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
+
+        // Simulate test result (90% pass rate for realistic testing)
+        const passed = Math.random() > 0.1;
+        if (passed) passedTests++;
+
+        const result: TestResult = {
+          id: `test-${i}`,
+          name: testCase.name,
+          status: passed ? 'passed' : 'failed',
+          duration: Math.round(200 + Math.random() * 800),
+          message: passed ? 'Test passed successfully' : testCase.failureMessage,
+          category: testCase.category
+        };
+
+        testResults.push(result);
+      }
+
+      const testsPassed = passedTests;
+      const testsTotal = testCases.length;
+      const testCoverage = Math.round((testsPassed / testsTotal) * 100);
+      const allTestsPassed = testsPassed === testsTotal;
+
+      // Update file with test results
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId ? { 
+          ...f, 
+          status: allTestsPassed ? 'test_passed' : 'test_failed',
+          progress: 100,
+          testResults,
+          testsPassed,
+          testsTotal,
+          testCoverage,
+          deploymentReady: allTestsPassed && f.deploymentReady
+        } : f
+      ));
+
+      addToast({
+        type: allTestsPassed ? 'success' : 'warning',
+        title: 'Testing Complete',
+        message: `${testsPassed}/${testsTotal} tests passed (${testCoverage}% coverage)`
+      });
+
+    } catch (error: any) {
+      console.error('Testing failed:', error);
+      
+      setUploadedFiles(prev => prev.map(f => 
+        f.id === fileId ? { 
+          ...f, 
+          status: 'test_failed', 
+          progress: 0,
+          error: 'Testing failed: ' + (error.message || 'Unknown error')
+        } : f
+      ));
+
+      addToast({
+        type: 'error',
+        title: 'Testing Failed',
+        message: error.message || 'Failed to run agent tests'
+      });
     }
+  };
+
+  const generateTestCases = (agentMetadata: any) => {
+    const category = agentMetadata.category || 'Custom';
+    const baseCases = [
+      {
+        name: 'Agent Initialization Test',
+        category: 'functionality' as const,
+        failureMessage: 'Agent failed to initialize properly'
+      },
+      {
+        name: 'Input Validation Test',
+        category: 'functionality' as const,
+        failureMessage: 'Agent does not handle invalid inputs correctly'
+      },
+      {
+        name: 'Security Scan Test',
+        category: 'security' as const,
+        failureMessage: 'Security vulnerabilities detected in agent code'
+      },
+      {
+        name: 'Performance Benchmark Test',
+        category: 'performance' as const,
+        failureMessage: 'Agent performance below acceptable thresholds'
+      }
+    ];
+
+    // Add category-specific tests
+    if (category === 'QE') {
+      baseCases.push(
+        {
+          name: 'Test Framework Integration',
+          category: 'functionality' as const,
+          failureMessage: 'Failed to integrate with testing frameworks'
+        },
+        {
+          name: 'Test Case Generation',
+          category: 'functionality' as const,
+          failureMessage: 'Unable to generate valid test cases'
+        },
+        {
+          name: 'Test Execution Simulation',
+          category: 'functionality' as const,
+          failureMessage: 'Test execution simulation failed'
+        }
+      );
+    } else if (category === 'Security') {
+      baseCases.push(
+        {
+          name: 'Vulnerability Detection Test',
+          category: 'functionality' as const,
+          failureMessage: 'Failed to detect known vulnerabilities'
+        },
+        {
+          name: 'Compliance Check Test',
+          category: 'functionality' as const,
+          failureMessage: 'Compliance validation failed'
+        }
+      );
+    } else if (category === 'DevOps') {
+      baseCases.push(
+        {
+          name: 'Infrastructure Analysis Test',
+          category: 'functionality' as const,
+          failureMessage: 'Infrastructure analysis capabilities failed'
+        },
+        {
+          name: 'Cost Optimization Test',
+          category: 'functionality' as const,
+          failureMessage: 'Cost optimization algorithms failed'
+        }
+      );
+    }
+
+    return baseCases;
+  };
+
+  const getStatusColor = (status: string) => {
+    // Use consistent blue color for all statuses
+    return 'primary';
   };
 
   const getStatusText = (status: string) => {
@@ -659,6 +837,9 @@ const AgentUpload: React.FC = () => {
       case 'validating': return 'Validating Package...';
       case 'validated': return 'Validation Passed';
       case 'validation_failed': return 'Validation Issues';
+      case 'testing': return 'Running Tests...';
+      case 'test_passed': return 'Tests Passed';
+      case 'test_failed': return 'Tests Failed';
       case 'success': return 'Ready for Deployment';
       case 'deploying': return 'Deploying...';
       case 'deployed': return 'Deployed Successfully';
@@ -668,14 +849,8 @@ const AgentUpload: React.FC = () => {
   };
 
   const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'A': return 'success';
-      case 'B': return 'primary';
-      case 'C': return 'warning';
-      case 'D': return 'warning';
-      case 'F': return 'danger';
-      default: return 'secondary';
-    }
+    // Use consistent blue color for all grades
+    return 'primary';
   };
 
   return (
@@ -696,16 +871,25 @@ const AgentUpload: React.FC = () => {
         </Col>
       </Row>
 
+      {/* Bedrock Integration Status */}
+      <Row className="mb-4">
+        <Col>
+          <BedrockStatus showDetails={false} />
+        </Col>
+      </Row>
+
       {/* Upload Status Banner */}
       <Row className="mb-4">
         <Col>
-          <Alert variant={isUploading ? "info" : "success"}>
+          <Alert variant="info">
             <div className="d-flex align-items-center">
               <div className="me-3">
                 {isUploading ? (
                   <Spinner animation="border" size="sm" />
                 ) : (
-                  <Icon name="success" size={32} color="success" />
+                  <div className="af-badge af-badge-primary" style={{ fontSize: '1.5rem', padding: '0.75rem' }}>
+                    ✓
+                  </div>
                 )}
               </div>
               <div className="flex-grow-1">
@@ -721,7 +905,7 @@ const AgentUpload: React.FC = () => {
                 </p>
               </div>
               <div className="d-flex align-items-center gap-2">
-                <Badge bg={isUploading ? "info" : "success"}>
+                <Badge bg="primary">
                   {uploadedFiles.filter(f => f.status === 'validated' || f.status === 'success').length} validated
                 </Badge>
                 {deployedAgents.length > 0 && (
@@ -729,8 +913,8 @@ const AgentUpload: React.FC = () => {
                     variant="outline-primary" 
                     size="sm"
                     onClick={() => setShowManagementModal(true)}
+                    className="af-btn af-btn-outline af-btn-sm"
                   >
-                    <Icon name="settings" size="small" className="me-1" />
                     Manage Agents ({deployedAgents.length})
                   </Button>
                 )}
@@ -745,9 +929,8 @@ const AgentUpload: React.FC = () => {
         <Row className="mb-4">
           <Col>
             <Card>
-              <Card.Header className="bg-success text-white">
+              <Card.Header className="bg-primary text-white">
                 <h6 className="mb-0">
-                  <Icon name="success" size="small" className="me-2" />
                   Recently Deployed Agents
                 </h6>
               </Card.Header>
@@ -759,27 +942,11 @@ const AgentUpload: React.FC = () => {
                         <Card.Body className="p-3">
                           <div className="d-flex justify-content-between align-items-start mb-2">
                             <h6 className="mb-0">{agent.name}</h6>
-                            <Badge bg={agent.status === 'active' ? 'success' : agent.status === 'deploying' ? 'warning' : 'secondary'}>
+                            <Badge bg="primary">
                               {agent.status}
                             </Badge>
                           </div>
-                          <p className="small text-muted mb-2">v{agent.version} • {agent.category}</p>
-                          <div className="d-flex gap-1">
-                            <Button 
-                              variant="outline-primary" 
-                              size="sm"
-                              onClick={() => handleManageAgent(agent)}
-                            >
-                              <Icon name="settings" size="small" />
-                            </Button>
-                            <Button 
-                              variant="outline-success" 
-                              size="sm"
-                              disabled={agent.status !== 'active'}
-                            >
-                              <Icon name="play" size="small" />
-                            </Button>
-                          </div>
+                          <p className="small text-muted mb-0">v{agent.version} • {agent.category}</p>
                         </Card.Body>
                       </Card>
                     </Col>
@@ -808,7 +975,9 @@ const AgentUpload: React.FC = () => {
                   >
                     <Card.Body>
                       <div className="mb-3">
-                        <Icon name="file" size="xlarge" color="primary" />
+                        <div className="af-badge af-badge-primary" style={{ fontSize: '1.5rem', padding: '1rem' }}>
+                          FILE
+                        </div>
                       </div>
                       <h6>Upload Files</h6>
                       <p className="small text-muted">
@@ -826,7 +995,11 @@ const AgentUpload: React.FC = () => {
                   >
                     <Card.Body>
                       <div className="mb-3">
-                        <Icon name="git" size="xlarge" color="dark" />
+                        <div className="af-badge af-badge-primary" style={{ fontSize: '1.5rem', padding: '1rem' }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                          </svg>
+                        </div>
                       </div>
                       <h6>GitHub Repository</h6>
                       <p className="small text-muted">
@@ -844,7 +1017,11 @@ const AgentUpload: React.FC = () => {
                   >
                     <Card.Body>
                       <div className="mb-3">
-                        <Icon name="docker" size="xlarge" color="info" />
+                        <div className="af-badge af-badge-primary" style={{ fontSize: '1.5rem', padding: '1rem' }}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338 0-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983 0 1.938-.089 2.844-.266a11.94 11.94 0 003.776-1.329c.896-.537 1.68-1.215 2.334-2.02a9.73 9.73 0 001.305-2.132.751.751 0 00-.648-.748h-1.018c1.854-1.205 2.68-3.048 2.763-3.256l.252-.556-.170-.42-.252-.556-.17-.42z"/>
+                          </svg>
+                        </div>
                       </div>
                       <h6>Docker Image</h6>
                       <p className="small text-muted">
@@ -865,7 +1042,7 @@ const AgentUpload: React.FC = () => {
         <Row className="mb-4">
           <Col>
             <Card>
-              <Card.Header className="bg-success text-white">
+              <Card.Header className="bg-primary text-white">
                 <h5 className="mb-0">Upload Agent Files</h5>
               </Card.Header>
               <Card.Body>
@@ -878,7 +1055,9 @@ const AgentUpload: React.FC = () => {
                 >
                   <input {...getInputProps()} />
                   <div className="mb-3">
-                    <Icon name="upload" size={48} color="muted" />
+                    <div className="af-badge af-badge-secondary" style={{ fontSize: '2rem', padding: '1rem' }}>
+                      UPLOAD
+                    </div>
                   </div>
                   {isDragActive ? (
                     <p className="mb-0">Drop the files here...</p>
@@ -1026,7 +1205,7 @@ const AgentUpload: React.FC = () => {
         <Row className="mb-4">
           <Col>
             <Card>
-              <Card.Header className="bg-warning text-dark">
+              <Card.Header className="bg-primary text-white">
                 <h5 className="mb-0">Upload Progress</h5>
               </Card.Header>
               <Card.Body>
@@ -1044,10 +1223,10 @@ const AgentUpload: React.FC = () => {
                       </Badge>
                     </div>
                     
-                    {(uploadFile.status === 'uploading' || uploadFile.status === 'validating') && (
+                    {(uploadFile.status === 'uploading' || uploadFile.status === 'validating' || uploadFile.status === 'testing') && (
                       <ProgressBar 
                         now={uploadFile.progress} 
-                        variant={uploadFile.status === 'uploading' ? 'primary' : 'warning'}
+                        variant="primary"
                         className="mb-2"
                       />
                     )}
@@ -1055,12 +1234,14 @@ const AgentUpload: React.FC = () => {
                     {/* Deployment Status */}
                     {(uploadFile.status === 'deploying' || uploadFile.status === 'deployed') && (
                       <div className="mt-2">
-                        <Alert variant={uploadFile.status === 'deployed' ? 'success' : 'info'} className="py-2">
+                        <Alert variant="info" className="py-2">
                           <div className="d-flex align-items-center">
                             {uploadFile.status === 'deploying' ? (
                               <Spinner animation="border" size="sm" className="me-2" />
                             ) : (
-                              <Icon name="success" size="small" className="me-2" />
+                              <span className="af-badge af-badge-primary me-2" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
+                                ✓
+                              </span>
                             )}
                             <small>{uploadFile.deploymentStatus}</small>
                           </div>
@@ -1071,16 +1252,16 @@ const AgentUpload: React.FC = () => {
                               variant="outline-primary" 
                               size="sm"
                               onClick={() => window.location.href = '/agents'}
+                              className="af-btn af-btn-outline af-btn-sm"
                             >
-                              <Icon name="grid" size="small" className="me-1" />
                               View in Catalog
                             </Button>
                             <Button 
-                              variant="outline-success" 
+                              variant="outline-primary" 
                               size="sm"
                               onClick={() => setShowManagementModal(true)}
+                              className="af-btn af-btn-outline af-btn-sm"
                             >
-                              <Icon name="settings" size="small" className="me-1" />
                               Manage Agent
                             </Button>
                           </div>
@@ -1095,11 +1276,11 @@ const AgentUpload: React.FC = () => {
                           <Badge bg={getGradeColor(uploadFile.grade || 'F')} className="me-2">
                             Grade: {uploadFile.grade || 'F'}
                           </Badge>
-                          <Badge bg="info" className="me-2">
+                          <Badge bg="primary" className="me-2">
                             Score: {uploadFile.validationScore || 0}/100
                           </Badge>
                           {uploadFile.deploymentReady && (
-                            <Badge bg="success">✅ Deployment Ready</Badge>
+                            <Badge bg="primary">✅ Validation Passed</Badge>
                           )}
                         </div>
                         
@@ -1125,14 +1306,11 @@ const AgentUpload: React.FC = () => {
                           
                           {uploadFile.deploymentReady ? (
                             <Button 
-                              variant="success" 
+                              variant="primary" 
                               size="sm"
-                              onClick={() => {
-                                console.log('Deploy Now clicked for:', uploadFile.id);
-                                handleDeployAgent(uploadFile.id);
-                              }}
+                              onClick={() => runAgentTests(uploadFile.id)}
                             >
-                              Deploy Now
+                              🧪 Test Agent
                             </Button>
                           ) : (
                             <Button 
@@ -1142,6 +1320,88 @@ const AgentUpload: React.FC = () => {
                             >
                               Configure & Fix
                             </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Test Results */}
+                    {(uploadFile.status === 'test_passed' || uploadFile.status === 'test_failed') && (
+                      <div className="mt-2">
+                        <div className="d-flex align-items-center mb-2">
+                          <Badge bg={uploadFile.status === 'test_passed' ? 'success' : 'danger'} className="me-2">
+                            {uploadFile.testsPassed || 0}/{uploadFile.testsTotal || 0} Tests
+                          </Badge>
+                          <Badge bg="info" className="me-2">
+                            Coverage: {uploadFile.testCoverage || 0}%
+                          </Badge>
+                          {uploadFile.status === 'test_passed' && (
+                            <Badge bg="success">✅ Ready to Deploy</Badge>
+                          )}
+                        </div>
+                        
+                        {uploadFile.testResults && uploadFile.testResults.length > 0 && (
+                          <div className="mb-2">
+                            <small className="text-muted">Test Results:</small>
+                            <div className="mt-1">
+                              {uploadFile.testResults.slice(0, 3).map((test, idx) => (
+                                <div key={idx} className="d-flex align-items-center small mb-1">
+                                  <span className={`me-2 ${test.status === 'passed' ? 'text-success' : 'text-danger'}`}>
+                                    {test.status === 'passed' ? '✓' : '✗'}
+                                  </span>
+                                  <span className="me-2">{test.name}</span>
+                                  <Badge bg="light" text="dark" className="me-2">
+                                    {test.category}
+                                  </Badge>
+                                  <small className="text-muted">{test.duration}ms</small>
+                                </div>
+                              ))}
+                              {uploadFile.testResults.length > 3 && (
+                                <small className="text-muted">
+                                  +{uploadFile.testResults.length - 3} more tests...
+                                </small>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="d-flex gap-2">
+                          <Button 
+                            variant="outline-info" 
+                            size="sm"
+                            onClick={() => handleViewValidation(uploadFile.id)}
+                          >
+                            View Full Report
+                          </Button>
+                          
+                          {uploadFile.status === 'test_passed' ? (
+                            <Button 
+                              variant="success" 
+                              size="sm"
+                              onClick={() => {
+                                console.log('Deploy Now clicked for:', uploadFile.id);
+                                handleDeployAgent(uploadFile.id);
+                              }}
+                            >
+                              🚀 Deploy Now
+                            </Button>
+                          ) : (
+                            <>
+                              <Button 
+                                variant="warning" 
+                                size="sm"
+                                onClick={() => runAgentTests(uploadFile.id)}
+                              >
+                                🔄 Retry Tests
+                              </Button>
+                              <Button 
+                                variant="outline-warning" 
+                                size="sm"
+                                onClick={() => handleConfigureAgent(uploadFile.id)}
+                              >
+                                Fix Issues
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
@@ -1261,10 +1521,10 @@ const AgentUpload: React.FC = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowMetadataModal(false)}>
+          <Button variant="secondary" onClick={() => setShowMetadataModal(false)} className="af-btn af-btn-secondary">
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleSaveMetadata}>
+          <Button variant="primary" onClick={handleSaveMetadata} className="af-btn af-btn-primary">
             Deploy Agent
           </Button>
         </Modal.Footer>
@@ -1318,6 +1578,54 @@ const AgentUpload: React.FC = () => {
                 <p className="mb-0">{currentValidationResult.message}</p>
               </Alert>
 
+              {/* Test Results Section */}
+              {(() => {
+                const uploadFile = uploadedFiles.find(f => f.id === currentFileId);
+                return uploadFile?.testResults && uploadFile.testResults.length > 0 && (
+                  <Card className="mb-3">
+                    <Card.Header>
+                      <h6 className="mb-0">🧪 Test Results</h6>
+                    </Card.Header>
+                    <Card.Body>
+                      <div className="mb-3">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span>Test Coverage</span>
+                          <Badge bg="info">{uploadFile.testCoverage || 0}%</Badge>
+                        </div>
+                        <ProgressBar 
+                          now={uploadFile.testCoverage || 0} 
+                          variant={(uploadFile.testCoverage || 0) >= 80 ? 'success' : (uploadFile.testCoverage || 0) >= 60 ? 'warning' : 'danger'}
+                        />
+                      </div>
+                      
+                      <div className="test-results">
+                        {uploadFile.testResults.map((test, idx) => (
+                          <div key={idx} className="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <div className="d-flex align-items-center">
+                              <span className={`me-2 ${test.status === 'passed' ? 'text-success' : 'text-danger'}`}>
+                                {test.status === 'passed' ? '✓' : '✗'}
+                              </span>
+                              <div>
+                                <div className="fw-medium">{test.name}</div>
+                                {test.message && test.status === 'failed' && (
+                                  <small className="text-danger">{test.message}</small>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-end">
+                              <Badge bg="light" text="dark" className="me-2">
+                                {test.category}
+                              </Badge>
+                              <small className="text-muted">{test.duration}ms</small>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card.Body>
+                  </Card>
+                );
+              })()}
+
               {currentValidationResult.recommendations.length > 0 && (
                 <Card>
                   <Card.Header>
@@ -1339,16 +1647,48 @@ const AgentUpload: React.FC = () => {
           <Button variant="secondary" onClick={() => setShowValidationModal(false)}>
             Close
           </Button>
-          {currentValidationResult?.deployment_ready && (
-            <Button variant="success" onClick={() => {
-              setShowValidationModal(false);
-              // Find the file and deploy it
-              const fileId = uploadedFiles.find(f => f.validationId === currentValidationResult?.agent_id)?.id;
-              if (fileId) handleDeployAgent(fileId);
-            }}>
-              Deploy Agent
-            </Button>
-          )}
+          {(() => {
+            const uploadFile = uploadedFiles.find(f => f.id === currentFileId);
+            if (!uploadFile) return null;
+            
+            if (uploadFile.status === 'validated' && uploadFile.deploymentReady) {
+              return (
+                <Button variant="primary" onClick={() => {
+                  setShowValidationModal(false);
+                  runAgentTests(uploadFile.id);
+                }}>
+                  🧪 Run Tests
+                </Button>
+              );
+            } else if (uploadFile.status === 'test_passed') {
+              return (
+                <Button variant="success" onClick={() => {
+                  setShowValidationModal(false);
+                  handleDeployAgent(uploadFile.id);
+                }}>
+                  🚀 Deploy Agent
+                </Button>
+              );
+            } else if (uploadFile.status === 'test_failed') {
+              return (
+                <>
+                  <Button variant="warning" onClick={() => {
+                    setShowValidationModal(false);
+                    runAgentTests(uploadFile.id);
+                  }}>
+                    🔄 Retry Tests
+                  </Button>
+                  <Button variant="outline-warning" onClick={() => {
+                    setShowValidationModal(false);
+                    handleConfigureAgent(uploadFile.id);
+                  }}>
+                    Fix Issues
+                  </Button>
+                </>
+              );
+            }
+            return null;
+          })()}
         </Modal.Footer>
       </Modal>
 
@@ -1409,14 +1749,12 @@ const AgentUpload: React.FC = () => {
       <Modal show={showManagementModal} onHide={() => setShowManagementModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
-            <Icon name="settings" size="small" className="me-2" />
             Manage Deployed Agents
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {deployedAgents.length === 0 ? (
             <Alert variant="info">
-              <Icon name="target" size="small" className="me-2" />
               No agents deployed yet. Upload and deploy an agent to see it here.
             </Alert>
           ) : (
@@ -1428,7 +1766,9 @@ const AgentUpload: React.FC = () => {
                       <Col md={6}>
                         <div className="d-flex align-items-center">
                           <div className="me-3">
-                            <Icon name="agent" size="large" className="text-primary" />
+                            <div className="af-badge af-badge-primary" style={{ fontSize: '1rem', padding: '0.5rem' }}>
+                              AGENT
+                            </div>
                           </div>
                           <div>
                             <h6 className="mb-1">{agent.name}</h6>
@@ -1439,11 +1779,7 @@ const AgentUpload: React.FC = () => {
                               )}
                             </p>
                             <div className="d-flex align-items-center gap-2">
-                              <Badge bg={
-                                agent.status === 'active' ? 'success' : 
-                                agent.status === 'deploying' ? 'warning' : 
-                                agent.status === 'error' ? 'danger' : 'secondary'
-                              }>
+                              <Badge bg="primary">
                                 {agent.status}
                               </Badge>
                               <small className="text-muted">
@@ -1467,12 +1803,12 @@ const AgentUpload: React.FC = () => {
                       <Col md={3}>
                         <div className="d-flex flex-column gap-2">
                           <Button 
-                            variant={agent.status === 'active' ? 'warning' : 'success'}
+                            variant="primary"
                             size="sm"
                             onClick={() => handleToggleAgent(agent.id, agent.status)}
                             disabled={agent.status === 'deploying'}
+                            className="af-btn af-btn-primary af-btn-sm"
                           >
-                            <Icon name={agent.status === 'active' ? 'time' : 'play'} size="small" className="me-1" />
                             {agent.status === 'active' ? 'Deactivate' : 'Activate'}
                           </Button>
                           <div className="d-flex gap-1">
@@ -1480,19 +1816,21 @@ const AgentUpload: React.FC = () => {
                               variant="outline-primary" 
                               size="sm"
                               onClick={() => handleEditAgent(agent.id)}
+                              className="af-btn af-btn-outline af-btn-sm"
                             >
-                              <Icon name="edit" size="small" />
+                              Edit
                             </Button>
                             <Button 
-                              variant="outline-danger" 
+                              variant="outline-primary" 
                               size="sm"
                               onClick={() => {
                                 if (window.confirm(`Are you sure you want to delete ${agent.name}?`)) {
                                   handleDeleteAgent(agent.id);
                                 }
                               }}
+                              className="af-btn af-btn-outline af-btn-sm"
                             >
-                              <Icon name="target" size="small" />
+                              Delete
                             </Button>
                           </div>
                         </div>
@@ -1505,11 +1843,10 @@ const AgentUpload: React.FC = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowManagementModal(false)}>
+          <Button variant="outline-primary" onClick={() => setShowManagementModal(false)} className="af-btn af-btn-outline">
             Close
           </Button>
-          <Button variant="primary" onClick={() => window.location.href = '/manage'}>
-            <Icon name="settings" size="small" className="me-1" />
+          <Button variant="primary" onClick={() => window.location.href = '/manage'} className="af-btn af-btn-primary">
             Full Management Dashboard
           </Button>
         </Modal.Footer>

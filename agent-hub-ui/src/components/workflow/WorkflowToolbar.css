@@ -1,0 +1,51 @@
+.workflow-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-title {
+  color: #333;
+  font-weight: 600;
+}
+
+.workflow-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-item {
+  font-size: 12px;
+  color: #666;
+}
+
+.stat-item strong {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .workflow-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .toolbar-section {
+    justify-content: center;
+  }
+
+  .workflow-stats {
+    justify-content: center;
+  }
+}

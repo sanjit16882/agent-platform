@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "@agenthub/cli",
+    "language": "typescript",
+    "testFramework": "jest"
+  },
+  "agents": {
+    "preferred": {
+      "code-quality": "code-quality-agent",
+      "test-generator": "test-generator-agent",
+      "security-scanner": "security-scanner-agent"
+    }
+  },
+  "hooks": {
+    "pre-commit": [
+      "security-scan"
+    ],
+    "pre-push": [
+      "test-coverage"
+    ]
+  }
+}

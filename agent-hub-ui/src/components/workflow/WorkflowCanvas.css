@@ -1,0 +1,390 @@
+.workflow-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+  user-select: none;
+}
+
+.workflow-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.workflow-canvas.show-grid {
+  background-image: 
+    linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+    linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.workflow-canvas.dragging {
+  cursor: grabbing !important;
+}
+
+.grid-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.canvas-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+}
+
+.connections-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.canvas-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 15px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-controls button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.zoom-controls button:hover {
+  background: #f5f5f5;
+  border-color: #b0b0b0;
+}
+
+.zoom-controls button:active {
+  background: #e8e8e8;
+}
+
+.zoom-controls span {
+  font-size: 12px;
+  color: #666;
+  min-width: 40px;
+  text-align: center;
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+}
+
+.view-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #666;
+  cursor: pointer;
+  margin: 0;
+}
+
+.view-controls input[type="checkbox"] {
+  margin: 0;
+}
+
+.action-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-controls button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #d0d0d0;
+  background: #ffffff;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.action-controls button:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #b0b0b0;
+}
+
+.action-controls button:active:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.action-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.canvas-info {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  gap: 15px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+}
+
+.canvas-info span {
+  font-size: 11px;
+  color: #666;
+}
+
+/* Component Node Styles */
+.component-node {
+  position: absolute;
+  background: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 160px;
+  cursor: move;
+  transition: all 0.2s;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.component-node:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.component-node.selected {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.component-node.readonly {
+  cursor: default;
+}
+
+.component-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.component-node-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.component-node-type {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.component-node-type.llm {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.component-node-type.rpa {
+  background: #e8f5e8;
+  color: #388e3c;
+}
+
+.component-node-type.selenium {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.component-node-type.custom {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.component-node-content {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.component-node-ports {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  position: relative;
+}
+
+.component-ports {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.component-port {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #666;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: crosshair;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 10;
+}
+
+.component-port:hover {
+  border-color: #007bff;
+  background: #007bff;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+.component-port.input {
+  margin-left: -24px;
+}
+
+.component-port.output {
+  margin-right: -24px;
+}
+
+/* Connection Styles */
+.connection-line {
+  stroke: #666;
+  stroke-width: 2;
+  fill: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.connection-line:hover {
+  stroke: #007bff;
+  stroke-width: 3;
+}
+
+.connection-line.selected {
+  stroke: #007bff;
+  stroke-width: 3;
+}
+
+.connection-arrow {
+  fill: #666;
+  transition: all 0.2s;
+}
+
+.connection-line:hover + .connection-arrow,
+.connection-line.selected + .connection-arrow {
+  fill: #007bff;
+}
+
+/* Connection Hover Effects */
+.connection-group:hover .connection-delete {
+  opacity: 1 !important;
+}
+
+.connection-group:hover .connection-line {
+  stroke: #007bff;
+  stroke-width: 3;
+}
+
+.connection-group:hover .connection-arrow {
+  fill: #007bff;
+}
+
+/* Connection Drag Line */
+.connection-drag-line {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* Port Hover Effects */
+.component-port:hover {
+  border-color: #007bff !important;
+  background: #007bff !important;
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+.component-port.dragging-connection {
+  border-color: #28a745 !important;
+  background: #28a745 !important;
+  transform: scale(1.4);
+  box-shadow: 0 0 12px rgba(40, 167, 69, 0.7);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .workflow-canvas-container {
+    height: 400px;
+  }
+  
+  .canvas-controls {
+    top: 5px;
+    right: 5px;
+    padding: 6px 8px;
+  }
+  
+  .zoom-controls button {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  
+  .component-node {
+    min-width: 120px;
+    padding: 8px;
+  }
+  
+  .component-node-title {
+    font-size: 12px;
+  }
+}

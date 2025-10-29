@@ -16,51 +16,28 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   listView = false
 }) => {
   const getCategoryIcon = (category: string) => {
-    const icons = {
-      'QE': '🧪',
-      'DevOps': '⚙️',
-      'Security': '🔒',
-      'Business': '📊'
-    };
-    return icons[category as keyof typeof icons] || '📋';
+    // Removed fancy icons - using simple text labels instead
+    return category.substring(0, 2).toUpperCase();
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
-      'QE': 'primary',
-      'DevOps': 'success',
-      'Security': 'danger',
-      'Business': 'warning'
-    };
-    return colors[category as keyof typeof colors] || 'secondary';
+    // Use consistent blue color for all categories
+    return 'primary';
   };
 
   const getComplexityColor = (complexity: string) => {
-    const colors = {
-      'Beginner': 'success',
-      'Intermediate': 'warning',
-      'Advanced': 'danger'
-    };
-    return colors[complexity as keyof typeof colors] || 'secondary';
+    // Use consistent blue color for all complexity levels
+    return 'primary';
   };
 
   const getApprovalStatusColor = (status: string) => {
-    const colors = {
-      'Approved': 'success',
-      'Pending': 'warning',
-      'Rejected': 'danger',
-      'Draft': 'secondary'
-    };
-    return colors[status as keyof typeof colors] || 'secondary';
+    // Use consistent blue color for all approval statuses
+    return 'primary';
   };
 
   const getComplianceStatusColor = (status: string) => {
-    const colors = {
-      'Compliant': 'success',
-      'Non-Compliant': 'danger',
-      'Under-Review': 'warning'
-    };
-    return colors[status as keyof typeof colors] || 'secondary';
+    // Use consistent blue color for all compliance statuses
+    return 'primary';
   };
 
   const formatUsageCount = (count: number) => {
@@ -71,24 +48,12 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   };
 
   const renderStars = (rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<span key={i} className="text-warning">★</span>);
-    }
-    
-    if (hasHalfStar) {
-      stars.push(<span key="half" className="text-warning">☆</span>);
-    }
-    
-    const emptyStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<span key={`empty-${i}`} className="text-muted">☆</span>);
-    }
-    
-    return stars;
+    // Simplified rating display without fancy star icons
+    return (
+      <span className="af-text-warning">
+        {rating.toFixed(1)}/5.0
+      </span>
+    );
   };
 
   if (listView) {
@@ -97,7 +62,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <Card.Body>
           <Row className="align-items-center">
             <Col md={1} className="text-center">
-              <div style={{ fontSize: '2rem' }}>
+              <div className="af-badge af-badge-primary" style={{ fontSize: '0.75rem', padding: '0.5rem' }}>
                 {getCategoryIcon(template.category)}
               </div>
             </Col>
@@ -166,6 +131,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   size="sm"
                   onClick={() => onCreateFromTemplate(template.id)}
                   disabled={template.approvalStatus !== 'Approved'}
+                  className="af-btn af-btn-primary af-btn-sm"
                 >
                   Create Agent
                 </Button>
@@ -173,6 +139,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
                   variant="outline-secondary"
                   size="sm"
                   onClick={() => onViewDetails(template.id)}
+                  className="af-btn af-btn-outline af-btn-sm"
                 >
                   Details
                 </Button>
@@ -189,7 +156,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       <Card.Header className="bg-light border-0">
         <div className="d-flex justify-content-between align-items-center">
           <div className="d-flex align-items-center">
-            <span style={{ fontSize: '1.5rem', marginRight: '8px' }}>
+            <span className="af-badge af-badge-secondary me-2" style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>
               {getCategoryIcon(template.category)}
             </span>
             <Badge bg={getCategoryColor(template.category)}>
@@ -264,7 +231,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           
           {template.complianceStatus === 'Compliant' && (
             <ProgressBar 
-              variant="success" 
+              variant="primary" 
               now={95} 
               style={{ height: '4px' }}
               className="mb-1"
@@ -283,7 +250,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               variant="primary"
               onClick={() => onCreateFromTemplate(template.id)}
               disabled={template.approvalStatus !== 'Approved'}
-              className="d-flex align-items-center justify-content-center"
+              className="af-btn af-btn-primary d-flex align-items-center justify-content-center"
             >
               {template.approvalStatus === 'Approved' ? (
                 <>Create Agent</>
@@ -297,10 +264,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             </Button>
             
             <Button
-              variant="outline-secondary"
+              variant="outline-primary"
               size="sm"
               onClick={() => onViewDetails(template.id)}
-              className="d-flex align-items-center justify-content-center"
+              className="af-btn af-btn-outline af-btn-sm d-flex align-items-center justify-content-center"
             >
               View Details
             </Button>

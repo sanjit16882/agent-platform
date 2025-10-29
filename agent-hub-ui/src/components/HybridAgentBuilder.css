@@ -1,0 +1,54 @@
+/* Template card styling */
+.template-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #dee2e6;
+}
+
+.template-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+.template-card .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Component palette styling */
+.component-palette {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.palette-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.component-template-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.component-template-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge styling */
+.badge-sm {
+  font-size: 0.65rem;
+  padding: 0.25em 0.4em;
+}
+
+/* Template details styling */
+.template-details {
+  font-size: 0.75rem;
+}
+
+.template-details .text-muted {
+  color: #6c757d !important;
+}

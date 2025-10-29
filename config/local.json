@@ -1,0 +1,71 @@
+{
+  "environment": "local",
+  "server": {
+    "port": 3002,
+    "host": "localhost",
+    "cors": {
+      "origin": ["http://localhost:3001"],
+      "credentials": true
+    }
+  },
+  "database": {
+    "type": "sqlite",
+    "path": "./data/local.db",
+    "logging": true
+  },
+  "aws": {
+    "region": "us-east-1",
+    "profile": "default",
+    "localstack": {
+      "enabled": true,
+      "endpoint": "http://localhost:4566"
+    }
+  },
+  "redis": {
+    "enabled": false,
+    "host": "localhost",
+    "port": 6379
+  },
+  "logging": {
+    "level": "debug",
+    "console": true,
+    "file": "./logs/local.log"
+  },
+  "security": {
+    "jwt": {
+      "secret": "local-dev-secret-key-change-in-production",
+      "expiresIn": "24h"
+    },
+    "rateLimit": {
+      "windowMs": 900000,
+      "max": 1000
+    }
+  },
+  "features": {
+    "swagger": true,
+    "metrics": true,
+    "debugging": true
+  },
+  "ai": {
+    "provider": "mock",
+    "useMockData": true,
+    "costOptimization": false,
+    "simulateProcessingTime": true
+  },
+  "endpoints": {
+    "api": "http://localhost:3002",
+    "frontend": "http://localhost:3001",
+    "health": "http://localhost:3002/health"
+  },
+  "ai": {
+    "provider": "mock",
+    "useMockData": true,
+    "costOptimization": false,
+    "simulateProcessingTime": true
+  },
+  "endpoints": {
+    "api": "http://localhost:3002",
+    "frontend": "http://localhost:3001",
+    "health": "http://localhost:3002/health"
+  }
+}

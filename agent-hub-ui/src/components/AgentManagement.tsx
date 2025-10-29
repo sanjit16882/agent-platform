@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Modal, Tabs, Tab, Spinner, Toast, ToastContainer, Form, Alert, Table } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import PermissionGuard from './PermissionGuard';
 import { Icon } from './Icon';
 import { useAgentContext } from '../context/AgentContext';
 
@@ -15,6 +16,7 @@ import { LoadingError } from './common/ErrorFallback';
 import Button from './common/Button';
 import Card from './common/Card';
 import Badge from './common/Badge';
+import BedrockStatus from './BedrockStatus';
 
 // Import hooks and utilities
 import { useAgentManagement } from '../hooks/useAgentManagement';
@@ -838,6 +840,11 @@ const AgentManagement: React.FC = () => {
   return (
     <ErrorBoundary>
       <Container style={{ maxWidth: '1400px', padding: '20px' }}>
+        {/* Bedrock Integration Status */}
+        <div className="mb-4">
+          <BedrockStatus showDetails={false} />
+        </div>
+
         {/* Enhanced Header with Search */}
         <ManagementHeader
           searchQuery={searchQuery}

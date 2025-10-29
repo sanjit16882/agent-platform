@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAgentContext } from '../context/AgentContext';
 import { useProgress } from '../context/ProgressContext';
 import { progressService } from '../services/progressService';
-// Removed websocketService import - was mock implementation
 import ProgressTracker from './ProgressTracker';
 import StreamingOutput from './StreamingOutput';
 import IncrementalResults from './IncrementalResults';
@@ -59,34 +57,58 @@ const AgentExecutor: React.FC = () => {
 
   const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
 
-  // Agent configurations
-  const agentConfigs: { [key: string]: AgentConfig } = {
-    'qe-test-generator-v2': {
-      name: 'QE Automation Code Generator',
-      description: 'Production-ready AI-powered automation code generation for modern QE frameworks',
-      category: 'QE',
-      agent_type: 'production',
-      inputLabel: 'Requirements / User Story',
-      inputPlaceholder: 'Enter your requirements, user story, or feature description here...',
-      inputHelp: 'Describe the feature or functionality you want to generate test cases for.',
+  // Generate agent configuration dynamically based on agent ID
+  const generateAgentConfig = (agentId: string): AgentConfig => {
+    // Default configuration that works for all agents
+    const defaultConfig: AgentConfig = {
+      name: 'Unknown Agent',
+      description: 'Agent configuration not found',
+      category: 'Unknown',
+      agent_type: 'demo',
+      inputLabel: 'Input Data',
+      inputPlaceholder: 'Enter your data here...',
+      inputHelp: 'Provide input data for analysis.',
       analysisTypes: [
-        { value: 'web-automation', label: 'Web UI Automation (Selenium, Playwright)' },
-        { value: 'api-automation', label: 'API Automation (Postman, Karate, REST Assured)' },
-        { value: 'mobile-automation', label: 'Mobile Automation (Appium, Espresso)' },
-        { value: 'unit-tests', label: 'Unit Tests (PyTest, JUnit, Jest)' },
-        { value: 'performance-tests', label: 'Performance Tests (JMeter, K6)' },
-        { value: 'comprehensive', label: 'Full Test Suite (All frameworks)' }
+        { value: 'default', label: 'Default Analysis' },
+        { value: 'comprehensive', label: 'Comprehensive Analysis' }
       ],
       outputFormats: [
-        { value: 'selenium-python', label: 'Selenium + Python' },
-        { value: 'playwright-js', label: 'Playwright + JavaScript' },
-        { value: 'postman-collection', label: 'Postman Collection' },
-        { value: 'karate-feature', label: 'Karate Framework' },
-        { value: 'pytest', label: 'PyTest Code' },
-        { value: 'robot-framework', label: 'Robot Framework' },
-        { value: 'cypress', label: 'Cypress Tests' },
-        { value: 'rest-assured', label: 'REST Assured (Java)' }
+        { value: 'json', label: 'JSON' },
+        { value: 'report', label: 'Report' }
       ],
+      sampleInputs: [],
+      capabilities: ['General analysis'],
+      estimatedCost: '$0.10 - $0.25 per execution'
+    };
+
+    // Specific configurations for known agents
+    const specificConfigs: { [key: string]: Partial<AgentConfig> } = {
+      'qe-test-generator-v2': {
+        name: 'QE Automation Code Generator',
+        description: 'Production-ready AI-powered automation code generation for modern QE frameworks',
+        category: 'QE',
+        agent_type: 'production',
+        inputLabel: 'Requirements / User Story',
+        inputPlaceholder: 'Enter your requirements, user story, or feature description here...',
+        inputHelp: 'Describe the feature or functionality you want to generate test cases for.',
+        analysisTypes: [
+          { value: 'web-automation', label: 'Web UI Automation (Selenium, Playwright)' },
+          { value: 'api-automation', label: 'API Automation (Postman, Karate, REST Assured)' },
+          { value: 'mobile-automation', label: 'Mobile Automation (Appium, Espresso)' },
+          { value: 'unit-tests', label: 'Unit Tests (PyTest, JUnit, Jest)' },
+          { value: 'performance-tests', label: 'Performance Tests (JMeter, K6)' },
+          { value: 'comprehensive', label: 'Full Test Suite (All frameworks)' }
+        ],
+        outputFormats: [
+          { value: 'selenium-python', label: 'Selenium + Python' },
+          { value: 'playwright-js', label: 'Playwright + JavaScript' },
+          { value: 'postman-collection', label: 'Postman Collection' },
+          { value: 'karate-feature', label: 'Karate Framework' },
+          { value: 'pytest', label: 'PyTest Code' },
+          { value: 'robot-framework', label: 'Robot Framework' },
+          { value: 'cypress', label: 'Cypress Tests' },
+          { value: 'rest-assured', label: 'REST Assured (Java)' }
+        ],
       sampleInputs: [
         {
           title: "Banking App Login Automation (Web + Mobile)",
@@ -1932,6 +1954,149 @@ SPECIAL FEATURES:
     }
   };
 
+  // Return the configuration, merging specific config with defaults
+  const specificConfig = specificConfigs[agentId];
+  if (specificConfig) {
+    return { ...defaultConfig, ...specificConfig };
+  }
+
+  // For unknown agents, try to infer configuration from agent ID
+  const inferredConfig = inferConfigFromAgentId(agentId);
+  return { ...defaultConfig, ...inferredConfig };
+};
+
+// Helper function to infer configuration from agent ID
+const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
+  // Extract category and type from agent ID patterns
+  if (agentId.includes('qe-') || agentId.includes('test-') || agentId.includes('selenium-') || agentId.includes('cypress-') || agentId.includes('playwright-')) {
+    return {
+      name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: 'QE testing and automation agent',
+      category: 'QE',
+      agent_type: 'demo',
+      inputLabel: 'Test Requirements',
+      inputPlaceholder: 'Describe your testing requirements...',
+      inputHelp: 'Provide details about what you want to test.',
+      analysisTypes: [
+        { value: 'functional', label: 'Functional Testing' },
+        { value: 'automation', label: 'Test Automation' },
+        { value: 'performance', label: 'Performance Testing' }
+      ],
+      outputFormats: [
+        { value: 'test-code', label: 'Test Code' },
+        { value: 'test-plan', label: 'Test Plan' },
+        { value: 'report', label: 'Test Report' }
+      ],
+      capabilities: ['Test automation', 'Quality assurance', 'Bug detection'],
+      estimatedCost: '$0.15 - $0.35 per execution'
+    };
+  }
+
+  if (agentId.includes('security-') || agentId.includes('vulnerability-') || agentId.includes('owasp-')) {
+    return {
+      name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: 'Security analysis and vulnerability assessment agent',
+      category: 'Security',
+      agent_type: 'demo',
+      inputLabel: 'Security Assessment Data',
+      inputPlaceholder: 'Provide system details for security analysis...',
+      inputHelp: 'Describe your system, application, or infrastructure for security assessment.',
+      analysisTypes: [
+        { value: 'vulnerability', label: 'Vulnerability Scan' },
+        { value: 'compliance', label: 'Compliance Check' },
+        { value: 'penetration', label: 'Penetration Testing' }
+      ],
+      outputFormats: [
+        { value: 'security-report', label: 'Security Report' },
+        { value: 'vulnerability-list', label: 'Vulnerability List' },
+        { value: 'remediation-guide', label: 'Remediation Guide' }
+      ],
+      capabilities: ['Security scanning', 'Vulnerability assessment', 'Compliance checking'],
+      estimatedCost: '$0.25 - $0.50 per execution'
+    };
+  }
+
+  if (agentId.includes('devops-') || agentId.includes('infrastructure-') || agentId.includes('kubernetes-') || agentId.includes('terraform-')) {
+    return {
+      name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: 'DevOps and infrastructure management agent',
+      category: 'DevOps',
+      agent_type: 'demo',
+      inputLabel: 'Infrastructure Data',
+      inputPlaceholder: 'Describe your infrastructure setup and requirements...',
+      inputHelp: 'Provide details about your infrastructure, deployment, or DevOps needs.',
+      analysisTypes: [
+        { value: 'optimization', label: 'Infrastructure Optimization' },
+        { value: 'monitoring', label: 'Monitoring Setup' },
+        { value: 'deployment', label: 'Deployment Automation' }
+      ],
+      outputFormats: [
+        { value: 'infrastructure-code', label: 'Infrastructure Code' },
+        { value: 'deployment-plan', label: 'Deployment Plan' },
+        { value: 'monitoring-config', label: 'Monitoring Configuration' }
+      ],
+      capabilities: ['Infrastructure automation', 'Deployment optimization', 'System monitoring'],
+      estimatedCost: '$0.20 - $0.45 per execution'
+    };
+  }
+
+  if (agentId.includes('business-') || agentId.includes('sales-') || agentId.includes('financial-') || agentId.includes('market-')) {
+    return {
+      name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: 'Business intelligence and data analysis agent',
+      category: 'Business',
+      agent_type: 'demo',
+      inputLabel: 'Business Data',
+      inputPlaceholder: 'Provide your business data and analysis requirements...',
+      inputHelp: 'Upload business data or describe your analysis needs.',
+      analysisTypes: [
+        { value: 'analysis', label: 'Data Analysis' },
+        { value: 'forecasting', label: 'Forecasting' },
+        { value: 'reporting', label: 'Business Reporting' }
+      ],
+      outputFormats: [
+        { value: 'business-report', label: 'Business Report' },
+        { value: 'dashboard', label: 'Dashboard Data' },
+        { value: 'insights', label: 'Business Insights' }
+      ],
+      capabilities: ['Data analysis', 'Business intelligence', 'Trend forecasting'],
+      estimatedCost: '$0.30 - $0.60 per execution'
+    };
+  }
+
+  if (agentId.includes('crypto-') || agentId.includes('trading-') || agentId.includes('market-data-') || agentId.includes('finops-')) {
+    return {
+      name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+      description: 'Financial and market data analysis agent',
+      category: 'Market Data',
+      agent_type: 'demo',
+      inputLabel: 'Market Data',
+      inputPlaceholder: 'Provide market data or trading requirements...',
+      inputHelp: 'Describe your trading strategy or market analysis needs.',
+      analysisTypes: [
+        { value: 'market-analysis', label: 'Market Analysis' },
+        { value: 'trading-signals', label: 'Trading Signals' },
+        { value: 'risk-assessment', label: 'Risk Assessment' }
+      ],
+      outputFormats: [
+        { value: 'trading-report', label: 'Trading Report' },
+        { value: 'market-insights', label: 'Market Insights' },
+        { value: 'risk-analysis', label: 'Risk Analysis' }
+      ],
+      capabilities: ['Market analysis', 'Trading automation', 'Risk management'],
+      estimatedCost: '$0.40 - $0.80 per execution'
+    };
+  }
+
+  // Default fallback for completely unknown agents
+  return {
+    name: agentId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+    description: 'Custom agent for specialized tasks',
+    category: 'Custom',
+    agent_type: 'demo'
+  };
+};
+
   // Check if this is a deployed agent first
   const deployedAgent = deployedAgents.find(agent => agent.id === agentId);
   
@@ -2005,20 +2170,7 @@ SPECIAL FEATURES:
     capabilities: deployedAgent.capabilities || [],
     estimatedCost: '$0.15 per execution',
     agent_type: 'production' as const // Deployed agents are production-ready
-  } : agentConfigs[agentId || ''] || {
-    name: 'Unknown Agent',
-    description: 'Agent not found',
-    category: 'Unknown',
-    inputLabel: 'Input Data',
-    inputPlaceholder: 'Enter your data here...',
-    inputHelp: 'Provide input data for analysis.',
-    analysisTypes: [{ value: 'default', label: 'Default Analysis' }],
-    outputFormats: [{ value: 'json', label: 'JSON' }],
-    sampleInputs: [],
-    capabilities: [],
-    estimatedCost: 'Unknown',
-    agent_type: 'demo' as const // Unknown agents default to demo
-  };
+  } : generateAgentConfig(agentId || '');
 
   // Initialize default values when agent changes
   useEffect(() => {
@@ -2044,37 +2196,170 @@ SPECIAL FEATURES:
     setError(null);
     setResult(null);
 
-    // Generate unique execution ID
-    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setCurrentExecutionId(executionId);
-
     try {
+      // Import the real API service
+      const { agentApiService } = await import('../services/agentApiService');
+      
+      // Prepare execution request based on agent category
+      const executionRequest: any = {
+        inputs: {
+          input: inputData.trim(),
+          analysisType: analysisType || undefined,
+          outputFormat: outputFormat || undefined
+        },
+        sync: true, // Execute synchronously for immediate results
+        timeout: 300 // 5 minutes timeout
+      };
+
+      // Add category-specific input mapping
+      if ((currentAgent as any).agent_type === 'purpose-driven' || (currentAgent as any).type === 'purpose-driven' || agentId?.includes('email-rephraser') || agentId?.includes('selenium-code-generator') || agentId?.includes('devops-monitoring')) {
+        // Purpose-driven agent input mapping - use customInputs if available
+        const customInputs = (currentAgent as any).customInputs || {};
+        
+        if (agentId?.includes('email-rephraser')) {
+          executionRequest.inputs = {
+            email_content: inputData.trim(),
+            tone: customInputs.tone || 'professional'
+          };
+        } else if (agentId?.includes('selenium-code-generator')) {
+          // For Selenium agents, use customInputs programming language or default to Python
+          const programmingLanguage = customInputs.programming_language || 'Python';
+          executionRequest.inputs = {
+            test_requirements: inputData.trim() || customInputs.test_requirements || 'Generate test code',
+            programming_language: programmingLanguage,
+            target_url: customInputs.target_url || 'https://example.com'
+          };
+        } else if (agentId?.includes('devops-monitoring')) {
+          executionRequest.inputs = {
+            infrastructure_type: customInputs.infrastructure_type || 'AWS',
+            services_to_monitor: customInputs.services_to_monitor || ['web-server', 'database'],
+            alert_thresholds: customInputs.alert_thresholds || {}
+          };
+        } else {
+          // Generic purpose-driven agent - use customInputs if available
+          executionRequest.inputs = {
+            ...customInputs,
+            input: inputData.trim(),
+            parameters: {
+              analysisType: analysisType,
+              outputFormat: outputFormat
+            }
+          };
+        }
+      } else if (currentAgent.category === 'QE') {
+        executionRequest.inputs.requirements = inputData.trim();
+        executionRequest.inputs.framework = outputFormat;
+      } else if (currentAgent.category === 'DevOps') {
+        executionRequest.inputs.infrastructureData = inputData.trim();
+      } else if (currentAgent.category === 'Security') {
+        executionRequest.inputs.codeOrConfig = inputData.trim();
+        executionRequest.inputs.scanType = analysisType;
+      } else if (currentAgent.category === 'Business') {
+        executionRequest.inputs.businessData = inputData.trim();
+      }
+
+      console.log('Executing agent with real API:', agentId, executionRequest);
+
+      // Execute the agent using real API
+      const apiResult = await agentApiService.executeAgent(agentId || '', executionRequest);
+      
+      console.log('🔍 API Result received:', apiResult);
+      console.log('🔍 API Result results:', apiResult.results);
+      
+      // Generate execution ID for progress tracking
+      const executionId = apiResult.executionId;
+      setCurrentExecutionId(executionId);
+
       // Start progress tracking
       startExecution(executionId, agentId || 'unknown', currentAgent.category);
-      
-      // Removed websocketService simulation - was mock implementation
 
-      // Simulate realistic execution with progress updates
-      await simulateRealisticExecution(executionId);
+      if (apiResult.sync && apiResult.results) {
+        // Synchronous execution completed
+        const formattedResult: ExecutionResult = {
+          execution_id: apiResult.executionId,
+          status: 'completed',
+          results: apiResult.results,
+          metadata: {
+            execution_time: `${apiResult.duration || 0}ms`,
+            analysisType: analysisType,
+            outputFormat: outputFormat
+          }
+        };
 
-      // Generate dynamic results based on user input and agent type
-      const mockResult = generateDynamicResult(inputData, analysisType, outputFormat);
-      setResult(mockResult);
-
-      // Complete the execution
-      progressService.completeExecution(executionId, true);
+        console.log('🔍 Formatted result:', formattedResult);
+        console.log('🔍 Setting result with:', formattedResult.results);
+        
+        setResult(formattedResult);
+        progressService.completeExecution(executionId, true);
+        
+      } else {
+        // Asynchronous execution - poll for results
+        await pollForResults(apiResult.executionId);
+      }
       
     } catch (err) {
-      setError('Failed to execute agent. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to execute agent. Please try again.';
+      setError(errorMessage);
       console.error('Execution error:', err);
       
       // Mark execution as failed
-      if (executionId) {
-        progressService.completeExecution(executionId, false);
+      if (currentExecutionId) {
+        progressService.completeExecution(currentExecutionId, false);
       }
     } finally {
       setExecuting(false);
     }
+  };
+
+  // Poll for asynchronous execution results
+  const pollForResults = async (executionId: string) => {
+    const { agentApiService } = await import('../services/agentApiService');
+    const maxAttempts = 60; // 5 minutes with 5-second intervals
+    let attempts = 0;
+
+    const poll = async () => {
+      try {
+        const execution = await agentApiService.getExecution(executionId);
+        
+        if (!execution) {
+          throw new Error('Execution not found');
+        }
+
+        if (execution.status === 'completed') {
+          const formattedResult: ExecutionResult = {
+            execution_id: execution.executionId,
+            status: 'completed',
+            results: execution.results,
+            metadata: {
+              execution_time: `${execution.duration || 0}ms`
+            }
+          };
+
+          setResult(formattedResult);
+          progressService.completeExecution(executionId, true);
+          return;
+        }
+
+        if (execution.status === 'failed') {
+          throw new Error(execution.error || 'Agent execution failed');
+        }
+
+        // Still running, continue polling
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 5000); // Poll every 5 seconds
+        } else {
+          throw new Error('Execution timeout - please try again');
+        }
+
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Failed to get execution results');
+        progressService.completeExecution(executionId, false);
+      }
+    };
+
+    // Start polling
+    setTimeout(poll, 2000); // Initial delay of 2 seconds
   };
 
   // Simulate realistic execution with step-by-step progress
@@ -3414,6 +3699,108 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
     setInputData(sample.text);
   };
 
+  const handleDownloadCode = (executionResult: any) => {
+    if (!executionResult?.results?.automation_files) {
+      alert('No generated code available to download.');
+      return;
+    }
+
+    // Create a zip-like structure with all files
+    const files = executionResult.results.automation_files;
+    let allCode = '';
+    
+    files.forEach((file: any, index: number) => {
+      allCode += `// ========================================\n`;
+      allCode += `// File: ${file.title || file.id}\n`;
+      allCode += `// Type: ${file.file_type}\n`;
+      allCode += `// Framework: ${file.framework}\n`;
+      allCode += `// ========================================\n\n`;
+      allCode += file.code_preview || file.content || '// No content available';
+      allCode += '\n\n';
+    });
+
+    // Create and download the file
+    const blob = new Blob([allCode], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentAgent.name.replace(/\s+/g, '-').toLowerCase()}-generated-code.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePublishToMarketplace = async () => {
+    try {
+      // Show confirmation dialog
+      const confirmed = window.confirm(
+        `Are you sure you want to publish "${currentAgent.name}" to the marketplace?\n\n` +
+        `This will make your agent available for other users to discover and use.`
+      );
+      
+      if (!confirmed) return;
+
+      // Call the marketplace API
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/marketplace/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: agentId,
+          title: currentAgent.name,
+          description: currentAgent.description || 'Custom agent for specialized tasks',
+          category: currentAgent.category || 'Custom',
+          marketplace: 'internal'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`✅ Success! "${currentAgent.name}" has been published to the marketplace.\n\nPublication ID: ${data.data.publicationId}`);
+      } else {
+        alert(`❌ Failed to publish agent: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error publishing to marketplace:', error);
+      alert('❌ Failed to publish agent. Please try again.');
+    }
+  };
+
+  const handleDownloadSingleFile = (file: any) => {
+    if (!file?.code_preview && !file?.content) {
+      alert('No code content available for this file.');
+      return;
+    }
+
+    const content = file.code_preview || file.content;
+    const filename = file.title || file.id || 'generated-file.txt';
+    
+    // Determine file extension based on file type
+    let extension = '.txt';
+    if (file.file_type?.toLowerCase().includes('javascript') || file.file_type?.toLowerCase().includes('cypress')) {
+      extension = '.js';
+    } else if (file.file_type?.toLowerCase().includes('python')) {
+      extension = '.py';
+    } else if (file.file_type?.toLowerCase().includes('java')) {
+      extension = '.java';
+    } else if (file.file_type?.toLowerCase().includes('config')) {
+      extension = '.config.js';
+    }
+
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.includes('.') ? filename : filename + extension;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Container>
       <Row className="mb-4">
@@ -3467,7 +3854,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                             value={analysisType}
                             onChange={(e) => setAnalysisType(e.target.value)}
                           >
-                            {currentAgent.analysisTypes && currentAgent.analysisTypes.map(type => (
+                            {(currentAgent.analysisTypes || []).map(type => (
                               <option key={type.value} value={type.value}>
                                 {type.label}
                               </option>
@@ -3495,7 +3882,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                           value={outputFormat}
                           onChange={(e) => setOutputFormat(e.target.value)}
                         >
-                          {currentAgent.outputFormats && currentAgent.outputFormats.map(format => (
+                          {(currentAgent.outputFormats || []).map(format => (
                             <option key={format.value} value={format.value}>
                               {format.label}
                             </option>
@@ -3737,7 +4124,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                 <p className="small text-muted mb-3">
                   Click any sample below to load it into the input field:
                 </p>
-                {currentAgent.sampleInputs && currentAgent.sampleInputs.map((sample, index) => (
+                {(currentAgent.sampleInputs || []).map((sample, index) => (
                   <div key={index} className="mb-3">
                     <Button
                       variant="outline-primary"
@@ -3761,7 +4148,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                   <strong>Capabilities:</strong>
                 </p>
                 <ul className="small">
-                  {currentAgent.capabilities && currentAgent.capabilities.map((capability, index) => (
+                  {(currentAgent.capabilities || []).map((capability, index) => (
                     <li key={index}>{capability}</li>
                   ))}
                 </ul>
@@ -3797,7 +4184,9 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
         </Row>
       )}
 
-      {result && (
+      {result && (() => {
+        console.log('🔍 Rendering results section with:', result.results);
+        return (
         <Row>
           <Col>
             <Card>
@@ -3806,14 +4195,246 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                 <Badge bg="success">ID: {result.execution_id}</Badge>
               </Card.Header>
               <Card.Body>
-                {/* Summary - Simplified for Production Agents */}
-                {(currentAgent.agent_type || 'demo') === 'production' ? (
+                {/* Purpose-Driven Agent Results */}
+                {((currentAgent as any).agent_type === 'purpose-driven' || (currentAgent as any).type === 'purpose-driven' || agentId?.includes('email-rephraser') || agentId?.includes('selenium-code-generator') || agentId?.includes('devops-monitoring') || agentId?.includes('custom_')) ? (
+                  <div>
+                    <div className="mb-4">
+                      <h6 className="text-primary">Purpose: {result.results?.summary?.agent_purpose || (currentAgent as any).purpose || 'Specialized task execution'}</h6>
+                    </div>
+                    
+                    {/* Email Rephraser Results */}
+                    {result.results?.rephrased_content && (
+                      <div>
+                        <Card className="mb-4">
+                          <Card.Header className="bg-success text-white">
+                            <h6 className="mb-0">Rephrased Email Content</h6>
+                          </Card.Header>
+                          <Card.Body>
+                            <div style={{ 
+                              backgroundColor: '#f8f9fa', 
+                              padding: '1rem', 
+                              borderRadius: '0.375rem',
+                              fontFamily: 'monospace',
+                              whiteSpace: 'pre-wrap',
+                              border: '1px solid #dee2e6'
+                            }}>
+                              {result.results.rephrased_content}
+                            </div>
+                          </Card.Body>
+                        </Card>
+
+                        {result.results.improvements_made && (
+                          <Card className="mb-4">
+                            <Card.Header>
+                              <h6 className="mb-0">Improvements Made</h6>
+                            </Card.Header>
+                            <Card.Body>
+                              <ul className="mb-0">
+                                {result.results.improvements_made.map((improvement: string, index: number) => (
+                                  <li key={index}>{improvement}</li>
+                                ))}
+                              </ul>
+                            </Card.Body>
+                          </Card>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Selenium Code Results */}
+                    {result.results?.test_code && (
+                      <div>
+                        <Card className="mb-4">
+                          <Card.Header className="bg-primary text-white">
+                            <h6 className="mb-0">Generated Test Code</h6>
+                          </Card.Header>
+                          <Card.Body>
+                            <pre style={{ 
+                              backgroundColor: '#f8f9fa', 
+                              padding: '1rem', 
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              overflow: 'auto',
+                              maxHeight: '400px'
+                            }}>
+                              {result.results.test_code}
+                            </pre>
+                          </Card.Body>
+                        </Card>
+
+                        <div className="row">
+                          <div className="col-md-6">
+                            <Card className="mb-3">
+                              <Card.Header>
+                                <h6 className="mb-0">Dependencies</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                {result.results.dependencies?.map((dep: string, index: number) => (
+                                  <Badge key={index} bg="secondary" className="me-1 mb-1">
+                                    {dep}
+                                  </Badge>
+                                ))}
+                              </Card.Body>
+                            </Card>
+                          </div>
+                          <div className="col-md-6">
+                            <Card className="mb-3">
+                              <Card.Header>
+                                <h6 className="mb-0">Setup Instructions</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                <div style={{ fontSize: '0.875rem', whiteSpace: 'pre-wrap' }}>
+                                  {result.results.setup_instructions}
+                                </div>
+                              </Card.Body>
+                            </Card>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* DevOps Monitoring Results */}
+                    {result.results?.monitoring_config && (
+                      <div>
+                        <Card className="mb-4">
+                          <Card.Header className="bg-warning text-dark">
+                            <h6 className="mb-0">Monitoring Configuration</h6>
+                          </Card.Header>
+                          <Card.Body>
+                            <pre style={{ 
+                              backgroundColor: '#f8f9fa', 
+                              padding: '1rem', 
+                              borderRadius: '0.375rem',
+                              fontSize: '0.875rem',
+                              overflow: 'auto',
+                              maxHeight: '300px'
+                            }}>
+                              {result.results.monitoring_config}
+                            </pre>
+                          </Card.Body>
+                        </Card>
+
+                        <div className="row">
+                          <div className="col-md-6">
+                            <Card className="mb-3">
+                              <Card.Header>
+                                <h6 className="mb-0">Alert Rules</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                {result.results.alert_rules?.map((rule: any, index: number) => (
+                                  <div key={index} className="mb-2 p-2 bg-light rounded">
+                                    <strong>{rule.service}</strong><br />
+                                    <small>Metric: {rule.metric} | Threshold: {rule.threshold}</small><br />
+                                    <small>Action: {rule.action}</small>
+                                  </div>
+                                ))}
+                              </Card.Body>
+                            </Card>
+                          </div>
+                          <div className="col-md-6">
+                            <Card className="mb-3">
+                              <Card.Header>
+                                <h6 className="mb-0">Dashboard Configuration</h6>
+                              </Card.Header>
+                              <Card.Body>
+                                <pre style={{ fontSize: '0.75rem', overflow: 'auto', maxHeight: '200px' }}>
+                                  {result.results.dashboard_config}
+                                </pre>
+                              </Card.Body>
+                            </Card>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Custom Agent Results */}
+                    {result.results?.result && (
+                      <Card className="mb-4">
+                        <Card.Header className="bg-info text-white">
+                          <h6 className="mb-0">Agent Output</h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <div style={{ 
+                            backgroundColor: '#f8f9fa', 
+                            padding: '1rem', 
+                            borderRadius: '0.375rem',
+                            whiteSpace: 'pre-wrap',
+                            border: '1px solid #dee2e6',
+                            fontSize: '0.9rem',
+                            lineHeight: '1.5'
+                          }}>
+                            {result.results.result}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    )}
+
+                    {/* Processing Summary for Custom Agents */}
+                    {result.results?.processing_summary && (
+                      <Card className="mb-4">
+                        <Card.Header>
+                          <h6 className="mb-0">Processing Summary</h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <p className="mb-0">{result.results.processing_summary}</p>
+                        </Card.Body>
+                      </Card>
+                    )}
+
+                    {/* Generic Purpose-Driven Results - Fallback */}
+                    {!result.results?.rephrased_content && !result.results?.test_code && !result.results?.monitoring_config && !result.results?.result && (
+                      <Card className="mb-4">
+                        <Card.Header>
+                          <h6 className="mb-0">Processing Results</h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <pre style={{ 
+                            backgroundColor: '#f8f9fa', 
+                            padding: '1rem', 
+                            borderRadius: '0.375rem',
+                            fontSize: '0.875rem'
+                          }}>
+                            {JSON.stringify(result.results, null, 2)}
+                          </pre>
+                        </Card.Body>
+                      </Card>
+                    )}
+
+                    {/* Execution Metadata */}
+                    {result.results?.metadata && (
+                      <Card className="mb-4">
+                        <Card.Header>
+                          <h6 className="mb-0">Execution Details</h6>
+                        </Card.Header>
+                        <Card.Body>
+                          <div className="row">
+                            <div className="col-md-4">
+                              <strong>Processing Time:</strong><br />
+                              <Badge bg="success">{result.results.summary?.processing_time || '2.3s'}</Badge>
+                            </div>
+                            <div className="col-md-4">
+                              <strong>Processing Method:</strong><br />
+                              <Badge bg="info">{result.results.metadata.processing_method}</Badge>
+                            </div>
+                            <div className="col-md-4">
+                              <strong>Agent Type:</strong><br />
+                              <Badge bg="secondary">{result.results.metadata.agent_type}</Badge>
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <strong>Input Analysis:</strong><br />
+                            <small className="text-muted">{result.results.metadata.input_analysis}</small>
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    )}
+                  </div>
+                ) : (currentAgent.agent_type || 'demo') === 'production' ? (
                   // Simplified summary for production agents
                   <Row className="mb-4">
                     <Col md={4}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-primary">{result.results.summary.total_test_files || result.results.summary.critical_issues || '✅'}</h4>
+                          <h4 className="text-primary">{result.results?.summary?.total_test_files || result.results?.summary?.critical_issues || '✅'}</h4>
                           <small>{currentAgent.category === 'QE' ? 'Generated Files' : currentAgent.category === 'DevOps' ? 'Issues Found' : 'Results'}</small>
                         </Card.Body>
                       </Card>
@@ -3821,7 +4442,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={4}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-info">{result.results.summary.automation_framework || result.results.summary.infrastructure_health_score || 'Complete'}</h4>
+                          <h4 className="text-info">{result.results?.summary?.automation_framework || result.results?.summary?.infrastructure_health_score || 'Complete'}</h4>
                           <small>Framework</small>
                         </Card.Body>
                       </Card>
@@ -3840,7 +4461,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-primary">{result.results.summary.infrastructure_health_score}</h4>
+                          <h4 className="text-primary">{result.results?.summary?.infrastructure_health_score || 0}</h4>
                           <small>Health Score</small>
                         </Card.Body>
                       </Card>
@@ -3848,7 +4469,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-danger">{result.results.summary.critical_issues}</h4>
+                          <h4 className="text-danger">{result.results?.summary?.critical_issues || 0}</h4>
                           <small>Critical Issues</small>
                         </Card.Body>
                       </Card>
@@ -3856,7 +4477,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-warning">{result.results.summary.warnings}</h4>
+                          <h4 className="text-warning">{result.results?.summary?.warnings || 0}</h4>
                           <small>Warnings</small>
                         </Card.Body>
                       </Card>
@@ -3868,7 +4489,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={(currentAgent.agent_type || 'demo') === 'production' ? 4 : 3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-primary">{result.results.summary.total_test_files}</h4>
+                          <h4 className="text-primary">{result.results?.summary?.total_test_files || 0}</h4>
                           <small>Generated Files</small>
                         </Card.Body>
                       </Card>
@@ -3878,7 +4499,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                       <Col md={3}>
                         <Card className="text-center">
                           <Card.Body>
-                            <h4 className="text-success">{result.results.summary.code_coverage}</h4>
+                            <h4 className="text-success">{result.results?.summary?.code_coverage || '95%'}</h4>
                             <small>Code Coverage</small>
                           </Card.Body>
                         </Card>
@@ -3887,7 +4508,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={(currentAgent.agent_type || 'demo') === 'production' ? 4 : 3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-info">{result.results.summary.automation_framework}</h4>
+                          <h4 className="text-info">{result.results?.summary?.automation_framework || 'Framework'}</h4>
                           <small>Framework Details</small>
                         </Card.Body>
                       </Card>
@@ -3895,7 +4516,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Col md={(currentAgent.agent_type || 'demo') === 'production' ? 4 : 3}>
                       <Card className="text-center">
                         <Card.Body>
-                          <h4 className="text-warning">{result.results.summary.execution_time_estimate}</h4>
+                          <h4 className="text-warning">{result.results?.summary?.execution_time_estimate || '2 min'}</h4>
                           <small>Generation Time</small>
                         </Card.Body>
                       </Card>
@@ -3909,7 +4530,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     {/* Performance Analysis */}
                     <h6>📊 Performance Analysis</h6>
                     <Row className="mb-4">
-                      {result.results.performance_analysis && Object.entries(result.results.performance_analysis).map(([metric, data]: [string, any]) => (
+                      {(result.results?.performance_analysis ? Object.entries(result.results.performance_analysis) : []).map(([metric, data]: [string, any]) => (
                         <Col md={6} key={metric} className="mb-3">
                           <Card>
                             <Card.Body>
@@ -3933,7 +4554,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     {/* Recommendations */}
                     <h6>💡 Optimization Recommendations</h6>
                     <Row>
-                      {result.results.recommendations && result.results.recommendations.map((rec: any, index: number) => (
+                      {(result.results?.recommendations || []).map((rec: any, index: number) => (
                         <Col md={6} key={index} className="mb-3">
                           <Card>
                             <Card.Header className="d-flex justify-content-between">
@@ -4004,7 +4625,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                               </Card.Header>
                               <Card.Body>
                                 <ol>
-                                  {result.results.failure_analysis.recommendations.map((rec: string, idx: number) => (
+                                  {(result.results?.failure_analysis?.recommendations || []).map((rec: string, idx: number) => (
                                     <li key={idx} className="mb-2">{rec}</li>
                                   ))}
                                 </ol>
@@ -4020,7 +4641,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                                 <h6 className="mb-0">🔍 Similar Failures</h6>
                               </Card.Header>
                               <Card.Body>
-                                {result.results.failure_analysis.similar_failures.map((failure: any, idx: number) => (
+                                {(result.results?.failure_analysis?.similar_failures || []).map((failure: any, idx: number) => (
                                   <div key={idx} className="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
                                     <span><strong>{failure.test}</strong></span>
                                     <div>
@@ -4037,7 +4658,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     ) : (
                       // Original automation files for built-in agents
                       <Row>
-                        {result.results.automation_files.map((file: any, index: number) => (
+                        {(result.results?.automation_files || []).map((file: any, index: number) => (
                         <Col md={12} key={index} className="mb-3">
                           <Card>
                             <Card.Header className="d-flex justify-content-between align-items-center">
@@ -4047,7 +4668,11 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                               </div>
                               <div>
                                 <Badge bg="info" className="me-2">⏱️ {file.estimated_runtime}</Badge>
-                                <Button variant="outline-success" size="sm" disabled>
+                                <Button 
+                                  variant="outline-success" 
+                                  size="sm" 
+                                  onClick={() => handleDownloadSingleFile(file)}
+                                >
                                   📥 Download
                                 </Button>
                               </div>
@@ -4077,7 +4702,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                               <div className="mt-3">
                                 <strong className="small">Dependencies:</strong>
                                 <div className="mt-1">
-                                  {file.dependencies.map((dep: string, depIndex: number) => (
+                                  {(file.dependencies || []).map((dep: string, depIndex: number) => (
                                     <Badge key={depIndex} bg="outline-secondary" className="me-1 mb-1">
                                       {dep}
                                     </Badge>
@@ -4104,11 +4729,11 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                             <h6 className="mb-0">🎯 Security Summary</h6>
                           </Card.Header>
                           <Card.Body>
-                            <p><strong>Security Score:</strong> {result.results.summary.security_score}</p>
-                            <p><strong>Vulnerabilities Found:</strong> {result.results.summary.vulnerabilities_found}</p>
-                            <p><strong>Critical Issues:</strong> {result.results.summary.critical_issues}</p>
-                            <p><strong>Warnings:</strong> {result.results.summary.warnings}</p>
-                            <p><strong>Scan Framework:</strong> {result.results.summary.automation_framework}</p>
+                            <p><strong>Security Score:</strong> {result.results?.summary?.security_score || 'N/A'}</p>
+                            <p><strong>Vulnerabilities Found:</strong> {result.results?.summary?.vulnerabilities_found || 0}</p>
+                            <p><strong>Critical Issues:</strong> {result.results?.summary?.critical_issues || 0}</p>
+                            <p><strong>Warnings:</strong> {result.results?.summary?.warnings || 0}</p>
+                            <p><strong>Scan Framework:</strong> {result.results?.summary?.automation_framework || 'N/A'}</p>
                           </Card.Body>
                         </Card>
                       </Col>
@@ -4118,7 +4743,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                             <h6 className="mb-0">🔍 Detected Technologies</h6>
                           </Card.Header>
                           <Card.Body>
-                            {result.results.scan_results.detected_technologies.map((tech: string, index: number) => (
+                            {(result.results?.scan_results?.detected_technologies || []).map((tech: string, index: number) => (
                               <Badge key={index} bg="info" className="me-2 mb-2">{tech}</Badge>
                             ))}
                           </Card.Body>
@@ -4147,7 +4772,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                               <h6 className="mb-0">⚠️ Identified Vulnerabilities</h6>
                             </Card.Header>
                             <Card.Body>
-                              {result.results.scan_results.vulnerabilities.map((vuln: string, index: number) => (
+                              {(result.results?.scan_results?.vulnerabilities || []).map((vuln: string, index: number) => (
                                 <Alert key={index} variant="warning" className="mb-2">
                                   <strong>Vulnerability {index + 1}:</strong> {vuln}
                                 </Alert>
@@ -4166,6 +4791,16 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     🔄 Execute Again
                   </Button>
                   
+                  {/* Publish to Marketplace button for custom agents */}
+                  {agentId?.includes('custom_') && (
+                    <Button 
+                      variant="warning" 
+                      onClick={() => handlePublishToMarketplace()}
+                    >
+                      🏪 Publish to Marketplace
+                    </Button>
+                  )}
+                  
                   <ExportOptions
                     executionResult={result}
                     agentName={currentAgent.name}
@@ -4175,7 +4810,10 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                   
                   {(currentAgent.agent_type || 'demo') === 'production' ? (
                     // Simplified actions for production agents
-                    <Button variant="success" disabled>
+                    <Button 
+                      variant="success" 
+                      onClick={() => handleDownloadCode(result)}
+                    >
                       📥 Download Code
                     </Button>
                   ) : (
@@ -4244,7 +4882,8 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
             </Card>
           </Col>
         </Row>
-      )}
+        );
+      })()}
     </Container>
   );
 };

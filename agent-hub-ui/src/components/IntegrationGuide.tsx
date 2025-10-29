@@ -811,7 +811,6 @@ https://api.agenthub.company.com/v1`}
           <Card>
             <Card.Header className="bg-warning text-dark">
               <h5 className="mb-0">
-                <Icon name="shield" size="small" className="me-2" />
                 Error Handling & Best Practices
               </h5>
             </Card.Header>
@@ -842,7 +841,6 @@ https://api.agenthub.company.com/v1`}
           <Card>
             <Card.Header className="bg-info text-white">
               <h5 className="mb-0">
-                <Icon name="time" size="small" className="me-2" />
                 Rate Limits
               </h5>
             </Card.Header>
@@ -886,7 +884,6 @@ https://api.agenthub.company.com/v1`}
           <Card>
             <Card.Header className="bg-success text-white">
               <h5 className="mb-0">
-                <Icon name="chart" size="small" className="me-2" />
                 Performance Metrics
               </h5>
             </Card.Header>

@@ -1,22 +1,71 @@
-# Agent Lifecycle Management Platform
+# Agent Factory - Local Development Platform
 
-A comprehensive AI-powered agent platform for automating QE testing, DevOps operations, security scanning, and business intelligence across enterprise teams.
+A local development platform for creating and managing AI agents with real-time AWS Bedrock integration. Build, test, and prototype AI agents locally while leveraging live AWS Bedrock models.
 
-## 🚀 Platform Overview
+## 🚀 Quick Start
 
-The Agent Lifecycle Management Platform transforms repetitive engineering tasks into automated intelligence, delivering measurable ROI through:
+### Prerequisites
+- Node.js 18+
+- AWS credentials configured for Bedrock access
 
-- **QE Automation**: Generate comprehensive test suites (Cypress, Selenium, Postman) from requirements
-- **DevOps Optimization**: Automated infrastructure analysis and cost optimization (AWS, Azure, GCP)
-- **Security Scanning**: Enterprise-grade vulnerability assessment and compliance checking
-- **Business Intelligence**: Data analysis, forecasting, and executive reporting
+### Installation & Setup
+```bash
+# Install backend dependencies
+cd agent-hub-backend
+npm install
 
-## 📊 Key Benefits
+# Install frontend dependencies  
+cd ../agent-hub-ui
+npm install
 
-- **95% Time Reduction** in test case creation
-- **$25K+ Annual Savings** per team through automation
-- **60% Fewer Production Incidents** through comprehensive testing
-- **Framework Flexibility** - works with existing tools and processes
+# Start backend (Terminal 1)
+cd agent-hub-backend
+npm run dev
+
+# Start frontend (Terminal 2)
+cd ../agent-hub-ui
+npm start
+```
+
+### Access the Platform
+- **Frontend**: http://localhost:3001
+- **Backend API**: http://localhost:3002
+- **Health Check**: http://localhost:3002/health
+
+## 🤖 **Real AWS Bedrock Integration**
+
+- ✅ **Live AI Models**: Claude 3 Haiku, Claude 3.5 Sonnet, Amazon Titan
+- ✅ **Real-time Connection**: Direct AWS Bedrock API integration
+- ✅ **Smart Recommendations**: Model selection based on agent type
+- ✅ **Cost Tracking**: Token usage and cost information
+- ✅ **Performance Metrics**: Response times and success rates
+
+## 🛠️ **Developer Experience Tools**
+
+### **VSCode Extension** - IDE Integration
+- ✅ **Right-click Integration**: Generate tests, security analysis, documentation
+- ✅ **Command Palette**: Full agent access within VSCode
+- ✅ **Status Bar**: Real-time connection status
+- ✅ **Side Panels**: Agent browser and operation history
+- ✅ **Auto-scanning**: Continuous security and quality checks
+
+### **CLI Tool** - Terminal Integration
+- ✅ **Project Management**: `agent init`, `agent status`
+- ✅ **Test Generation**: `agent test src/file.ts`
+- ✅ **Security Scanning**: `agent scan`
+- ✅ **Documentation**: `agent docs`
+- ✅ **Agent Management**: `agent list`, `agent run`
+
+**Installation:**
+```bash
+# VSCode Extension
+cd agenthub-vscode-extension
+code --install-extension agenthub-1.0.0.vsix
+
+# CLI Tool
+cd agent-hub-cli
+npm install && npm run build && npm link
+```
 
 ## 🏗️ Architecture
 

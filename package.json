@@ -1,0 +1,57 @@
+{
+  "name": "agent-hub-platform",
+  "version": "1.0.0",
+  "description": "Agent Lifecycle Management Platform with separate local and production configurations",
+  "scripts": {
+    "start:local": "cross-env NODE_ENV=local npm run start:backend:local",
+    "start:prod": "cross-env NODE_ENV=production npm run start:backend:prod",
+    "start:backend:local": "cd agent-hub-backend && cross-env PORT=3002 npm run dev",
+    "start:backend:prod": "cd agent-hub-backend && npm run build:prod && npm run start:prod",
+    "start:backend:prod:bedrock": "cd agent-hub-backend && cross-env NODE_ENV=production BEDROCK_ENABLED=true npm run start:prod",
+    "start:ui:local": "cd agent-hub-ui && cross-env PORT=3001 npm start",
+    "start:ui:prod": "cd agent-hub-ui && npm run build && serve -s build -l 80",
+    "start:production": "npm run start:backend:prod:bedrock",
+    "docker:local": "docker-compose -f docker-compose.local.yml up --build",
+    "docker:prod": "docker-compose -f docker-compose.production.yml up --build -d",
+    "docker:local:down": "docker-compose -f docker-compose.local.yml down",
+    "docker:prod:down": "docker-compose -f docker-compose.production.yml down",
+    "setup:local": "npm run setup:backend && npm run setup:ui && npm run setup:local:env",
+    "setup:backend": "cd agent-hub-backend && npm install",
+    "setup:ui": "cd agent-hub-ui && npm install",
+    "setup:local:env": "node scripts/setup-local-env.js",
+    "test:local": "npm run test:backend && npm run test:ui",
+    "test:backend": "cd agent-hub-backend && npm test",
+    "test:ui": "cd agent-hub-ui && npm test -- --watchAll=false",
+    "build:all": "npm run build:backend && npm run build:ui",
+    "build:backend": "cd agent-hub-backend && npm run build",
+    "build:ui": "cd agent-hub-ui && npm run build",
+    "deploy:aws": "cd aws-lambda-deployment && npm run deploy",
+    "clean": "npm run clean:backend && npm run clean:ui && npm run clean:data",
+    "clean:backend": "cd agent-hub-backend && rm -rf dist node_modules",
+    "clean:ui": "cd agent-hub-ui && rm -rf build node_modules",
+    "clean:data": "rm -rf data logs localstack-data"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "agent-platform",
+    "ai",
+    "automation",
+    "devops",
+    "qa",
+    "testing"
+  ],
+  "author": "AgentHub Team",
+  "license": "MIT"
+}

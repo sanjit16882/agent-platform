@@ -1,18 +1,33 @@
 import React from 'react';
-import { Navbar as BootstrapNavbar, Nav, Container } from 'react-bootstrap';
+import { Navbar as BootstrapNavbar, Nav, Container, NavDropdown, Badge } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { Icon } from './Icon';
+import { useAuth } from '../context/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
+import { FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
+
+// Type assertion for React Icons compatibility
+const UserIcon = FaUser as any;
+const SignOutIcon = FaSignOutAlt as any;
+const CogIcon = FaCog as any;
 
 const Navbar: React.FC = () => {
   const location = useLocation();
+  const { user, logout, isAuthenticated } = useAuth();
+  const { hasPermission, canAccessFeature } = usePermissions();
+
+
+
+  const handleLogout = () => {
+    logout();
+    // Optionally redirect to login page
+  };
 
   return (
     <>
       {/* Main Navigation */}
       <BootstrapNavbar expand="lg" className="main-navbar" style={{background: 'linear-gradient(135deg, #003d82 0%, #002a5c 100%)'}}>
         <Container>
-          <BootstrapNavbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center">
-            <Icon name="agentHub" size="large" color="primary" className="me-2" />
+          <BootstrapNavbar.Brand as={Link} to="/" className="fw-bold">
             AgentHub
           </BootstrapNavbar.Brand>
           <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
@@ -23,9 +38,8 @@ const Navbar: React.FC = () => {
                 as={Link} 
                 to="/" 
                 active={location.pathname === '/'}
-                className="d-flex align-items-center px-2"
+                className="px-2"
               >
-                <Icon name="dashboard" size="small" className="me-1" />
                 Dashboard
               </Nav.Link>
               
@@ -33,39 +47,39 @@ const Navbar: React.FC = () => {
                 as={Link} 
                 to="/agents" 
                 active={location.pathname === '/agents'}
-                className="d-flex align-items-center px-2"
+                className="px-2"
               >
-                <Icon name="grid" size="small" className="me-1" />
                 Agents
               </Nav.Link>
 
+
+
+
+
               <Nav.Link 
                 as={Link} 
-                to="/templates" 
-                active={location.pathname === '/templates'}
-                className="d-flex align-items-center px-2"
+                to="/agent-builder" 
+                active={location.pathname === '/agent-builder'}
+                className="px-2"
               >
-                <Icon name="file" size="small" className="me-1" />
-                Templates
+                Agent Builder
               </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
-                to="/nlp-tester" 
-                active={location.pathname === '/nlp-tester'}
-                className="d-flex align-items-center px-2 text-success"
+                to="/hybrid-builder" 
+                active={location.pathname === '/hybrid-builder'}
+                className="px-2"
               >
-                <Icon name="agent" size="small" className="me-1" />
-                NLP Creator
+                Hybrid Builder
               </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
                 to="/upload" 
                 active={location.pathname === '/upload'}
-                className="d-flex align-items-center px-2 text-warning"
+                className="px-2"
               >
-                <Icon name="upload" size="small" className="me-1" />
                 Upload
               </Nav.Link>
 
@@ -73,37 +87,88 @@ const Navbar: React.FC = () => {
                 as={Link} 
                 to="/manage" 
                 active={location.pathname === '/manage'}
-                className="d-flex align-items-center px-2 text-info"
+                className="px-2"
               >
-                <Icon name="settings" size="small" className="me-1" />
                 Manage
               </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
-                to="/metrics" 
-                active={location.pathname === '/metrics'}
-                className="d-flex align-items-center px-2 text-danger"
+                to="/integration" 
+                active={location.pathname === '/integration'}
+                className="px-2"
               >
-                <Icon name="activity" size="small" className="me-1" />
-                Metrics
+                Integration
               </Nav.Link>
 
-              <Nav.Link 
-                as={Link} 
-                to="/analytics" 
-                active={location.pathname === '/analytics'}
-                className="d-flex align-items-center px-2 text-success"
-              >
-                <Icon name="chart" size="small" className="me-1" />
-                Analytics
-              </Nav.Link>
+              {canAccessFeature('cost-management') && (
+                <Nav.Link 
+                  as={Link} 
+                  to="/finops" 
+                  active={location.pathname === '/finops'}
+                  className="px-2"
+                >
+                  FinOps
+                </Nav.Link>
+              )}
+
+              {canAccessFeature('cost-management') && (
+                <Nav.Link 
+                  as={Link} 
+                  to="/analytics" 
+                  active={location.pathname === '/analytics'}
+                  className="px-2"
+                >
+                  Analytics
+                </Nav.Link>
+              )}
             </Nav>
             <Nav>
-              <Nav.Link disabled className="text-light small">
-                <Icon name="users" size="small" className="me-1" />
-                User
-              </Nav.Link>
+              {isAuthenticated && user ? (
+                <NavDropdown
+                  title={
+                    <span className="d-flex align-items-center">
+                      <span className="me-2">{user.name.split(' ')[0]}</span>
+                      <Badge bg="primary" className="small">
+                        {user.role}
+                      </Badge>
+                    </span>
+                  }
+                  id="user-dropdown"
+                  align="end"
+                  className="navbar-user-dropdown"
+                >
+                  {canAccessFeature('user-management') && (
+                    <NavDropdown.Item as={Link} to="/users">
+                      <CogIcon className="me-2" />
+                      User Management
+                    </NavDropdown.Item>
+                  )}
+                  {canAccessFeature('role-management') && (
+                    <NavDropdown.Item as={Link} to="/roles">
+                      <CogIcon className="me-2" />
+                      Role Management
+                    </NavDropdown.Item>
+                  )}
+                  {hasPermission('system.admin') && (
+                    <NavDropdown.Item as={Link} to="/security">
+                      Security & Compliance
+                    </NavDropdown.Item>
+                  )}
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={handleLogout}>
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              ) : (
+                <Nav.Link 
+                  as={Link} 
+                  to="/login" 
+                  className="small navbar-user-text"
+                >
+                  Login
+                </Nav.Link>
+              )}
             </Nav>
           </BootstrapNavbar.Collapse>
         </Container>
@@ -117,43 +182,43 @@ const Navbar: React.FC = () => {
               as={Link} 
               to="/integration-guide" 
               active={location.pathname === '/integration-guide'}
-              className="d-flex align-items-center px-3 text-success small"
+              className="px-3 text-primary small"
             >
-              <Icon name="view" size="small" className="me-1" />
               Integration Guide
-            </Nav.Link>
-
-
-
-            <Nav.Link 
-              as={Link} 
-              to="/integration" 
-              active={location.pathname === '/integration'}
-              className="d-flex align-items-center px-3 text-info small"
-            >
-              <Icon name="enterprise" size="small" className="me-1" />
-              Platform Integration
-            </Nav.Link>
-
-            <Nav.Link 
-              as={Link} 
-              to="/enterprise" 
-              active={location.pathname === '/enterprise'}
-              className="d-flex align-items-center px-3 text-primary small"
-            >
-              <Icon name="enterprise" size="small" className="me-1" />
-              Enterprise API
             </Nav.Link>
 
             <Nav.Link 
               as={Link} 
               to="/api-docs" 
               active={location.pathname === '/api-docs'}
-              className="d-flex align-items-center px-3 text-success small"
+              className="px-3 text-primary small"
             >
-              <Icon name="view" size="small" className="me-1" />
-              API Docs
+              API Documentation
             </Nav.Link>
+
+            {hasPermission('agent.deploy') && (
+              <Nav.Link 
+                as={Link} 
+                to="/deployment" 
+                active={location.pathname === '/deployment'}
+                className="px-3 text-warning small"
+              >
+                Deployment
+              </Nav.Link>
+            )}
+
+            {hasPermission('template.publish') && (
+              <Nav.Link 
+                as={Link} 
+                to="/marketplace" 
+                active={location.pathname === '/marketplace'}
+                className="px-3 text-primary small"
+              >
+                Marketplace
+              </Nav.Link>
+            )}
+
+
           </Nav>
         </Container>
       </div>

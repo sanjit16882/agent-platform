@@ -1,0 +1,142 @@
+/* Data Mapping Modal Styles */
+.data-mapping-modal .modal-dialog {
+  max-width: 1200px;
+}
+
+.data-mapping-modal .modal-body {
+  min-height: 600px;
+}
+
+/* Field Mapping Panel */
+.field-mapping-panel .field-item {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.field-mapping-panel .field-item:hover {
+  background-color: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+.field-mapping-panel .field-item.mapped {
+  background-color: #e7f3ff;
+  border-left: 4px solid #0d6efd;
+}
+
+.field-mapping-panel .field-item.selected {
+  background-color: #cce7ff;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.field-mapping-panel .mapping-arrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+/* Data Preview Panel */
+.data-preview-panel .data-preview-content {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  font-size: 0.875rem;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Transformation Editor */
+.transformation-editor .form-control[readonly] {
+  background-color: #f8f9fa;
+}
+
+.transformation-editor textarea {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Drag and Drop Styles */
+.field-item[draggable="true"] {
+  cursor: grab;
+}
+
+.field-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.field-item.drag-over {
+  background-color: #fff3cd;
+  border-color: #ffc107;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .data-mapping-modal .modal-dialog {
+    max-width: 95%;
+    margin: 1rem auto;
+  }
+  
+  .field-mapping-panel .mapping-arrow {
+    transform: rotate(90deg);
+    margin: 0.5rem 0;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Badge styling */
+.badge.small {
+  font-size: 0.7em;
+}
+
+/* Card hover effects */
+.card:hover {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+/* Form validation styles */
+.is-invalid {
+  border-color: #dc3545;
+}
+
+.is-valid {
+  border-color: #198754;
+}
+
+/* Custom scrollbar for preview content */
+.data-preview-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.data-preview-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.data-preview-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.data-preview-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

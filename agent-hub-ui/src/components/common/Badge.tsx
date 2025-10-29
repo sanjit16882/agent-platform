@@ -1,11 +1,11 @@
 import React from 'react';
-import { badgeStyles } from '../../styles/theme';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'critical' | 'info';
   className?: string;
   style?: React.CSSProperties;
+  bg?: string; // For Bootstrap compatibility
   [key: string]: any;
 }
 
@@ -14,29 +14,47 @@ const Badge: React.FC<BadgeProps> = ({
   variant = 'primary', 
   className = '',
   style = {},
+  bg,
   ...props 
 }) => {
-  const baseStyle = badgeStyles.base;
-  const variantStyle = badgeStyles.variants[variant] || badgeStyles.variants.primary;
-  
-  const combinedStyle: React.CSSProperties = {
-    display: baseStyle.display as React.CSSProperties['display'],
-    alignItems: baseStyle.alignItems as React.CSSProperties['alignItems'],
-    padding: baseStyle.padding,
-    fontSize: baseStyle.fontSize,
-    fontWeight: baseStyle.fontWeight,
-    borderRadius: baseStyle.borderRadius,
-    textTransform: baseStyle.textTransform as React.CSSProperties['textTransform'],
-    letterSpacing: baseStyle.letterSpacing,
-    backgroundColor: variantStyle.backgroundColor,
-    color: variantStyle.color,
-    ...style
+  // Map variants to enterprise theme classes
+  const getVariantClass = (variant: string) => {
+    const variantMap = {
+      'primary': 'af-badge-primary',
+      'secondary': 'af-badge-secondary',
+      'success': 'af-badge-success',
+      'warning': 'af-badge-warning',
+      'danger': 'af-badge-critical',  // Map danger to critical
+      'critical': 'af-badge-critical',
+      'info': 'af-badge-info'
+    };
+    return variantMap[variant as keyof typeof variantMap] || 'af-badge-primary';
   };
+
+  // Handle Bootstrap bg prop
+  const getBgClass = (bg: string) => {
+    const bgMap = {
+      'primary': 'af-badge-primary',
+      'secondary': 'af-badge-secondary',
+      'success': 'af-badge-success',
+      'warning': 'af-badge-warning',
+      'danger': 'af-badge-critical',  // Map danger to critical
+      'critical': 'af-badge-critical',
+      'info': 'af-badge-info'
+    };
+    return bgMap[bg as keyof typeof bgMap] || 'af-badge-primary';
+  };
+
+  const classes = [
+    'af-badge',
+    bg ? getBgClass(bg) : getVariantClass(variant),
+    className
+  ].filter(Boolean).join(' ');
 
   return (
     <span
-      className={className}
-      style={combinedStyle}
+      className={classes}
+      style={style}
       {...props}
     >
       {children}

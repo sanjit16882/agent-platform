@@ -1,10 +1,17 @@
-# Agent Factory Complete Platform Design
+# Agent Factory - Enterprise Agent Lifecycle Platform Design
 
 ## Overview
 
-The Agent Factory Complete Platform transforms the existing AgentHub into a comprehensive, enterprise-ready AI agent development and deployment platform. The design implements a hybrid approach with 20 production-ready features and 15 professional demo features, providing 100% visual completeness within budget constraints.
+Agent Factory is the industry's first vendor-neutral, enterprise-grade platform for complete agent lifecycle management. Unlike cloud-specific solutions (Azure AI Foundry, AWS Bedrock, GCP Vertex AI), Agent Factory provides a unified orchestration layer that works with ANY AI provider, cloud platform, or deployment model.
 
-The platform architecture supports both immediate business value through production features and complete stakeholder visualization through professional mockups of advanced capabilities.
+The platform revolutionizes enterprise automation by:
+- **Multi-Domain Agents**: Combining LLM, RPA, Selenium, and custom logic in single agents
+- **Vendor Independence**: Deploy across AWS, Azure, GCP, or on-premise without lock-in
+- **Internal Marketplace**: Enterprise agent catalog for discovery, reuse, and governance
+- **Business User Empowerment**: Natural language agent creation without coding
+- **Complete Lifecycle**: Version control, health monitoring, and continuous optimization
+
+This design positions Agent Factory as the "Kubernetes for AI Agents" - providing enterprise orchestration, governance, and portability across the entire AI ecosystem.
 
 ## Architecture
 
@@ -12,52 +19,61 @@ The platform architecture supports both immediate business value through product
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[React UI Components]
-        Demo[Demo/Mockup Components]
-        SDK[JavaScript SDK]
+    subgraph "Business User Layer"
+        NL[Natural Language Interface]
+        Visual[Visual Workflow Designer]
+        Marketplace[Agent Marketplace]
     end
     
-    subgraph "API Gateway Layer"
-        Gateway[REST API Gateway]
-        Auth[Authentication & RBAC]
-        Rate[Rate Limiting]
+    subgraph "Developer Layer"
+        SDK[Multi-Language SDKs]
+        API[Vendor-Neutral APIs]
+        Templates[Agent Templates]
     end
     
-    subgraph "Core Services"
-        Agent[Agent Management]
-        Exec[Execution Engine]
-        NLP[Natural Language Processor]
-        Analytics[Analytics Engine]
+    subgraph "Agent Factory Core"
+        Orchestrator[Multi-Agent Orchestrator]
+        Lifecycle[Agent Lifecycle Manager]
+        Intelligence[Continuous Learning Engine]
+        Governance[Enterprise Governance]
     end
     
-    subgraph "Integration Layer"
-        Connectors[Multi-Source Connectors]
-        Webhooks[Event Triggers]
-        CICD[CI/CD Integration]
+    subgraph "Multi-Domain Runtime"
+        LLM[LLM Agents]
+        RPA[RPA Workflows]
+        Selenium[Web Automation]
+        Custom[Custom Logic]
     end
     
-    subgraph "Data Layer"
-        DB[(Agent Database)]
-        Logs[(Audit Logs)]
-        Secrets[(Secret Store)]
+    subgraph "Vendor-Neutral Layer"
+        ModelHub[Multi-Model Hub]
+        CloudBroker[Multi-Cloud Broker]
+        DataBridge[Universal Data Bridge]
     end
     
-    subgraph "External Services"
-        AWS[AWS S3]
-        GitHub[GitHub API]
-        Slack[Slack API]
-        Jenkins[Jenkins CI]
+    subgraph "AI Providers"
+        OpenAI[OpenAI]
+        Anthropic[Anthropic]
+        Azure[Azure OpenAI]
+        AWS[AWS Bedrock]
+        GCP[GCP Vertex AI]
+        Custom_Models[Custom Models]
     end
     
-    UI --> Gateway
-    Demo --> UI
-    SDK --> Gateway
-    Gateway --> Auth
-    Gateway --> Core Services
-    Core Services --> Integration Layer
-    Integration Layer --> External Services
-    Core Services --> Data Layer
+    subgraph "Cloud Platforms"
+        AWS_Cloud[AWS]
+        Azure_Cloud[Azure]
+        GCP_Cloud[GCP]
+        OnPrem[On-Premise]
+        Hybrid[Hybrid]
+    end
+    
+    Business User Layer --> Agent Factory Core
+    Developer Layer --> Agent Factory Core
+    Agent Factory Core --> Multi-Domain Runtime
+    Multi-Domain Runtime --> Vendor-Neutral Layer
+    Vendor-Neutral Layer --> AI Providers
+    Vendor-Neutral Layer --> Cloud Platforms
 ```
 
 ### Component Architecture

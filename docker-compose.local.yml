@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # LocalStack for local AWS services
+  localstack:
+    image: localstack/localstack:latest
+    container_name: agent-hub-localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,dynamodb,lambda,apigateway
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+    volumes:
+      - "./localstack-data:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - agent-hub-local
+
+  # Redis for local development (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: agent-hub-redis-local
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - agent-hub-local
+
+  # Agent Hub Backend
+  agent-hub-backend:
+    build:
+      context: ./agent-hub-backend
+      dockerfile: Dockerfile.local
+    container_name: agent-hub-backend-local
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=local
+      - PORT=3002
+    env_file:
+      - ./agent-hub-backend/.env.local
+    volumes:
+      - ./agent-hub-backend:/app
+      - /app/node_modules
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - localstack
+      - redis
+    networks:
+      - agent-hub-local
+
+  # Agent Hub Frontend
+  agent-hub-ui:
+    build:
+      context: ./agent-hub-ui
+      dockerfile: Dockerfile.local
+    container_name: agent-hub-ui-local
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - REACT_APP_API_URL=http://localhost:3002
+      - REACT_APP_ENV=local
+    volumes:
+      - ./agent-hub-ui:/app
+      - /app/node_modules
+    depends_on:
+      - agent-hub-backend
+    networks:
+      - agent-hub-local
+
+volumes:
+  redis-data:
+
+networks:
+  agent-hub-local:
+    driver: bridge

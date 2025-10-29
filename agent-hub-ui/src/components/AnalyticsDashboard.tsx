@@ -4,6 +4,7 @@ import { analyticsService, TimeRange, ROIData, CategoryMetrics, UserActivity } f
 import MetricsOverview from './MetricsOverview';
 import UsageChart from './UsageChart';
 import AgentPerformanceTable from './AgentPerformanceTable';
+import { theme } from '../styles/theme';
 
 const AnalyticsDashboard: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>({
@@ -158,233 +159,334 @@ const AnalyticsDashboard: React.FC = () => {
   };
 
   return (
-    <Container fluid>
+    <div style={{ 
+      padding: theme.spacing['3xl'], 
+      backgroundColor: theme.colors.backgroundSecondary,
+      minHeight: '100vh'
+    }}>
       {/* Header */}
-      <Row className="mb-4">
-        <Col>
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <h1>Analytics Dashboard</h1>
-              <p className="text-muted mb-0">
-                Comprehensive insights into agent performance and business value
-              </p>
-            </div>
-            <div className="d-flex gap-2 align-items-center">
-              <small className="text-muted">
-                Last updated: {lastRefresh.toLocaleTimeString()}
-              </small>
-              <Button variant="outline-primary" size="sm" onClick={handleRefresh}>
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </Col>
-      </Row>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start',
+        marginBottom: theme.spacing['3xl'],
+        flexWrap: 'wrap',
+        gap: theme.spacing.xl
+      }}>
+        <div>
+          <h1 style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            fontWeight: theme.typography.fontWeight.bold,
+            color: theme.colors.primary,
+            marginBottom: theme.spacing.sm
+          }}>
+            Analytics Dashboard
+          </h1>
+          <p style={{ 
+            fontSize: theme.typography.fontSize.lg,
+            color: theme.colors.textSecondary,
+            margin: 0
+          }}>
+            Comprehensive insights into agent performance and business value
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: theme.spacing.sm, alignItems: 'center' }}>
+          <small style={{ color: theme.colors.textMuted }}>
+            Last updated: {lastRefresh.toLocaleTimeString()}
+          </small>
+          <Button variant="outline-primary" size="sm" onClick={handleRefresh}>
+            Refresh
+          </Button>
+        </div>
+      </div>
 
       {/* Time Range Selector */}
-      <Row className="mb-4">
-        <Col>
-          <Card>
-            <Card.Body className="py-2">
-              <div className="d-flex justify-content-between align-items-center">
-                <div className="d-flex align-items-center">
-                  <span className="me-3 fw-bold">📅 Time Range:</span>
-                  <ButtonGroup size="sm">
-                    <Button
-                      variant={timeRange.start.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
-                      onClick={() => handleTimeRangeChange(7)}
-                    >
-                      Last 7 Days
-                    </Button>
-                    <Button
-                      variant={timeRange.start.getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 && timeRange.start.getTime() <= Date.now() - 7 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
-                      onClick={() => handleTimeRangeChange(30)}
-                    >
-                      Last 30 Days
-                    </Button>
-                    <Button
-                      variant={timeRange.start.getTime() <= Date.now() - 30 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
-                      onClick={() => handleTimeRangeChange(90)}
-                    >
-                      Last 90 Days
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      onClick={() => setShowCustomDatePicker(true)}
-                    >
-                      📅 Custom Range
-                    </Button>
-                  </ButtonGroup>
-                </div>
-                <div className="d-flex gap-2">
-                  <Dropdown>
-                    <Dropdown.Toggle variant="outline-success" size="sm">
-                      Export Data
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item onClick={() => handleExportData('csv')}>
-                        📄 Export as CSV
-                      </Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleExportData('excel')}>
-                        Export as Excel
-                      </Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleExportData('pdf')}>
-                        Export as PDF
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                  <Badge bg="success" className="px-3 py-2">
-                    🟢 System Healthy
-                  </Badge>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <Card style={{ marginBottom: theme.spacing['3xl'] }}>
+        <Card.Body style={{ padding: theme.spacing.lg }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: theme.spacing.lg
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.lg }}>
+              <span style={{ fontWeight: theme.typography.fontWeight.semibold }}>Time Range:</span>
+              <ButtonGroup size="sm">
+                <Button
+                  variant={timeRange.start.getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
+                  onClick={() => handleTimeRangeChange(7)}
+                >
+                  Last 7 Days
+                </Button>
+                <Button
+                  variant={timeRange.start.getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 && timeRange.start.getTime() <= Date.now() - 7 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
+                  onClick={() => handleTimeRangeChange(30)}
+                >
+                  Last 30 Days
+                </Button>
+                <Button
+                  variant={timeRange.start.getTime() <= Date.now() - 30 * 24 * 60 * 60 * 1000 ? 'primary' : 'outline-primary'}
+                  onClick={() => handleTimeRangeChange(90)}
+                >
+                  Last 90 Days
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => setShowCustomDatePicker(true)}
+                >
+                  Custom Range
+                </Button>
+              </ButtonGroup>
+            </div>
+            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+              <Dropdown>
+                <Dropdown.Toggle variant="outline-success" size="sm">
+                  Export Data
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={() => handleExportData('csv')}>
+                    Export as CSV
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleExportData('excel')}>
+                    Export as Excel
+                  </Dropdown.Item>
+                  <Dropdown.Item onClick={() => handleExportData('pdf')}>
+                    Export as PDF
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+              <Badge bg="success" style={{ padding: `${theme.spacing.sm} ${theme.spacing.lg}` }}>
+                System Healthy
+              </Badge>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
 
       {/* Key Metrics Overview */}
-      <div className="mb-4">
-        <h4 className="mb-3">Key Performance Indicators</h4>
+      <div style={{ marginBottom: theme.spacing['3xl'] }}>
+        <h4 style={{ 
+          marginBottom: theme.spacing.lg,
+          fontSize: theme.typography.fontSize.xl,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.textPrimary
+        }}>
+          Key Performance Indicators
+        </h4>
         <MetricsOverview timeRange={timeRange} refreshTrigger={refreshTrigger} />
       </div>
 
       {/* Platform Health Overview */}
-      <Row className="mb-4">
-        <Col>
-          <h4 className="mb-3">🚀 Platform Health & Performance</h4>
-        </Col>
-      </Row>
-      <Row className="mb-4">
-        <Col md={4} lg={2} className="mb-4">
-          <Card className="h-100 border-success">
-            <Card.Body className="text-center">
-              <div className="display-6 text-success fw-bold">
-                99.8%
-              </div>
-              <div className="text-muted small">System Uptime</div>
-              <Badge bg="success" className="mt-2">
-                🟢 Healthy
-              </Badge>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4} lg={2} className="mb-4">
-          <Card className="h-100 border-info">
-            <Card.Body className="text-center">
-              <div className="display-6 text-info fw-bold">
-                247ms
-              </div>
-              <div className="text-muted small">Avg Response Time</div>
-              <Badge bg="info" className="mt-2">
-                ⚡ Fast
-              </Badge>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4} lg={2} className="mb-4">
-          <Card className="h-100 border-warning">
-            <Card.Body className="text-center">
-              <div className="display-6 text-warning fw-bold">
-                {formatNumber(1247)}
-              </div>
-              <div className="text-muted small">Daily Executions</div>
-              <Badge bg="warning" className="mt-2">
-                📈 Growing
-              </Badge>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4} lg={2} className="mb-4">
-          <Card className="h-100 border-primary">
-            <Card.Body className="text-center">
-              <div className="display-6 text-primary fw-bold">
-                47
-              </div>
-              <div className="text-muted small">Active Agents</div>
-              <Badge bg="primary" className="mt-2">
-                🤖 Ready
-              </Badge>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+      <h4 style={{ 
+        marginBottom: theme.spacing.lg,
+        fontSize: theme.typography.fontSize.xl,
+        fontWeight: theme.typography.fontWeight.semibold,
+        color: theme.colors.textPrimary
+      }}>
+        Platform Health & Performance
+      </h4>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: theme.spacing.xl,
+        marginBottom: theme.spacing['3xl']
+      }}>
+        <Card style={{ textAlign: 'center', borderColor: theme.colors.success }}>
+          <Card.Body style={{ padding: theme.spacing.xl }}>
+            <div style={{ 
+              fontSize: theme.typography.fontSize['3xl'],
+              color: theme.colors.success,
+              fontWeight: theme.typography.fontWeight.bold,
+              marginBottom: theme.spacing.sm
+            }}>
+              99.8%
+            </div>
+            <div style={{ 
+              color: theme.colors.textMuted,
+              fontSize: theme.typography.fontSize.sm,
+              marginBottom: theme.spacing.sm
+            }}>
+              System Uptime
+            </div>
+            <Badge bg="success">
+              Healthy
+            </Badge>
+          </Card.Body>
+        </Card>
+        <Card style={{ textAlign: 'center', borderColor: theme.colors.info }}>
+          <Card.Body style={{ padding: theme.spacing.xl }}>
+            <div style={{ 
+              fontSize: theme.typography.fontSize['3xl'],
+              color: theme.colors.info,
+              fontWeight: theme.typography.fontWeight.bold,
+              marginBottom: theme.spacing.sm
+            }}>
+              247ms
+            </div>
+            <div style={{ 
+              color: theme.colors.textMuted,
+              fontSize: theme.typography.fontSize.sm,
+              marginBottom: theme.spacing.sm
+            }}>
+              Avg Response Time
+            </div>
+            <Badge bg="info">
+              Fast
+            </Badge>
+          </Card.Body>
+        </Card>
+        <Card style={{ textAlign: 'center', borderColor: theme.colors.warning }}>
+          <Card.Body style={{ padding: theme.spacing.xl }}>
+            <div style={{ 
+              fontSize: theme.typography.fontSize['3xl'],
+              color: theme.colors.warning,
+              fontWeight: theme.typography.fontWeight.bold,
+              marginBottom: theme.spacing.sm
+            }}>
+              {formatNumber(1247)}
+            </div>
+            <div style={{ 
+              color: theme.colors.textMuted,
+              fontSize: theme.typography.fontSize.sm,
+              marginBottom: theme.spacing.sm
+            }}>
+              Daily Executions
+            </div>
+            <Badge bg="warning">
+              Growing
+            </Badge>
+          </Card.Body>
+        </Card>
+        <Card style={{ textAlign: 'center', borderColor: theme.colors.primary }}>
+          <Card.Body style={{ padding: theme.spacing.xl }}>
+            <div style={{ 
+              fontSize: theme.typography.fontSize['3xl'],
+              color: theme.colors.primary,
+              fontWeight: theme.typography.fontWeight.bold,
+              marginBottom: theme.spacing.sm
+            }}>
+              47
+            </div>
+            <div style={{ 
+              color: theme.colors.textMuted,
+              fontSize: theme.typography.fontSize.sm,
+              marginBottom: theme.spacing.sm
+            }}>
+              Active Agents
+            </div>
+            <Badge bg="primary">
+              Ready
+            </Badge>
+          </Card.Body>
+        </Card>
+      </div>
 
 
 
 
       {/* Category Performance */}
       {categoryMetrics.length > 0 && (
-        <Row className="mb-4">
-          <Col>
-            <h4 className="mb-3">Category Performance</h4>
-            <Row>
-              {categoryMetrics.map(category => (
-                <Col key={category.category} md={6} lg={3} className="mb-3">
-                  <Card 
-                    className={`h-100 border-${getCategoryColor(category.category)} category-card`}
-                    style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-                    onClick={() => handleCategoryDrillDown(category.category)}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                  >
-                    <Card.Body>
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h6 className="mb-0">
-                          {getCategoryIcon(category.category)} {category.category}
-                        </h6>
-                        <Badge bg={getCategoryColor(category.category)}>
-                          {category.popularityTrend > 0 ? '↗' : '↘'} {Math.abs(category.popularityTrend).toFixed(1)}%
-                        </Badge>
-                      </div>
-                      <div className="small text-muted mb-2">
-                        <div>Executions: <strong>{formatNumber(category.executionCount)}</strong></div>
-                        <div>Success Rate: <strong>{category.successRate.toFixed(1)}%</strong></div>
-                        <div>Avg Duration: <strong>{category.category === 'QE' ? '34s' : category.category === 'DevOps' ? '47s' : category.category === 'Security' ? '62s' : '51s'}</strong></div>
-                        <div>Active Agents: <strong>{category.category === 'QE' ? '6' : category.category === 'DevOps' ? '10' : category.category === 'Security' ? '7' : '5'}</strong></div>
-                      </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          </Col>
-        </Row>
+        <div style={{ marginBottom: theme.spacing['3xl'] }}>
+          <h4 style={{ 
+            marginBottom: theme.spacing.lg,
+            fontSize: theme.typography.fontSize.xl,
+            fontWeight: theme.typography.fontWeight.semibold,
+            color: theme.colors.textPrimary
+          }}>
+            Category Performance
+          </h4>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: theme.spacing.xl
+          }}>
+            {categoryMetrics.map(category => (
+              <Card 
+                key={category.category}
+                style={{ 
+                  height: '100%',
+                  borderColor: getCategoryColor(category.category) === 'primary' ? theme.colors.primary : 
+                              getCategoryColor(category.category) === 'info' ? theme.colors.info :
+                              getCategoryColor(category.category) === 'danger' ? theme.colors.danger :
+                              getCategoryColor(category.category) === 'warning' ? theme.colors.warning : theme.colors.secondary,
+                  cursor: 'pointer', 
+                  transition: 'transform 0.2s' 
+                }}
+                onClick={() => handleCategoryDrillDown(category.category)}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <Card.Body style={{ padding: theme.spacing.xl }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start',
+                    marginBottom: theme.spacing.md
+                  }}>
+                    <h6 style={{ 
+                      margin: 0,
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      color: theme.colors.textPrimary
+                    }}>
+                      {getCategoryIcon(category.category)} {category.category}
+                    </h6>
+                    <Badge bg={getCategoryColor(category.category)}>
+                      {category.popularityTrend > 0 ? '↗' : '↘'} {Math.abs(category.popularityTrend).toFixed(1)}%
+                    </Badge>
+                  </div>
+                  <div style={{ 
+                    fontSize: theme.typography.fontSize.sm,
+                    color: theme.colors.textMuted
+                  }}>
+                    <div>Executions: <strong>{formatNumber(category.executionCount)}</strong></div>
+                    <div>Success Rate: <strong>{category.successRate.toFixed(1)}%</strong></div>
+                    <div>Avg Duration: <strong>{category.category === 'QE' ? '34s' : category.category === 'DevOps' ? '47s' : category.category === 'Security' ? '62s' : '51s'}</strong></div>
+                    <div>Active Agents: <strong>{category.category === 'QE' ? '6' : category.category === 'DevOps' ? '10' : category.category === 'Security' ? '7' : '5'}</strong></div>
+                  </div>
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Usage Trends Chart */}
-      <Row className="mb-4">
-        <Col>
-          <h4 className="mb-3">Usage Trends</h4>
-          <UsageChart refreshTrigger={refreshTrigger} />
-        </Col>
-      </Row>
+      <div style={{ marginBottom: theme.spacing['3xl'] }}>
+        <h4 style={{ 
+          marginBottom: theme.spacing.lg,
+          fontSize: theme.typography.fontSize.xl,
+          fontWeight: theme.typography.fontWeight.semibold,
+          color: theme.colors.textPrimary
+        }}>
+          Usage Trends
+        </h4>
+        <UsageChart refreshTrigger={refreshTrigger} />
+      </div>
 
       {/* Agent Performance Table */}
-      <Row className="mb-4">
-        <Col>
-          <AgentPerformanceTable refreshTrigger={refreshTrigger} />
-        </Col>
-      </Row>
-
-
+      <div style={{ marginBottom: theme.spacing['3xl'] }}>
+        <AgentPerformanceTable refreshTrigger={refreshTrigger} />
+      </div>
 
       {/* Footer */}
-      <Row>
-        <Col>
-          <Alert variant="info" className="mb-0">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <strong>Pro Tip:</strong> Click on category cards for detailed drill-down analysis. 
-                Use the export options to download data in various formats.
-              </div>
-              <Badge bg="info">
-                Data refreshes every 5 minutes
-              </Badge>
-            </div>
-          </Alert>
-        </Col>
-      </Row>
+      <Alert variant="info" style={{ margin: 0 }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: theme.spacing.lg
+        }}>
+          <div>
+            <strong>Pro Tip:</strong> Click on category cards for detailed drill-down analysis. 
+            Use the export options to download data in various formats.
+          </div>
+          <Badge bg="info">
+            Data refreshes every 5 minutes
+          </Badge>
+        </div>
+      </Alert>
 
       {/* Custom Date Range Modal */}
       <Modal show={showCustomDatePicker} onHide={() => setShowCustomDatePicker(false)}>
@@ -483,7 +585,7 @@ const AnalyticsDashboard: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </Container>
+    </div>
   );
 };
 

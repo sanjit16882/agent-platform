@@ -166,7 +166,7 @@ const ConfigEditor = ({ initialConfig, onConfigChange }) => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3002/api/v1/nlp/edit-config', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/nlp/edit-config`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -256,45 +256,115 @@ const ConfigEditor = ({ initialConfig, onConfigChange }) => {
     if (onConfigChange) onConfigChange(updatedConfig);
   };
 
-  const handleSaveAgent = () => {
+  const handleSaveAgent = async () => {
     if (!config) {
       setError('No agent configuration to save');
       return;
     }
 
+    setLoading(true);
+    setSaveStatus(null);
+    setError(null);
+
     try {
-      const deployedAgent = {
-        id: `template-agent-${Date.now()}`,
-        name: config.name || 'Template Generated Agent',
-        description: config.description || 'Agent created from template',
-        version: config.version || '1.0.0',
-        status: 'active',
-        deployedAt: new Date().toISOString(),
-        category: config.metadata?.templateId ? 'Template Generated' : 'Custom',
-        executionCount: 0,
-        author: 'Template System',
-        tags: config.metadata?.templateId ? ['template-generated', config.metadata.templateId] : ['custom-created'],
-        framework: 'AgentHub Template',
-        pricing: {
-          costPerExecution: 0.01,
-          estimatedRuntime: '30s'
+      // Create agent payload for backend API
+      const agentPayload = {
+        name: config.name || 'Custom Agent',
+        description: config.description || 'Agent created from builder',
+        components: [
+          {
+            name: 'Main Processor',
+            type: 'llm',
+            config: {
+              provider: 'openai',
+              model: 'gpt-4',
+              temperature: 0.7,
+              maxTokens: 1000,
+              systemPrompt: `You are ${config.name || 'a helpful agent'}. ${config.description || ''}`,
+              userPromptTemplate: 'Process this input: {input}',
+              responseFormat: 'json'
+            },
+            inputs: config.inputs || [{ name: 'input', type: 'string', required: true, source: 'user' }],
+            outputs: config.outputs || [{ name: 'result', type: 'object', description: 'Processing result' }],
+            dependencies: []
+          }
+        ],
+        orchestration: {
+          mode: 'sequential',
+          timeout: 300000,
+          maxRetries: 3,
+          retryDelay: 2000,
+          parallelism: 1,
+          conditions: []
         },
-        capabilities: config.triggers?.map(t => t.name) || ['Custom Processing'],
-        inputSchema: config.parameters || {},
-        outputSchema: {}
+        dataFlow: {
+          mappings: [],
+          transformations: [],
+          storage: {
+            persistent: false,
+            encryption: true,
+            retention: 7,
+            location: 'memory'
+          }
+        }
       };
 
-      addDeployedAgent(deployedAgent);
-      setSaveStatus('success');
+      // Save to backend API
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/hybrid/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agentPayload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       
-      // Navigate to agent catalog after a short delay
-      setTimeout(() => {
-        navigate('/agents');
-      }, 1500);
+      if (result.success) {
+        setSaveStatus('success');
+        
+        // Also add to local context for immediate UI update
+        const deployedAgent = {
+          id: result.data.id,
+          name: result.data.name,
+          description: result.data.description,
+          version: result.data.version || '1.0.0',
+          status: 'active',
+          deployedAt: result.data.created,
+          category: result.data.category || 'Custom',
+          executionCount: 0,
+          author: result.data.author || 'Agent Builder',
+          tags: result.data.tags || ['custom-created'],
+          framework: 'AgentHub Hybrid',
+          pricing: {
+            costPerExecution: 0.01,
+            estimatedRuntime: '30s'
+          },
+          capabilities: config.inputs?.map(i => i.name) || ['Custom Processing'],
+          inputSchema: config.inputs || {},
+          outputSchema: config.outputs || {}
+        };
+
+        addDeployedAgent(deployedAgent);
+        
+        // Navigate to agent catalog after a short delay
+        setTimeout(() => {
+          navigate('/agents');
+        }, 1500);
+      } else {
+        throw new Error(result.error || 'Failed to create agent');
+      }
       
     } catch (error) {
       setSaveStatus('error');
       setError('Failed to save agent: ' + error.message);
+      console.error('Agent save error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -339,7 +409,7 @@ const ConfigEditor = ({ initialConfig, onConfigChange }) => {
           <button 
             onClick={() => {
               console.log('Testing templates endpoint...');
-              fetch('http://localhost:3002/api/v1/nlp/templates')
+              fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/nlp/templates`)
                 .then(r => r.json())
                 .then(d => console.log('Direct fetch result:', d))
                 .catch(e => console.error('Direct fetch error:', e));
@@ -576,19 +646,21 @@ const ConfigEditor = ({ initialConfig, onConfigChange }) => {
             
             <button
               onClick={handleSaveAgent}
-              disabled={saveStatus === 'success' || !config}
+              disabled={saveStatus === 'success' || !config || loading}
               style={{
                 padding: '10px 20px',
                 backgroundColor: saveStatus === 'success' ? '#6c757d' : 
+                                loading ? '#6c757d' :
                                 !config ? '#6c757d' : '#007bff',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: saveStatus === 'success' || !config ? 'not-allowed' : 'pointer',
+                cursor: saveStatus === 'success' || !config || loading ? 'not-allowed' : 'pointer',
                 fontSize: '16px'
               }}
             >
               {saveStatus === 'success' ? 'Saved!' : 
+               loading ? 'Saving...' :
                !config ? 'No Configuration' : 'Save Agent to Catalog'}
             </button>
           </div>

@@ -1,5 +1,5 @@
-// NLP API Service - Force the correct URL for now
-const API_BASE_URL = 'http://localhost:3002/api/v1';
+// NLP API Service - Use production API URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api/v1';
 
 // Debug: Log the API URL
 console.log('NLP API Base URL:', API_BASE_URL);

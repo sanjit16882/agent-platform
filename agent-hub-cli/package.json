@@ -1,0 +1,40 @@
+{
+  "name": "@agenthub/cli",
+  "version": "1.0.0",
+  "description": "AgentHub CLI - Developer tools for agent-powered development",
+  "main": "dist/index.js",
+  "bin": {
+    "agent": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["agent", "ai", "development", "automation", "cli"],
+  "author": "AgentHub Team",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0",
+    "axios": "^1.5.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.5",
+    "ora": "^5.4.1",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.3",
+    "yaml": "^2.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "@types/inquirer": "^8.2.6",
+    "@types/fs-extra": "^11.0.1",
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1",
+    "jest": "^29.6.2",
+    "@types/jest": "^29.5.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

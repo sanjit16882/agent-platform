@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Button, Card } from 'react-bootstrap';
 import { nlpApi } from '../services/nlpApi';
 import ConfigEditor from './ConfigEditor';
-import Button from './common/Button';
-import Card from './common/Card';
 import { theme, icons } from '../styles/theme';
 
 const NLPTester = () => {
@@ -114,7 +113,7 @@ const NLPTester = () => {
         marginBottom: theme.spacing['3xl'],
         textAlign: 'center'
       }}>
-        {icons.agents} Agent Creator
+        {icons.agents} Agent Builder
       </h1>
       
       {/* Connection Status */}
@@ -199,7 +198,6 @@ const NLPTester = () => {
                   <Button 
                     variant="primary"
                     size="sm"
-                    icon={icons.right}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleUseExample(example);
@@ -319,7 +317,6 @@ const NLPTester = () => {
             disabled={loading || !description.trim()}
             variant="success"
             size="lg"
-            icon={loading ? icons.clock : icons.add}
           >
             {loading ? 'Processing...' : 'Create Agent'}
           </Button>
