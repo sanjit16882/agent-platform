@@ -1,257 +1,391 @@
-# Agent Factory - Local Development Platform
+# Agent Hub Platform
 
-A local development platform for creating and managing AI agents with real-time AWS Bedrock integration. Build, test, and prototype AI agents locally while leveraging live AWS Bedrock models.
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+
-- AWS credentials configured for Bedrock access
-
-### Installation & Setup
-```bash
-# Install backend dependencies
-cd agent-hub-backend
-npm install
-
-# Install frontend dependencies  
-cd ../agent-hub-ui
-npm install
-
-# Start backend (Terminal 1)
-cd agent-hub-backend
-npm run dev
-
-# Start frontend (Terminal 2)
-cd ../agent-hub-ui
-npm start
-```
-
-### Access the Platform
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:3002
-- **Health Check**: http://localhost:3002/health
-
-## 🤖 **Real AWS Bedrock Integration**
-
-- ✅ **Live AI Models**: Claude 3 Haiku, Claude 3.5 Sonnet, Amazon Titan
-- ✅ **Real-time Connection**: Direct AWS Bedrock API integration
-- ✅ **Smart Recommendations**: Model selection based on agent type
-- ✅ **Cost Tracking**: Token usage and cost information
-- ✅ **Performance Metrics**: Response times and success rates
-
-## 🛠️ **Developer Experience Tools**
-
-### **VSCode Extension** - IDE Integration
-- ✅ **Right-click Integration**: Generate tests, security analysis, documentation
-- ✅ **Command Palette**: Full agent access within VSCode
-- ✅ **Status Bar**: Real-time connection status
-- ✅ **Side Panels**: Agent browser and operation history
-- ✅ **Auto-scanning**: Continuous security and quality checks
-
-### **CLI Tool** - Terminal Integration
-- ✅ **Project Management**: `agent init`, `agent status`
-- ✅ **Test Generation**: `agent test src/file.ts`
-- ✅ **Security Scanning**: `agent scan`
-- ✅ **Documentation**: `agent docs`
-- ✅ **Agent Management**: `agent list`, `agent run`
-
-**Installation:**
-```bash
-# VSCode Extension
-cd agenthub-vscode-extension
-code --install-extension agenthub-1.0.0.vsix
-
-# CLI Tool
-cd agent-hub-cli
-npm install && npm run build && npm link
-```
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Agent Platform Architecture               │
-├─────────────────────────────────────────────────────────────┤
-│  Frontend (React)     │  API Gateway      │  Agent Registry │
-│  - Agent Catalog      │  - Authentication │  - Metadata     │
-│  - Execution UI       │  - Rate Limiting  │  - Versioning   │
-│  - Monitoring         │  - Routing        │  - Health       │
-├─────────────────────────────────────────────────────────────┤
-│  Agent Lifecycle Engine          │  Execution Environment   │
-│  - Validation Pipeline           │  - AWS Lambda Runtime    │
-│  - Deployment Automation         │  - Container Support     │
-│  - Health Monitoring             │  - Resource Management   │
-├─────────────────────────────────────────────────────────────┤
-│  Storage Layer                   │  Integration Layer       │
-│  - DynamoDB (Metadata)          │  - GitHub Actions        │
-│  - S3 (Artifacts)               │  - Slack/Teams           │
-│  - CloudWatch (Metrics)         │  - JIRA/ServiceNow       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## 🛠️ Project Structure
-
-```
-├── agent-hub-ui/           # React frontend application
-│   ├── src/components/     # UI components
-│   ├── public/            # Static assets
-│   └── package.json       # Frontend dependencies
-├── agent-hub-cdk/         # AWS CDK infrastructure
-│   ├── lib/               # CDK stack definitions
-│   ├── lambda/            # Lambda function code
-│   └── package.json       # CDK dependencies
-├── demo-scenarios/        # Demo materials and use cases
-│   ├── executive-demo.md  # Executive presentation
-│   ├── technical-deep-dive-demo.md
-│   └── qa-team-focused-demo.md
-└── .kiro/specs/          # Feature specifications
-    └── agent-lifecycle-management/
-```
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 18+
-- AWS CLI configured
-- AWS CDK installed (`npm install -g aws-cdk`)
-
-### 1. Deploy Infrastructure
-```bash
-cd agent-hub-cdk
-npm install
-npm run deploy
-```
-
-### 2. Start Frontend
-```bash
-cd agent-hub-ui
-npm install
-npm start
-```
-
-### 3. Access Platform
-- Frontend: http://localhost:3000
-- API: Check CDK output for API Gateway URL
-
-## 🎯 Team Use Cases
-
-### QA Teams
-- **Test Generation**: Create comprehensive test suites from requirements
-- **Framework Support**: Cypress, Selenium, Playwright, Postman, Karate
-- **CI/CD Integration**: Automated test execution in pipelines
-- **ROI**: 95% reduction in test creation time
-
-### DevOps Teams  
-- **Cost Optimization**: Identify $25K+ annual AWS savings
-- **Infrastructure Analysis**: Performance bottleneck detection
-- **Resource Management**: Right-sizing recommendations
-- **Monitoring**: Automated alerting and incident response
-
-### Security Teams
-- **Vulnerability Scanning**: OWASP Top 10 compliance
-- **Container Security**: Docker/Kubernetes assessment
-- **Compliance**: SOC2, HIPAA, PCI DSS validation
-- **Risk Assessment**: Automated security reporting
-
-### Business Teams
-- **Data Analysis**: Sales forecasting and trend analysis
-- **Customer Intelligence**: Churn prediction and segmentation
-- **Financial Reporting**: Automated P&L and cash flow analysis
-- **Market Intelligence**: Real-time sentiment and competitive analysis
-
-## 📈 Demo Scenarios
-
-Comprehensive demo materials available in `/demo-scenarios/`:
-
-- **Executive Demo** (15 min): ROI-focused presentation with 753% Year 1 return
-- **Technical Deep-Dive** (30 min): Architecture, integrations, and extensibility
-- **QA Team Demo** (25 min): Test automation transformation
-- **Sample Inputs**: Ready-to-use demo scenarios for live presentations
-
-## 🔧 Development
-
-### Running Tests
-```bash
-# Frontend tests
-cd agent-hub-ui
-npm test
-
-# CDK tests  
-cd agent-hub-cdk
-npm test
-```
-
-### Local Development
-```bash
-# Start frontend with hot reload
-cd agent-hub-ui
-npm run dev
-
-# Deploy CDK changes
-cd agent-hub-cdk
-npm run deploy
-```
-
-## 🌟 Key Features
-
-### Agent Catalog
-- 30+ pre-built agents across QE, DevOps, Security, Business domains
-- Framework-agnostic output (Cypress, Selenium, Terraform, etc.)
-- Usage analytics and success metrics
-- Community marketplace for custom agents
-
-### Execution Engine
-- Serverless AWS Lambda runtime
-- Auto-scaling based on demand
-- Real-time execution monitoring
-- Cost optimization and resource management
-
-### Integration Ecosystem
-- **CI/CD**: GitHub Actions, Jenkins, GitLab CI
-- **Communication**: Slack, Microsoft Teams
-- **Project Management**: JIRA, ServiceNow, Azure DevOps
-- **Monitoring**: DataDog, New Relic, Prometheus
-
-## 📊 Success Metrics
-
-### Quantitative Impact
-- **Engineering Productivity**: 80-95% reduction in repetitive tasks
-- **Cost Savings**: $150K+ annual savings per 50-person team
-- **Quality Improvement**: 60% reduction in production incidents
-- **Time to Market**: 40% faster feature delivery
-
-### ROI Analysis
-- **Year 1 ROI**: 753% return on investment
-- **Payback Period**: 1.4 months
-- **3-Year Value**: $2.69M for enterprise deployment
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: [Wiki](https://github.com/sanjit16882/agent-platform/wiki)
-- **Issues**: [GitHub Issues](https://github.com/sanjit16882/agent-platform/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/sanjit16882/agent-platform/discussions)
-
-## 🎉 Acknowledgments
-
-- Built with AWS CDK and React
-- Powered by AWS Lambda serverless architecture
-- Inspired by the need to eliminate repetitive engineering tasks
-- Designed for enterprise-scale automation and collaboration
+A comprehensive AI agent management platform with real-time learning analytics, intelligent routing, and enterprise-grade features.
 
 ---
 
-**Transform your team's productivity with AI-powered automation. Start your journey today!** 🚀
+## 🚀 Quick Start
 
+### Prerequisites
+- Node.js 16+
+- npm or yarn
+- AWS credentials (optional, for AWS features)
+
+### Installation & Setup
+
+```bash
+# 1. Install backend dependencies
+cd agent-hub-backend
+npm install
+
+# 2. Install frontend dependencies
+cd ../agent-hub-ui
+npm install
+
+# 3. Start the platform
+# Terminal 1 - Backend
+cd agent-hub-backend
+node comprehensive-server.js
+
+# Terminal 2 - Frontend
+cd agent-hub-ui
+npm start
+```
+
+### Access Points
+- **Frontend UI:** http://localhost:3001
+- **Backend API:** http://localhost:3002
+- **Learning Dashboard:** http://localhost:3001/learning
+
+---
+
+## 📦 Project Structure
+
+```
+agent-hub-platform/
+├── agent-hub-backend/          # Backend API server
+│   ├── services/               # Core services
+│   │   ├── learningAnalyticsService.js  # 🔒 Learning analytics
+│   │   ├── dynamicAgentExecutor.js      # Agent execution
+│   │   └── ...
+│   ├── comprehensive-server.js # Main server (🔒 learning endpoints)
+│   ├── seed-learning-data.js   # Sample data generator
+│   └── data/                   # Runtime data storage
+│
+├── agent-hub-ui/               # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ContinuousLearningDashboard.tsx  # 🔒 Analytics UI
+│   │   │   ├── AgentCatalog.tsx
+│   │   │   └── ...
+│   │   ├── services/           # API clients
+│   │   └── config/             # Configuration
+│   └── public/
+│
+├── backups/                    # File backups
+├── LEARNING_ANALYTICS_GUIDE.md # 📚 Learning system docs
+└── README.md                   # This file
+```
+
+---
+
+## ✨ Key Features
+
+### 1. Learning Analytics System 🔒
+**Status:** LOCKED & PRODUCTION READY
+
+Real-time tracking and analytics for all agent interactions:
+- Automatic interaction tracking
+- User profile management
+- AI-generated insights
+- Acceptance rate monitoring
+- Learning velocity metrics
+
+**See:** [LEARNING_ANALYTICS_GUIDE.md](LEARNING_ANALYTICS_GUIDE.md) for complete documentation.
+
+### 2. Agent Management
+- Create, deploy, and manage AI agents
+- Dynamic agent execution
+- Version control
+- S3 storage integration
+
+### 3. Intelligent Routing
+- Semantic query analysis
+- Intent detection
+- Agent recommendation
+- Context-aware routing
+
+### 4. Enterprise Features
+- API key management
+- Role-based access control
+- Security compliance
+- Audit logging
+
+### 5. Integration Hub
+- GitHub integration
+- MCP (Model Context Protocol) support
+- Webhook support
+- REST API
+
+---
+
+## 🔌 API Endpoints
+
+### Core Endpoints
+```
+GET  /health                                    # Health check
+GET  /api/v1/agents                            # List all agents
+POST /api/v1/agents/:agentId/execute           # Execute agent
+GET  /api/v1/agents/s3                         # S3 agents
+```
+
+### Learning Analytics Endpoints 🔒
+```
+GET  /api/intelligence/learning-analytics       # Platform metrics
+GET  /api/intelligence/learning/profile/:userId # User profile
+POST /api/intelligence/learning/optimize        # Optimize profile
+GET  /api/intelligence/learning/export          # Export data
+```
+
+### Intelligence Endpoints
+```
+POST /api/intelligence/analyze-query-dynamic    # Query analysis
+```
+
+**Full API documentation:** See [LEARNING_ANALYTICS_GUIDE.md](LEARNING_ANALYTICS_GUIDE.md)
+
+---
+
+## 📊 Learning Analytics
+
+The platform includes a comprehensive learning analytics system that automatically tracks:
+
+- **User Interactions:** Every agent execution is logged
+- **Acceptance Rates:** Track which suggestions users accept
+- **Learning Progress:** Monitor user growth over time
+- **AI Insights:** Automatic recommendations based on patterns
+
+### Generate Sample Data
+```bash
+cd agent-hub-backend
+node seed-learning-data.js
+```
+
+This creates 150 sample interactions across 5 users for testing.
+
+---
+
+## 🔒 Protected Files
+
+The following files are **LOCKED** and should not be modified without review:
+
+```
+✅ agent-hub-backend/services/learningAnalyticsService.js
+✅ agent-hub-backend/comprehensive-server.js (learning endpoints)
+✅ agent-hub-ui/src/components/ContinuousLearningDashboard.tsx
+```
+
+**Before modifying:** Read [LEARNING_ANALYTICS_GUIDE.md](LEARNING_ANALYTICS_GUIDE.md) → Protection Rules
+
+---
+
+## 🧪 Testing
+
+### Test Backend
+```bash
+curl http://localhost:3002/health
+curl http://localhost:3002/api/intelligence/learning-analytics
+```
+
+### Test Frontend
+1. Open http://localhost:3001
+2. Navigate to Analytics → Continuous Learning
+3. Should see real-time data
+
+### Execute an Agent
+1. Go to Agents page
+2. Select any agent
+3. Execute with sample inputs
+4. Check learning dashboard - metrics should update
+
+---
+
+## 🛠️ Development
+
+### Backend Development
+```bash
+cd agent-hub-backend
+node comprehensive-server.js
+```
+
+### Frontend Development
+```bash
+cd agent-hub-ui
+npm start
+```
+
+### Environment Variables
+Create `.env` files in both directories:
+
+**Backend (.env):**
+```
+PORT=3002
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+```
+
+**Frontend (.env):**
+```
+REACT_APP_BACKEND_URL=http://localhost:3002
+```
+
+---
+
+## 📚 Documentation
+
+- **[LEARNING_ANALYTICS_GUIDE.md](LEARNING_ANALYTICS_GUIDE.md)** - Complete learning analytics documentation
+- **agent-hub-backend/LEARNING_ANALYTICS_README.md** - Detailed API reference
+- **agent-hub-ui/MCP-UI-INTEGRATION-GUIDE.md** - MCP integration guide
+
+---
+
+## 🔄 Backup & Recovery
+
+### Backups Location
+```
+backups/learning-analytics-2025-11-08/
+```
+
+### Restore from Backup
+```bash
+cp backups/learning-analytics-2025-11-08/* [destination]
+```
+
+### Restore from Git
+```bash
+git checkout 44860df -- [file-path]
+```
+
+---
+
+## 🚀 Deployment
+
+### Git Repository
+```
+Repository: https://github.com/sanjit16882/agent-platform.git
+Branch: main
+```
+
+### Recent Commits
+```
+161a187 - Final deployment confirmation
+b4d749e - Deployment summary
+44860df - Learning Analytics implementation
+```
+
+### Push Changes
+```bash
+git add .
+git commit -m "Your message"
+git push origin main
+```
+
+---
+
+## 🎯 Current Status
+
+### ✅ Production Ready
+- Learning analytics system
+- Agent execution
+- Real-time tracking
+- User profiles
+- AI insights
+
+### 🔒 Locked & Protected
+- Core learning analytics files
+- API endpoints
+- Data tracking logic
+
+### 📊 Sample Data Available
+- 5 users
+- 150 interactions
+- 43 feedback entries
+- 80% acceptance rate
+
+---
+
+## 🤝 Contributing
+
+1. Read protection guidelines in [LEARNING_ANALYTICS_GUIDE.md](LEARNING_ANALYTICS_GUIDE.md)
+2. Create a backup before modifying locked files
+3. Test thoroughly
+4. Document your changes
+5. Commit with clear messages
+
+---
+
+## 📞 Support
+
+### Common Issues
+
+**"Error Loading Learning Data"**
+- Check backend is running on port 3002
+- Verify data files exist in `agent-hub-backend/data/learning/`
+- Run `node seed-learning-data.js` to regenerate
+
+**"Unexpected token '<'" Error**
+- Frontend is calling wrong URL
+- Check `API_CONFIG.BACKEND_URL` in `agent-hub-ui/src/config/api.ts`
+- Should be `http://localhost:3002`
+
+**No Data Showing**
+- Generate sample data: `node seed-learning-data.js`
+- Execute some agents to create real data
+- Refresh the dashboard
+
+---
+
+## 📈 Metrics & Analytics
+
+Current platform metrics (sample data):
+```
+Total Users:         5
+Active Users:        5
+Total Interactions:  150
+Acceptance Rate:     80%
+Feedback Rate:       29%
+Learning Velocity:   30 interactions/user/week
+```
+
+---
+
+## 🎉 Features Highlights
+
+### Automatic Tracking
+Every agent execution is automatically tracked - no additional code needed!
+
+### Real-Time Analytics
+Dashboard updates with live data from actual user interactions.
+
+### AI-Powered Insights
+System generates recommendations based on usage patterns.
+
+### User Profiles
+Individual learning progress tracking with personalized recommendations.
+
+### Data Export
+Export all learning data in JSON format for analysis.
+
+---
+
+## 🔐 Security
+
+- User IDs anonymized in exports
+- No PII stored in learning data
+- Local JSON file storage
+- Data retention limits (10K interactions, 5K feedback)
+- No external data transmission
+
+---
+
+## 📝 License
+
+[Your License Here]
+
+---
+
+## 🌟 Acknowledgments
+
+Built with:
+- React
+- Node.js
+- Express
+- Bootstrap
+- AWS SDK
+
+---
+
+**Last Updated:** November 8, 2025  
+**Version:** 1.0.0  
+**Status:** 🔒 LOCKED ✅ DEPLOYED 🚀 LIVE
