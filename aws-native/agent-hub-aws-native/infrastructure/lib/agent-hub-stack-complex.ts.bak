@@ -1,0 +1,398 @@
+import * as cdk from 'aws-cdk-lib';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import { Construct } from 'constructs';
+
+export class AgentHubStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // ============================================================================
+    // STORAGE LAYER
+    // ============================================================================
+
+    // DynamoDB Tables
+    const agentsTable = new dynamodb.Table(this, 'AgentsTable', {
+      tableName: 'agent-hub-agents',
+      partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'version', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecovery: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      globalSecondaryIndexes: [
+        {
+          indexName: 'CategoryIndex',
+          partitionKey: { name: 'category', type: dynamodb.AttributeType.STRING },
+          sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING }
+        },
+        {
+          indexName: 'StatusIndex',
+          partitionKey: { name: 'status', type: dynamodb.AttributeType.STRING },
+          sortKey: { name: 'updated_at', type: dynamodb.AttributeType.STRING }
+        }
+      ]
+    });
+
+    const executionsTable = new dynamodb.Table(this, 'ExecutionsTable', {
+      tableName: 'agent-hub-executions',
+      partitionKey: { name: 'execution_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: 'ttl',
+      globalSecondaryIndexes: [
+        {
+          indexName: 'AgentIndex',
+          partitionKey: { name: 'agent_id', type: dynamodb.AttributeType.STRING },
+          sortKey: { name: 'timestamp', type: dynamodb.AttributeType.STRING }
+        }
+      ]
+    });
+
+    const intelligenceTable = new dynamodb.Table(this, 'IntelligenceTable', {
+      tableName: 'agent-hub-intelligence',
+      partitionKey: { name: 'query_hash', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      timeToLiveAttribute: 'ttl'
+    });
+
+    // S3 Buckets
+    const agentAssetsBucket = new s3.Bucket(this, 'AgentAssetsBucket', {
+      bucketName: `agent-hub-assets-${this.account}-${this.region}`,
+      versioned: true,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      removalPolicy: cdk.RemovalPolicy.RETAIN
+    });
+
+    const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
+      bucketName: `agent-hub-frontend-${this.account}-${this.region}`,
+      websiteIndexDocument: 'index.html',
+      websiteErrorDocument: 'error.html',
+      publicReadAccess: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
+
+    // ============================================================================
+    // AUTHENTICATION & AUTHORIZATION
+    // ============================================================================
+
+    const userPool = new cognito.UserPool(this, 'AgentHubUserPool', {
+      userPoolName: 'agent-hub-users',
+      selfSignUpEnabled: true,
+      signInAliases: { email: true },
+      passwordPolicy: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: true,
+        requireSymbols: true
+      },
+      mfa: cognito.Mfa.OPTIONAL,
+      mfaSecondFactor: {
+        sms: true,
+        otp: true
+      }
+    });
+
+    const userPoolClient = new cognito.UserPoolClient(this, 'AgentHubUserPoolClient', {
+      userPool,
+      generateSecret: false,
+      authFlows: {
+        userPassword: true,
+        userSrp: true
+      }
+    });
+
+    // ============================================================================
+    // MESSAGING & EVENTS
+    // ============================================================================
+
+    // SQS Queues
+    const agentExecutionQueue = new sqs.Queue(this, 'AgentExecutionQueue', {
+      queueName: 'agent-hub-executions',
+      visibilityTimeout: cdk.Duration.minutes(15),
+      deadLetterQueue: {
+        queue: new sqs.Queue(this, 'AgentExecutionDLQ', {
+          queueName: 'agent-hub-executions-dlq'
+        }),
+        maxReceiveCount: 3
+      }
+    });
+
+    const intelligenceQueue = new sqs.Queue(this, 'IntelligenceQueue', {
+      queueName: 'agent-hub-intelligence',
+      visibilityTimeout: cdk.Duration.minutes(5)
+    });
+
+    // SNS Topics
+    const agentEventsTopic = new sns.Topic(this, 'AgentEventsTopic', {
+      topicName: 'agent-hub-events'
+    });
+
+    // EventBridge
+    const eventBus = new events.EventBus(this, 'AgentHubEventBus', {
+      eventBusName: 'agent-hub-events'
+    });
+
+    // ============================================================================
+    // LAMBDA FUNCTIONS
+    // ============================================================================
+
+    // Common Lambda environment variables
+    const commonEnvVars = {
+      AGENTS_TABLE: agentsTable.tableName,
+      EXECUTIONS_TABLE: executionsTable.tableName,
+      INTELLIGENCE_TABLE: intelligenceTable.tableName,
+      ASSETS_BUCKET: agentAssetsBucket.bucketName,
+      EVENT_BUS: eventBus.eventBusName,
+      REGION: this.region
+    };
+
+    // Agent Management Functions
+    const agentCrudFunction = new lambda.Function(this, 'AgentCrudFunction', {
+      functionName: 'agent-hub-agent-crud',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('../lambda-functions/agent-crud'),
+      environment: commonEnvVars,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512
+    });
+
+    // Intelligence Analysis Function
+    const intelligenceFunction = new lambda.Function(this, 'IntelligenceFunction', {
+      functionName: 'agent-hub-intelligence',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('../lambda-functions/intelligence'),
+      environment: {
+        ...commonEnvVars,
+        BEDROCK_REGION: this.region
+      },
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 1024
+    });
+
+    // Agent Execution Function
+    const agentExecutionFunction = new lambda.Function(this, 'AgentExecutionFunction', {
+      functionName: 'agent-hub-execution',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('../lambda-functions/execution'),
+      environment: commonEnvVars,
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 2048
+    });
+
+    // MCP Integration Function
+    const mcpFunction = new lambda.Function(this, 'McpFunction', {
+      functionName: 'agent-hub-mcp',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('../lambda-functions/mcp'),
+      environment: commonEnvVars,
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 1024
+    });
+
+    // Analytics Function
+    const analyticsFunction = new lambda.Function(this, 'AnalyticsFunction', {
+      functionName: 'agent-hub-analytics',
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('../lambda-functions/analytics'),
+      environment: commonEnvVars,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512
+    });
+
+    // ============================================================================
+    // IAM PERMISSIONS
+    // ============================================================================
+
+    // Grant DynamoDB permissions
+    agentsTable.grantReadWriteData(agentCrudFunction);
+    agentsTable.grantReadData(intelligenceFunction);
+    executionsTable.grantReadWriteData(agentExecutionFunction);
+    executionsTable.grantReadData(analyticsFunction);
+    intelligenceTable.grantReadWriteData(intelligenceFunction);
+
+    // Grant S3 permissions
+    agentAssetsBucket.grantReadWrite(agentCrudFunction);
+    agentAssetsBucket.grantRead(agentExecutionFunction);
+
+    // Grant Bedrock permissions
+    intelligenceFunction.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'bedrock:InvokeModel',
+        'bedrock:ListFoundationModels'
+      ],
+      resources: ['*']
+    }));
+
+    // Grant EventBridge permissions
+    [agentCrudFunction, agentExecutionFunction, intelligenceFunction].forEach(fn => {
+      fn.addToRolePolicy(new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['events:PutEvents'],
+        resources: [eventBus.eventBusArn]
+      }));
+    });
+
+    // ============================================================================
+    // API GATEWAY
+    // ============================================================================
+
+    const api = new apigateway.RestApi(this, 'AgentHubApi', {
+      restApiName: 'agent-hub-api',
+      description: 'AWS Native Agent Hub Platform API',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: ['Content-Type', 'Authorization']
+      }
+    });
+
+    // Cognito Authorizer
+    const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'ApiAuthorizer', {
+      cognitoUserPools: [userPool]
+    });
+
+    // API Resources
+    const v1 = api.root.addResource('api').addResource('v1');
+
+    // Agents endpoints
+    const agents = v1.addResource('agents');
+    agents.addMethod('GET', new apigateway.LambdaIntegration(agentCrudFunction));
+    agents.addMethod('POST', new apigateway.LambdaIntegration(agentCrudFunction), {
+      authorizer
+    });
+
+    const agentById = agents.addResource('{id}');
+    agentById.addMethod('GET', new apigateway.LambdaIntegration(agentCrudFunction));
+    agentById.addMethod('PUT', new apigateway.LambdaIntegration(agentCrudFunction), {
+      authorizer
+    });
+    agentById.addMethod('DELETE', new apigateway.LambdaIntegration(agentCrudFunction), {
+      authorizer
+    });
+
+    // Intelligence endpoints
+    const intelligence = v1.addResource('intelligence');
+    intelligence.addResource('analyze-query-dynamic')
+      .addMethod('POST', new apigateway.LambdaIntegration(intelligenceFunction));
+
+    // Execution endpoints
+    const executions = v1.addResource('executions');
+    executions.addMethod('POST', new apigateway.LambdaIntegration(agentExecutionFunction), {
+      authorizer
+    });
+    executions.addMethod('GET', new apigateway.LambdaIntegration(analyticsFunction));
+
+    // MCP endpoints
+    const mcp = v1.addResource('mcp');
+    mcp.addResource('status').addMethod('GET', new apigateway.LambdaIntegration(mcpFunction));
+    mcp.addResource('execute').addMethod('POST', new apigateway.LambdaIntegration(mcpFunction), {
+      authorizer
+    });
+
+    // ============================================================================
+    // EVENT RULES & TARGETS
+    // ============================================================================
+
+    // Agent lifecycle events
+    new events.Rule(this, 'AgentCreatedRule', {
+      eventBus,
+      eventPattern: {
+        source: ['agent-hub'],
+        detailType: ['Agent Created']
+      },
+      targets: [
+        new targets.SqsQueue(agentExecutionQueue),
+        new targets.SnsTopic(agentEventsTopic)
+      ]
+    });
+
+    // Intelligence analysis events
+    new events.Rule(this, 'IntelligenceAnalysisRule', {
+      eventBus,
+      eventPattern: {
+        source: ['agent-hub'],
+        detailType: ['Intelligence Analysis Requested']
+      },
+      targets: [
+        new targets.SqsQueue(intelligenceQueue)
+      ]
+    });
+
+    // ============================================================================
+    // MONITORING & ALARMS
+    // ============================================================================
+
+    // CloudWatch Dashboard
+    const dashboard = new cloudwatch.Dashboard(this, 'AgentHubDashboard', {
+      dashboardName: 'agent-hub-metrics'
+    });
+
+    // Lambda function metrics
+    [agentCrudFunction, intelligenceFunction, agentExecutionFunction].forEach((fn, index) => {
+      dashboard.addWidgets(
+        new cloudwatch.GraphWidget({
+          title: `${fn.functionName} Metrics`,
+          left: [fn.metricInvocations(), fn.metricErrors()],
+          right: [fn.metricDuration()]
+        })
+      );
+    });
+
+    // DynamoDB metrics
+    dashboard.addWidgets(
+      new cloudwatch.GraphWidget({
+        title: 'DynamoDB Metrics',
+        left: [
+          agentsTable.metricConsumedReadCapacityUnits(),
+          agentsTable.metricConsumedWriteCapacityUnits()
+        ]
+      })
+    );
+
+    // ============================================================================
+    // OUTPUTS
+    // ============================================================================
+
+    new cdk.CfnOutput(this, 'ApiGatewayUrl', {
+      value: api.url,
+      description: 'API Gateway URL'
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+      description: 'Cognito User Pool ID'
+    });
+
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+      description: 'Cognito User Pool Client ID'
+    });
+
+    new cdk.CfnOutput(this, 'FrontendBucketUrl', {
+      value: frontendBucket.bucketWebsiteUrl,
+      description: 'Frontend S3 Website URL'
+    });
+
+    new cdk.CfnOutput(this, 'EventBusArn', {
+      value: eventBus.eventBusArn,
+      description: 'EventBridge Event Bus ARN'
+    });
+  }
+}

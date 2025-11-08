@@ -1,0 +1,13 @@
+{
+  "serviceName": "mcp-office365-service",
+  "cluster": "agent-hub-mcp-cluster-dev",
+  "taskDefinition": "agent-hub-mcp-office365-dev:4",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": ["subnet-0913227ed421b6a53", "subnet-08ddfc7ad8f87c5fa"],
+      "assignPublicIp": "DISABLED"
+    }
+  }
+}

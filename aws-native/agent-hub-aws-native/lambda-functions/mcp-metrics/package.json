@@ -1,0 +1,22 @@
+{
+  "name": "agent-hub-mcp-metrics",
+  "version": "1.0.0",
+  "description": "CloudWatch metrics collection for MCP tool executions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1400.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "cloudwatch",
+    "metrics",
+    "mcp",
+    "agent-hub"
+  ],
+  "author": "Agent Hub Platform",
+  "license": "MIT"
+}

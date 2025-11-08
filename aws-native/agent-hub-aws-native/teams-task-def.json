@@ -1,0 +1,40 @@
+{
+  "family": "agent-hub-mcp-teams-dev",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::448049831733:role/MCPInfrastructureStack-dev-TaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::448049831733:role/MCPInfrastructureStack-dev-TaskRole",
+  "containerDefinitions": [
+    {
+      "name": "mcp-teams",
+      "image": "448049831733.dkr.ecr.us-east-1.amazonaws.com/agent-hub-mcp-teams-dev:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 3001,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3001"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/mcp-teams",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "LambdaExecutionRole": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        "Resource": "arn:aws:logs:*:*:*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ],
+        "Resource": [
+          "arn:aws:dynamodb:*:*:table/agent-hub-*",
+          "arn:aws:dynamodb:*:*:table/agent-hub-*/index/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ],
+        "Resource": "arn:aws:s3:::agent-hub-assets-*/*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "events:PutEvents"
+        ],
+        "Resource": "arn:aws:events:*:*:event-bus/agent-hub-events"
+      }
+    ]
+  },
+  "BedrockIntelligenceRole": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "bedrock:InvokeModel",
+          "bedrock:ListFoundationModels"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ],
+        "Resource": [
+          "arn:aws:dynamodb:*:*:table/agent-hub-agents",
+          "arn:aws:dynamodb:*:*:table/agent-hub-intelligence"
+        ]
+      }
+    ]
+  },
+  "ApiGatewayRole": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "lambda:InvokeFunction"
+        ],
+        "Resource": "arn:aws:lambda:*:*:function:agent-hub-*"
+      }
+    ]
+  },
+  "CognitoUserPolicy": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "execute-api:Invoke"
+        ],
+        "Resource": "arn:aws:execute-api:*:*:*/*/POST/*",
+        "Condition": {
+          "StringEquals": {
+            "cognito-identity.amazonaws.com:aud": "${aws:RequestedRegion}"
+          }
+        }
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:GetObject"
+        ],
+        "Resource": "arn:aws:s3:::agent-hub-assets-*/*"
+      }
+    ]
+  }
+}

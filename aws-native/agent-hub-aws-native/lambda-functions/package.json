@@ -1,0 +1,24 @@
+{
+  "name": "agent-hub-lambda-functions",
+  "version": "1.0.0",
+  "description": "Lambda Functions for AWS Native Agent Hub Platform",
+  "scripts": {
+    "build": "npm run build:agent-crud && npm run build:intelligence && npm run build:execution && npm run build:mcp && npm run build:analytics",
+    "build:agent-crud": "cd agent-crud && npm run build",
+    "build:intelligence": "cd intelligence && npm run build",
+    "build:execution": "cd execution && npm run build",
+    "build:mcp": "cd mcp && npm run build",
+    "build:analytics": "cd analytics && npm run build",
+    "test": "jest",
+    "deploy": "sam deploy --guided"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.5.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1400.0"
+  }
+}

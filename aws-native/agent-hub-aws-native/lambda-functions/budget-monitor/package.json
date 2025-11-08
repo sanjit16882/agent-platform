@@ -1,0 +1,21 @@
+{
+  "name": "agent-hub-budget-monitor",
+  "version": "1.0.0",
+  "description": "AWS Budget monitoring Lambda function for Agent Hub Platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1400.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "budget",
+    "cost-monitoring",
+    "agent-hub"
+  ],
+  "author": "Agent Hub Platform",
+  "license": "MIT"
+}

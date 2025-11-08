@@ -1,0 +1,38 @@
+{
+  "name": "agent-hub-mcp-client",
+  "version": "1.0.0",
+  "description": "MCP Client Lambda function for Agent Hub Platform",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:integration": "node test/test-runner.js",
+    "test:unit": "jest --testPathIgnorePatterns=integration.test.js --testPathIgnorePatterns=performance.test.js",
+    "test:performance": "jest performance.test.js --runInBand --timeout=120000",
+    "test:coverage": "jest --coverage --collectCoverageFrom=index.js",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1400.0",
+    "uuid": "^9.0.0",
+    "redis": "^4.6.0",
+    "lru-cache": "^10.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "eslint": "^8.40.0",
+    "@types/aws-lambda": "^8.10.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "mcp",
+    "json-rpc",
+    "agent-hub"
+  ],
+  "author": "Agent Hub Platform",
+  "license": "MIT"
+}
