@@ -3,12 +3,13 @@ import { Navbar as BootstrapNavbar, Nav, Container, NavDropdown, Badge } from 'r
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
-import { FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaCog, FaStore } from 'react-icons/fa';
 
 // Type assertion for React Icons compatibility
 const UserIcon = FaUser as any;
 const SignOutIcon = FaSignOutAlt as any;
 const CogIcon = FaCog as any;
+const StoreIcon = FaStore as any;
 
 const Navbar: React.FC = () => {
   const location = useLocation();
@@ -50,9 +51,14 @@ const Navbar: React.FC = () => {
                 Agents
               </Nav.Link>
 
-
-
-
+              <Nav.Link 
+                as={Link} 
+                to="/marketplace" 
+                className={`px-2 ${location.pathname === '/marketplace' ? 'active' : ''}`}
+              >
+                <StoreIcon className="me-1" />
+                Marketplace
+              </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
@@ -88,35 +94,81 @@ const Navbar: React.FC = () => {
                 Manage
               </Nav.Link>
 
-              <Nav.Link 
-                as={Link} 
-                to="/integration" 
-                active={location.pathname === '/integration'}
-                className="px-2"
-              >
-                Integration
-              </Nav.Link>
+              <NavDropdown title="Developer Tools" id="developer-tools-dropdown" className="px-2">
+                <NavDropdown.Header>📚 Documentation</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/api-docs">
+                  API Documentation
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/integration-guide">
+                  Integration Guide
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                <NavDropdown.Header>🔌 Integration & Testing</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/mcp-test">
+                  🔌 MCP Test & Integration
+                  <Badge bg="success" className="ms-1">NEW</Badge>
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/integration">
+                  Platform Integration
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/enterprise">
+                  Enterprise Integration
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                <NavDropdown.Header>🛠️ Development Tools</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/cli-guide">
+                  CLI & IDE Integration
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/sdk-docs">
+                  SDKs & Libraries
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/webhooks">
+                  Webhooks & Events
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/api-keys">
+                  API Key Management
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                <NavDropdown.Header>🚀 Extensions</NavDropdown.Header>
+                <NavDropdown.Item href="#" onClick={(e) => {
+                  e.preventDefault();
+                  window.open('https://marketplace.visualstudio.com/search?term=agenthub&target=VSCode', '_blank');
+                }}>
+                  Get VS Code Extension
+                </NavDropdown.Item>
+              </NavDropdown>
 
               {canAccessFeature('cost-management') && (
-                <Nav.Link 
-                  as={Link} 
-                  to="/finops" 
-                  active={location.pathname === '/finops'}
-                  className="px-2"
-                >
-                  FinOps
-                </Nav.Link>
-              )}
-
-              {canAccessFeature('cost-management') && (
-                <Nav.Link 
-                  as={Link} 
-                  to="/analytics" 
-                  active={location.pathname === '/analytics'}
-                  className="px-2"
-                >
-                  Analytics
-                </Nav.Link>
+                <NavDropdown title="Analytics" id="analytics-dropdown" className="px-2">
+                  <NavDropdown.Item as={Link} to="/analytics">
+                    📊 Real Analytics
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/business-intelligence">
+                    💡 Business Intelligence
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/intelligence">
+                    🧠 Intelligence Layer
+                    <Badge bg="success" className="ms-1">NEW</Badge>
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/learning">
+                    🎯 Continuous Learning
+                    <Badge bg="primary" className="ms-1">LIVE</Badge>
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item as={Link} to="/metrics">
+                    ⚡ Real CloudWatch Metrics
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/finops">
+                    💰 FinOps Dashboard
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item as={Link} to="/analytics-comparison">
+                    🔄 Compare Analytics
+                  </NavDropdown.Item>
+                </NavDropdown>
               )}
             </Nav>
             <Nav>
@@ -169,54 +221,6 @@ const Navbar: React.FC = () => {
           </BootstrapNavbar.Collapse>
         </Container>
       </BootstrapNavbar>
-
-      {/* Secondary Navigation - Resources & Documentation */}
-      <div className="bg-light border-bottom secondary-navbar">
-        <Container>
-          <Nav className="justify-content-center py-2">
-            <Nav.Link 
-              as={Link} 
-              to="/integration-guide" 
-              active={location.pathname === '/integration-guide'}
-              className="px-3 text-primary small"
-            >
-              Integration Guide
-            </Nav.Link>
-
-            <Nav.Link 
-              as={Link} 
-              to="/api-docs" 
-              active={location.pathname === '/api-docs'}
-              className="px-3 text-primary small"
-            >
-              API Documentation
-            </Nav.Link>
-
-            {hasPermission('agent.deploy') && (
-              <Nav.Link 
-                as={Link} 
-                to="/deployment" 
-                className={`px-3 text-warning small ${location.pathname === '/deployment' ? 'active' : ''}`}
-              >
-                Deployment
-              </Nav.Link>
-            )}
-
-            {hasPermission('template.publish') && (
-              <Nav.Link 
-                as={Link} 
-                to="/marketplace" 
-                active={location.pathname === '/marketplace'}
-                className="px-3 text-primary small"
-              >
-                Marketplace
-              </Nav.Link>
-            )}
-
-
-          </Nav>
-        </Container>
-      </div>
     </>
   );
 };
