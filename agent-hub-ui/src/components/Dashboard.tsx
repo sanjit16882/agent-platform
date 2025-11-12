@@ -1,24 +1,61 @@
-import React from 'react';
-import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAgentContext } from '../context/AgentContext';
 import { theme } from '../styles/theme';
+import axios from 'axios';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const { getActiveAgentsCount } = useAgentContext();
-  // Removed ROI calculator state - was demo/marketing content
-
-  const baseAgentCount = 38;
   const deployedAgentCount = getActiveAgentsCount();
-  console.log('Dashboard - deployed agent count:', deployedAgentCount);
-  const stats = {
-    totalAgents: baseAgentCount + deployedAgentCount,
-    categories: 6,
-    frameworks: 12,
+  
+  // State for all dashboard stats
+  const [stats, setStats] = useState({
+    totalAgents: deployedAgentCount,
+    categories: 2,
+    frameworks: 8,
     avgResponseTime: 1.1,
     uptime: 99.98
-  };
+  });
+  const [loading, setLoading] = useState(true);
+
+  console.log('Dashboard - deployed agent count:', deployedAgentCount);
+
+  // Fetch all dashboard stats from API
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/api/v1/dashboard/stats`);
+        
+        if (response.data && response.data.success && response.data.data) {
+          setStats({
+            totalAgents: response.data.data.totalAgents,
+            categories: response.data.data.categories,
+            frameworks: response.data.data.frameworks,
+            avgResponseTime: 1.1,
+            uptime: response.data.data.uptime
+          });
+        }
+      } catch (error) {
+        console.error('❌ Dashboard: Error fetching stats:', error);
+        // Fallback to context value
+        setStats(prev => ({
+          ...prev,
+          totalAgents: deployedAgentCount || prev.totalAgents
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboardStats();
+  }, [deployedAgentCount]);
+
+
 
   const recentActivity = [
     { 
@@ -101,6 +138,56 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* CLI & IDE Integration Banner */}
+      <div style={{ marginBottom: theme.spacing['3xl'] }}>
+        <Card style={{ 
+          background: 'linear-gradient(135deg, #003d82 0%, #002a5c 100%)',
+          color: 'white',
+          border: 'none'
+        }}>
+          <Card.Body style={{ padding: theme.spacing.xl }}>
+            <Row className="align-items-center">
+              <Col md={8}>
+                <div className="d-flex align-items-center mb-3">
+                  <Badge bg="success" className="me-3 px-3 py-2">
+                    ✨ NEW
+                  </Badge>
+                  <h4 className="mb-0 text-white">CLI & IDE Integration Available</h4>
+                </div>
+                <p className="mb-3 text-light">
+                  Install the <strong>AgentHub VS Code Extension</strong> to access powerful command-line tools, 
+                  integrated development features, and seamless agent deployment workflows.
+                </p>
+                <div className="d-flex flex-wrap gap-2">
+                  <Badge bg="light" text="dark" className="px-3 py-1">⌨️ CLI Commands</Badge>
+                  <Badge bg="light" text="dark" className="px-3 py-1">🔧 IDE Integration</Badge>
+                  <Badge bg="light" text="dark" className="px-3 py-1">🚀 One-Click Deploy</Badge>
+                  <Badge bg="light" text="dark" className="px-3 py-1">📊 Real-time Monitoring</Badge>
+                </div>
+              </Col>
+              <Col md={4} className="text-end">
+                <Button 
+                  variant="light" 
+                  size="lg" 
+                  onClick={() => navigate('/cli-guide')}
+                  className="me-2 mb-2"
+                >
+                  📚 View CLI Guide
+                </Button>
+                <Button 
+                  variant="outline-light" 
+                  size="lg"
+                  onClick={() => navigate('/api-docs')}
+                  className="mb-2"
+                >
+                  🔗 API Docs
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
+      </div>
+
       {/* Stats Cards */}
       <div style={{ 
         display: 'grid', 
@@ -111,7 +198,7 @@ const Dashboard: React.FC = () => {
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
           <Card.Body>
             <h3 style={{ color: theme.colors.primary, fontSize: theme.typography.fontSize['2xl'], fontWeight: '900' }}>
-              {stats.totalAgents}
+              {loading ? '...' : stats.totalAgents}
             </h3>
             <p style={{ color: theme.colors.textSecondary, margin: 0 }}>AI Agents</p>
           </Card.Body>
@@ -119,7 +206,7 @@ const Dashboard: React.FC = () => {
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
           <Card.Body>
             <h3 style={{ color: theme.colors.primary, fontSize: theme.typography.fontSize['2xl'], fontWeight: '900' }}>
-              {stats.categories}
+              {loading ? '...' : stats.categories}
             </h3>
             <p style={{ color: theme.colors.textSecondary, margin: 0 }}>Business Domains</p>
           </Card.Body>
@@ -127,7 +214,7 @@ const Dashboard: React.FC = () => {
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl }}>
           <Card.Body>
             <h3 style={{ color: theme.colors.primary, fontSize: theme.typography.fontSize['2xl'], fontWeight: '900' }}>
-              {stats.frameworks}
+              {loading ? '...' : stats.frameworks}
             </h3>
             <p style={{ color: theme.colors.textSecondary, margin: 0 }}>Frameworks Supported</p>
           </Card.Body>
@@ -135,11 +222,12 @@ const Dashboard: React.FC = () => {
         <Card style={{ textAlign: 'center', padding: theme.spacing.xl, cursor: 'pointer' }} onClick={() => navigate('/manage')}>
           <Card.Body>
             <h3 style={{ color: theme.colors.primary, fontSize: theme.typography.fontSize['2xl'], fontWeight: '900' }}>
-              {stats.uptime}%
+              {loading ? '...' : `${stats.uptime}%`}
             </h3>
             <p style={{ color: theme.colors.textSecondary, margin: 0 }}>Platform Uptime</p>
           </Card.Body>
         </Card>
+
       </div>
 
       {/* Quick Actions */}
@@ -312,7 +400,7 @@ const Dashboard: React.FC = () => {
               }}>
                 Generate test suites for Selenium, Cypress, Playwright, and API testing frameworks
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>15+ Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>5 Agents</Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -340,7 +428,7 @@ const Dashboard: React.FC = () => {
               }}>
                 Cloud cost optimization, performance monitoring, and infrastructure analysis
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>12+ Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -368,7 +456,7 @@ const Dashboard: React.FC = () => {
               }}>
                 Vulnerability scanning, compliance auditing, and security best practices
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>8+ Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -396,7 +484,7 @@ const Dashboard: React.FC = () => {
               }}>
                 Data analysis, reporting automation, and business insights generation
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>10+ Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
             </div>
           </div>
           
@@ -456,10 +544,10 @@ const Dashboard: React.FC = () => {
             gap: theme.spacing.lg
           }}>
             {[
-              { name: 'Code Review Agent', uses: 47, category: 'Development', lastUsed: '2 min ago' },
-              { name: 'Email Rephraser', uses: 32, category: 'Communication', lastUsed: '15 min ago' },
-              { name: 'DevOps Monitor', uses: 28, category: 'Infrastructure', lastUsed: '2 hours ago' },
-              { name: 'Security Scanner', uses: 19, category: 'Security', lastUsed: '1 day ago' }
+              { name: 'Code Review Agent', uses: 12, category: 'Development', lastUsed: '2 min ago' },
+              { name: 'Email Rephraser', uses: 8, category: 'Communication', lastUsed: '15 min ago' },
+              { name: 'DevOps Monitor', uses: 6, category: 'Infrastructure', lastUsed: '2 hours ago' },
+              { name: 'Security Scanner', uses: 4, category: 'Security', lastUsed: '1 day ago' }
             ].map((agent, index) => (
               <div 
                 key={index}
@@ -513,6 +601,9 @@ const Dashboard: React.FC = () => {
           </div>
         </Card.Body>
       </Card>
+
+      {/* MCP Testing Section */}
+
 
       {/* Recent Activity */}
       <Card>

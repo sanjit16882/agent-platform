@@ -19,6 +19,7 @@
     "setup:backend": "cd agent-hub-backend && npm install",
     "setup:ui": "cd agent-hub-ui && npm install",
     "setup:local:env": "node scripts/setup-local-env.js",
+    "setup:aws:costs": "node scripts/setup-aws-costs.js",
     "test:local": "npm run test:backend && npm run test:ui",
     "test:backend": "cd agent-hub-backend && npm test",
     "test:ui": "cd agent-hub-ui && npm test -- --watchAll=false",
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.13.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "serverless-http": "^4.0.0"

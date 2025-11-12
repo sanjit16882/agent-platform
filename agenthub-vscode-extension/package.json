@@ -1,9 +1,9 @@
 {
-  "name": "agenthub",
-  "displayName": "AgentHub - AI-Powered Development",
-  "description": "Integrate AI agents directly into your VS Code workflow for testing, security analysis, and code generation",
+  "name": "agenthub-vscode-extension",
+  "displayName": "AgentHub - AI-Powered Development Assistant",
+  "description": "Generic VS Code extension for integrating with AgentHub platforms - enables AI agents for testing, security analysis, and code generation",
   "version": "1.0.0",
-  "publisher": "agenthub",
+  "publisher": "your-organization",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -14,13 +14,28 @@
     "Machine Learning"
   ],
   "keywords": [
+    "agenthub",
     "ai",
     "agent",
+    "artificial intelligence",
     "testing",
     "security",
     "automation",
-    "code generation"
+    "code generation",
+    "development tools",
+    "productivity",
+    "ai assistant"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/agenthub-vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/agenthub-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/your-org/agenthub-vscode-extension#readme",
+  "license": "MIT",
+  "icon": "icon.png",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -206,7 +221,11 @@
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
-    "package": "vsce package"
+    "package": "vsce package",
+    "deploy:org": "node deploy-organization.js",
+    "publish": "node publish-to-marketplace.js",
+    "publish:check": "node publish-to-marketplace.js --check",
+    "publish:package": "node publish-to-marketplace.js --package"
   },
   "devDependencies": {
     "@types/vscode": "^1.74.0",

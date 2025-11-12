@@ -34,6 +34,7 @@ interface AgentContextType {
   updateDeployedAgent: (id: string, updates: Partial<DeployedAgent>) => void;
   removeDeployedAgent: (id: string) => void;
   getActiveAgentsCount: () => number;
+  getRecentlyDeployedAgents: (days?: number) => DeployedAgent[];
   // S3 methods
   loadAgentsFromS3: () => Promise<void>;
   migrateToS3: () => Promise<void>;
@@ -76,6 +77,16 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
 
   const getActiveAgentsCount = () => {
     return deployedAgents.filter(agent => agent.status === 'active').length;
+  };
+
+  const getRecentlyDeployedAgents = (days: number = 7) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return deployedAgents.filter(agent => {
+      const deployedDate = new Date(agent.deployedAt);
+      return deployedDate >= cutoffDate;
+    });
   };
 
   // S3 Methods
@@ -254,6 +265,21 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
       // Refresh the page to see changes
       window.location.reload();
     };
+
+    // Expose function to clear all S3 agents (for removing dummy data)
+    (window as any).clearAllS3Agents = async () => {
+      if (window.confirm('Are you sure you want to delete ALL agents from S3? This cannot be undone.')) {
+        try {
+          for (const agent of deployedAgents) {
+            await s3AgentService.deleteAgent(agent.id);
+          }
+          setDeployedAgents([]);
+          console.log('✅ All S3 agents cleared');
+        } catch (error) {
+          console.error('❌ Failed to clear S3 agents:', error);
+        }
+      }
+    };
   }, [deployedAgents, isLoading]);
 
   const value: AgentContextType = {
@@ -262,6 +288,7 @@ export const AgentProvider: React.FC<AgentProviderProps> = ({ children }) => {
     updateDeployedAgent,
     removeDeployedAgent,
     getActiveAgentsCount,
+    getRecentlyDeployedAgents,
     loadAgentsFromS3,
     migrateToS3,
     isLoading

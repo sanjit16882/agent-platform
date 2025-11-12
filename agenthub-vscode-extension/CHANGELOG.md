@@ -1,6 +1,8 @@
 # Change Log
 
-All notable changes to the "AgentHub" extension will be documented in this file.
+All notable changes to the "AgentHub VS Code Extension" will be documented in this file.
+
+This is a generic extension that can be configured to work with any AgentHub instance or compatible AI agent platform.
 
 ## [1.0.0] - 2024-01-15
 

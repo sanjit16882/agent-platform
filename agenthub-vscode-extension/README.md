@@ -1,6 +1,8 @@
 # AgentHub VS Code Extension
 
-Integrate AI agents directly into your VS Code workflow for testing, security analysis, code generation, and more.
+A generic VS Code extension for integrating with AgentHub platforms. Integrate AI agents directly into your VS Code workflow for testing, security analysis, code generation, and more.
+
+This extension can be configured to work with any AgentHub instance or compatible AI agent platform.
 
 ## Features
 
@@ -41,7 +43,9 @@ Access all AgentHub features via Command Palette (`Ctrl+Shift+P`):
 ## Quick Start
 
 ### 1. Install Extension
-Install from VS Code Marketplace or package manually.
+Install from VS Code Marketplace, package manually, or deploy within your organization.
+
+> **Note**: This is a generic extension that can be configured to work with any AgentHub instance. Your organization may have customized this extension with specific branding and default configurations.
 
 ### 2. Configure Connection
 ```
@@ -92,7 +96,7 @@ Access via `File → Preferences → Settings → Extensions → AgentHub`:
 
 ```json
 {
-  "agenthub.apiUrl": "https://agenthub.company.com",
+  "agenthub.apiUrl": "https://your-agenthub-instance.com",
   "agenthub.apiKey": "your-api-key",
   "agenthub.autoGenerateTests": false,
   "agenthub.autoSecurityScan": true,
@@ -180,11 +184,21 @@ Available actions depend on file type and context.
 2. Adjust output level to "minimal"
 3. Check network connectivity to AgentHub API
 
+## Customization for Organizations
+
+This extension is designed to be generic and customizable for any organization's AgentHub instance. See [CUSTOMIZATION.md](./CUSTOMIZATION.md) for detailed instructions on:
+
+- Customizing branding and display names
+- Setting organization-specific defaults
+- Adding custom commands and integrations
+- Deployment options for enterprises
+- Security considerations
+
 ## Development
 
 ### Building from Source
 ```bash
-git clone https://github.com/agenthub/vscode-extension
+git clone <your-agenthub-extension-repository>
 cd vscode-extension
 npm install
 npm run compile
@@ -209,12 +223,14 @@ npm test
 4. Add tests
 5. Submit pull request
 
+Organizations can customize this extension for their specific needs - see the customization guide above.
+
 ## License
 
 MIT License - see LICENSE file for details.
 
 ## Support
 
-- **Documentation**: https://docs.agenthub.com
-- **Issues**: https://github.com/agenthub/vscode-extension/issues
-- **Community**: https://community.agenthub.com
+- **Documentation**: Refer to your AgentHub instance documentation
+- **Issues**: Report issues to your AgentHub administrator or development team
+- **Community**: Check with your organization's AgentHub community or support channels

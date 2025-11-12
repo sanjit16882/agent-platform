@@ -1,34 +1,40 @@
 import React from 'react';
 
-export interface BadgeProps {
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'critical' | 'info' | 'outline';
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'critical' | 'info';
-  className?: string;
 }
 
-export const Badge: React.FC<BadgeProps> = ({
-  children,
-  variant = 'secondary',
-  className = ''
+export const Badge: React.FC<BadgeProps> = ({ 
+  variant = 'primary', 
+  className = '', 
+  children, 
+  ...props 
 }) => {
-  const baseClasses = 'af-badge';
-  const variantClasses = {
-    primary: 'af-badge-primary',
-    secondary: 'af-badge-secondary',
-    success: 'af-badge-success',
-    warning: 'af-badge-warning',
-    critical: 'af-badge-critical',
-    info: 'af-badge-info'
+  const getBadgeClass = () => {
+    switch (variant) {
+      case 'outline':
+        return 'badge';
+      case 'secondary':
+        return 'badge';
+      case 'success':
+        return 'badge bg-success';
+      case 'warning':
+        return 'badge bg-warning';
+      case 'critical':
+        return 'badge bg-danger';
+      case 'info':
+        return 'badge bg-info';
+      default:
+        return 'badge bg-primary';
+    }
   };
-
-  const classes = [
-    baseClasses,
-    variantClasses[variant],
-    className
-  ].filter(Boolean).join(' ');
-
+  
   return (
-    <span className={classes}>
+    <span
+      className={`${getBadgeClass()} ${className}`}
+      {...props}
+    >
       {children}
     </span>
   );

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Badge, Alert, Spinner, Form } from 'react-bootstrap';
 import { agentManagementService, ManagedAgent, PlatformMetrics } from '../services/agentManagementService';
 import S3MigrationHelper from './S3MigrationHelper';
+import { EditAgentModal } from './EditAgentModal';
 
 const AgentManagementSimple: React.FC = () => {
   const [managedAgents, setManagedAgents] = useState<ManagedAgent[]>([]);
@@ -10,6 +11,8 @@ const AgentManagementSimple: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<ManagedAgent | null>(null);
 
   // Load data
   const loadData = async () => {
@@ -70,6 +73,27 @@ const AgentManagementSimple: React.FC = () => {
     }
   };
 
+  const handleEditAgent = (agent: ManagedAgent) => {
+    setSelectedAgent(agent);
+    setShowEditModal(true);
+  };
+
+  const handleSaveAgent = async (updatedAgent: any) => {
+    try {
+      // Update agent through service
+      await agentManagementService.updateAgent(updatedAgent);
+      
+      // Reload agents
+      await loadData();
+      
+      setShowEditModal(false);
+      setSelectedAgent(null);
+    } catch (error) {
+      console.error('Failed to update agent:', error);
+      throw error;
+    }
+  };
+
   return (
     <Container style={{ maxWidth: '1400px', padding: '20px' }}>
       {/* Header */}
@@ -111,7 +135,42 @@ const AgentManagementSimple: React.FC = () => {
       </Row>
 
       {/* Platform Metrics */}
-      {platformMetrics && (
+      {loading ? (
+        <Row className="mb-4">
+          <Col md={3}>
+            <Card className="text-center">
+              <Card.Body>
+                <Spinner animation="border" size="sm" />
+                <small className="d-block mt-2">TOTAL AGENTS</small>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="text-center">
+              <Card.Body>
+                <Spinner animation="border" size="sm" />
+                <small className="d-block mt-2">DEPLOYED AGENTS</small>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="text-center">
+              <Card.Body>
+                <Spinner animation="border" size="sm" />
+                <small className="d-block mt-2">HEALTHY AGENTS</small>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={3}>
+            <Card className="text-center">
+              <Card.Body>
+                <Spinner animation="border" size="sm" />
+                <small className="d-block mt-2">ACTIVE ALERTS</small>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      ) : platformMetrics && (
         <Row className="mb-4">
           <Col md={3}>
             <Card className="text-center">
@@ -240,13 +299,24 @@ const AgentManagementSimple: React.FC = () => {
                       </div>
                     </td>
                     <td>
-                      <Button
-                        variant="outline-success"
-                        size="sm"
-                        onClick={() => window.open(`/agents/${agent.id}/execute`, '_blank')}
-                      >
-                        Execute
-                      </Button>
+                      <div className="d-flex gap-1">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleEditAgent(agent)}
+                          title="Edit agent configuration"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline-success"
+                          size="sm"
+                          onClick={() => window.open(`/agents/${agent.id}/execute`, '_blank')}
+                          title="Execute agent"
+                        >
+                          Execute
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -255,6 +325,19 @@ const AgentManagementSimple: React.FC = () => {
           )}
         </Card.Body>
       </Card>
+
+      {/* Edit Agent Modal */}
+      {selectedAgent && (
+        <EditAgentModal
+          show={showEditModal}
+          onHide={() => {
+            setShowEditModal(false);
+            setSelectedAgent(null);
+          }}
+          agent={selectedAgent}
+          onSave={handleSaveAgent}
+        />
+      )}
     </Container>
   );
 };

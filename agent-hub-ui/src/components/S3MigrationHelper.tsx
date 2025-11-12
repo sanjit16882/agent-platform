@@ -5,10 +5,11 @@ import { migrationHelper } from '../utils/migrationHelper';
 
 const S3MigrationHelper: React.FC = () => {
   const { migrateToS3, isLoading, loadAgentsFromS3 } = useAgentContext();
-  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'checking' | 'migrating' | 'success' | 'error' | 'adding-samples'>('idle');
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'checking' | 'migrating' | 'success' | 'error' | 'adding-samples'>('checking');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [localAgentCount, setLocalAgentCount] = useState<number>(0);
   const [s3AgentCount, setS3AgentCount] = useState<number>(0);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
 
   const checkLocalStorage = () => {
     try {
@@ -27,7 +28,9 @@ const S3MigrationHelper: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        const totalAgents = data.data.length;
+        // Filter out template agents (they're not real manageable agents)
+        const realAgents = data.data.filter((agent: any) => agent.agent_type !== 'template');
+        const totalAgents = realAgents.length;
         setS3AgentCount(totalAgents);
         return totalAgents;
       }
@@ -76,17 +79,22 @@ const S3MigrationHelper: React.FC = () => {
   };
 
   const handleCheck = async () => {
+    setInitialLoading(true);
     setMigrationStatus('checking');
     checkLocalStorage();
     await checkTotalAgents();
+    setInitialLoading(false);
     setMigrationStatus('idle');
   };
 
   // Check on component mount
   useEffect(() => {
     const initCheck = async () => {
+      setInitialLoading(true);
       checkLocalStorage();
       await checkTotalAgents();
+      setInitialLoading(false);
+      setMigrationStatus('idle');
     };
     initCheck();
   }, []);
@@ -97,7 +105,12 @@ const S3MigrationHelper: React.FC = () => {
         <h6 className="mb-0">📊 System Status</h6>
       </Card.Header>
       <Card.Body>
-        {migrationStatus === 'idle' && (
+        {initialLoading ? (
+          <div className="text-center p-3">
+            <Spinner animation="border" size="sm" />
+            <div className="mt-2 small text-muted">Loading agent information...</div>
+          </div>
+        ) : migrationStatus === 'idle' && (
           <>
             <div className="row mb-3">
               <div className="col-md-6">

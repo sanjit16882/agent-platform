@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Form, Button, Alert, Row, Col, Badge } from 'react-bootstrap';
+import { Card, Form, Button, Alert, Row, Col, Badge, Modal } from 'react-bootstrap';
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
+import VectorDBConfigSection from './VectorDBConfigSection';
 
 interface AgentTemplate {
   id: string;
@@ -42,6 +43,26 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
   const [processingLogic, setProcessingLogic] = useState('');
   const [selectedBedrockModel, setSelectedBedrockModel] = useState<string>('');
   const [selectedBedrockModelName, setSelectedBedrockModelName] = useState<string>('');
+  
+  // Testing framework state
+  const [showTestingModal, setShowTestingModal] = useState(false);
+  const [testingStatus, setTestingStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
+  const [testProgress, setTestProgress] = useState(0);
+  const [comprehensiveTestResults, setComprehensiveTestResults] = useState<any[]>([]);
+  const [createdAgentId, setCreatedAgentId] = useState<string | null>(null);
+  
+  // Vector DB configuration state
+  const [vectorDBConfig, setVectorDBConfig] = useState({
+    enabled: false,
+    provider: 'mock',
+    knowledgeBases: [] as string[],
+    retrievalConfig: {
+      topK: 5,
+      minSimilarity: 0.7
+    }
+  });
+  const [vectorDBCost, setVectorDBCost] = useState(0);
+  const [vectorDBLatency, setVectorDBLatency] = useState(0);
 
   useEffect(() => {
     loadTemplates();
@@ -133,6 +154,101 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
     }
   };
 
+  const runComprehensiveTests = async (agentId: string) => {
+    setTestingStatus('running');
+    setTestProgress(0);
+    setComprehensiveTestResults([]);
+
+    try {
+      // Import the real testing framework
+      const { realTestingFramework } = await import('../services/realTestingFramework');
+      
+      // Get user-provided test data
+      const getUserTestData = () => ({
+        input: "This is a test input for validation",
+        sampleFile: "test.csv",
+        baseUrl: "https://www.google.com",
+        testPrompt: "Hello, this is a test prompt"
+      });
+
+      // Create agent component from the created agent
+      const agentComponent = {
+        id: agentId,
+        name: agentName,
+        type: selectedTemplate?.category?.toLowerCase() || 'custom',
+        config: selectedTemplate?.id === 'custom' ? { processingLogic } : inputs,
+        inputs: selectedTemplate?.id === 'custom' ? customInputs : selectedTemplate?.inputSchema || [],
+        outputs: selectedTemplate?.id === 'custom' ? customOutputs : selectedTemplate?.outputSchema || [],
+        dependencies: []
+      };
+
+      const testConfig = {
+        testData: getUserTestData(),
+        timeout: 60000, // 1 minute timeout for comprehensive testing
+        retries: 2
+      };
+
+      // Phase 1: Component Testing (0-50%)
+      setTestProgress(10);
+      const componentTestResult = await realTestingFramework.testComponent(agentComponent, testConfig);
+      setTestProgress(50);
+
+      // Phase 2: Security Testing (50-70%)
+      const securityTestResult = await realTestingFramework.testSecurity(agentComponent, testConfig);
+      setTestProgress(70);
+
+      // Phase 3: Performance Testing (70-90%)
+      const performanceTestResult = await realTestingFramework.testPerformance(agentComponent, testConfig);
+      setTestProgress(90);
+
+      // Phase 4: Integration Testing (90-100%)
+      const integrationTestResult = await realTestingFramework.testIntegration([agentComponent], testConfig);
+      setTestProgress(100);
+
+      // Compile comprehensive results
+      const comprehensiveResults = [
+        {
+          category: 'Component Tests',
+          status: componentTestResult.status,
+          tests: componentTestResult.tests,
+          duration: componentTestResult.duration,
+          description: 'Core functionality and component behavior tests'
+        },
+        {
+          category: 'Security Tests',
+          status: securityTestResult.status,
+          tests: securityTestResult.tests,
+          duration: securityTestResult.duration,
+          description: 'Security vulnerability and compliance tests'
+        },
+        {
+          category: 'Performance Tests',
+          status: performanceTestResult.status,
+          tests: performanceTestResult.tests,
+          duration: performanceTestResult.duration,
+          description: 'Performance benchmarks and resource usage tests'
+        },
+        {
+          category: 'Integration Tests',
+          status: integrationTestResult.overallStatus,
+          tests: integrationTestResult.workflowResults[0]?.steps || [],
+          duration: 0,
+          description: 'End-to-end integration and workflow tests'
+        }
+      ];
+
+      setComprehensiveTestResults(comprehensiveResults);
+      
+      // Determine overall status
+      const allPassed = comprehensiveResults.every(result => result.status === 'passed');
+      setTestingStatus(allPassed ? 'completed' : 'failed');
+
+    } catch (error: any) {
+      console.error('Comprehensive testing failed:', error);
+      setTestingStatus('failed');
+    }
+  };
+
   const createAgent = async () => {
     if (!selectedTemplate || !validateInputs()) return;
 
@@ -159,7 +275,8 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
             modelName: selectedBedrockModelName,
             provider: 'aws-bedrock',
             region: 'us-east-1'
-          } : undefined
+          } : undefined,
+          vectorDB: vectorDBConfig.enabled ? vectorDBConfig : undefined
         };
       } else {
         // Use existing template
@@ -173,7 +290,8 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
             modelName: selectedBedrockModelName,
             provider: 'aws-bedrock',
             region: 'us-east-1'
-          } : undefined
+          } : undefined,
+          vectorDB: vectorDBConfig.enabled ? vectorDBConfig : undefined
         };
       }
 
@@ -188,10 +306,8 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
       const result = await response.json();
       
       if (result.success) {
-        setSuccess('Agent created successfully! Redirecting to catalog...');
-        setTimeout(() => {
-          navigate('/agents');
-        }, 2000);
+        setCreatedAgentId(result.data?.agentId || result.data?.id || 'created-agent');
+        setSuccess('Agent created successfully! You can now test it before deploying.');
       } else {
         setError(result.error || 'Failed to create agent');
       }
@@ -387,6 +503,14 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
                     agentType={selectedTemplate?.category?.toLowerCase() || 'custom'}
                     label="AI Model"
                     required={false}
+                  />
+
+                  {/* Vector DB Configuration */}
+                  <VectorDBConfigSection
+                    config={vectorDBConfig}
+                    onChange={setVectorDBConfig}
+                    onCostChange={setVectorDBCost}
+                    onLatencyChange={setVectorDBLatency}
                   />
 
                   {selectedTemplate.id === 'custom' && (
@@ -627,15 +751,56 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
               </Card>
 
               <div className="text-center">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={createAgent}
-                  disabled={loading}
-                  style={{ minWidth: '200px' }}
-                >
-                  {loading ? 'Creating Agent...' : 'Create Agent'}
-                </Button>
+                {!createdAgentId ? (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={createAgent}
+                    disabled={loading}
+                    style={{ minWidth: '200px' }}
+                  >
+                    {loading ? 'Creating Agent...' : 'Create Agent'}
+                  </Button>
+                ) : (
+                  <div>
+                    <div className="mb-3">
+                      <Alert variant="success">
+                        <strong>✅ Agent Created Successfully!</strong>
+                        <p className="mb-0">Your agent "{agentName}" has been created. You can now test it before deploying.</p>
+                      </Alert>
+                    </div>
+                    <div className="d-flex gap-3 justify-content-center">
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={() => setShowTestingModal(true)}
+                      >
+                        🧪 Test Agent
+                      </Button>
+                      <Button
+                        variant="outline-primary"
+                        size="lg"
+                        onClick={() => navigate('/agents')}
+                      >
+                        Go to Catalog
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="lg"
+                        onClick={() => {
+                          setCreatedAgentId(null);
+                          setSelectedTemplate(null);
+                          setAgentName('');
+                          setAgentDescription('');
+                          setError(null);
+                          setSuccess(null);
+                        }}
+                      >
+                        Create Another
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </Col>
 
@@ -658,6 +823,27 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
                         <strong>Category:</strong>
                         <Badge bg="secondary">{customCategory || 'Custom'}</Badge>
                       </div>
+
+                      <div className="mb-3">
+                        <strong>Capabilities:</strong>
+                        <div className="d-flex gap-2 mt-1">
+                          <Badge bg="primary">LLM</Badge>
+                          {vectorDBConfig.enabled && (
+                            <Badge bg="info">Vector DB</Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {vectorDBConfig.enabled && (
+                        <div className="mb-3">
+                          <strong>Knowledge Bases:</strong>
+                          <div className="small text-muted">
+                            {vectorDBConfig.knowledgeBases.length > 0 
+                              ? `${vectorDBConfig.knowledgeBases.length} selected`
+                              : 'None selected'}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="mb-3">
                         <strong>Inputs ({customInputs.length}):</strong>
@@ -709,6 +895,27 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
                       </div>
 
                       <div className="mb-3">
+                        <strong>Capabilities:</strong>
+                        <div className="d-flex gap-2 mt-1">
+                          <Badge bg="primary">LLM</Badge>
+                          {vectorDBConfig.enabled && (
+                            <Badge bg="info">Vector DB</Badge>
+                          )}
+                        </div>
+                      </div>
+
+                      {vectorDBConfig.enabled && (
+                        <div className="mb-3">
+                          <strong>Knowledge Bases:</strong>
+                          <div className="small text-muted">
+                            {vectorDBConfig.knowledgeBases.length > 0 
+                              ? `${vectorDBConfig.knowledgeBases.length} selected`
+                              : 'None selected'}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mb-3">
                         <strong>Expected Outputs:</strong>
                         <ul className="small">
                           {selectedTemplate.outputSchema.map(output => (
@@ -730,6 +937,171 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
           </Row>
         </div>
       )}
+
+      {/* Comprehensive Testing Modal */}
+      <Modal show={showTestingModal} onHide={() => setShowTestingModal(false)} size="xl">
+        <Modal.Header closeButton>
+          <Modal.Title>
+            🧪 Comprehensive Agent Testing - {agentName}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div>
+            {/* Testing Overview */}
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6>Testing Overview</h6>
+                <div className="d-flex gap-2">
+                  {testingStatus === 'running' && (
+                    <div className="d-flex align-items-center me-3">
+                      <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+                      <span>Testing... {testProgress}%</span>
+                    </div>
+                  )}
+                  <Button 
+                    variant="primary"
+                    onClick={() => createdAgentId && runComprehensiveTests(createdAgentId)}
+                    disabled={testingStatus === 'running' || !createdAgentId}
+                  >
+                    {testingStatus === 'running' ? 'Testing...' : 'Run Comprehensive Tests'}
+                  </Button>
+                </div>
+              </div>
+
+              {testingStatus === 'running' && (
+                <div className="mb-3">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Testing Progress</span>
+                    <span>{testProgress}%</span>
+                  </div>
+                  <div className="progress">
+                    <div 
+                      className="progress-bar progress-bar-striped progress-bar-animated" 
+                      style={{ width: `${testProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              {testingStatus === 'idle' && (
+                <Alert variant="info">
+                  <strong>Comprehensive Testing Suite</strong>
+                  <p className="mb-0">
+                    Run a complete test suite including component functionality, security scanning, 
+                    performance benchmarks, and integration tests for your purpose-driven agent.
+                  </p>
+                </Alert>
+              )}
+            </div>
+
+            {/* Test Results */}
+            {comprehensiveTestResults.length > 0 && (
+              <div>
+                <h6 className="mb-3">Test Results</h6>
+                {comprehensiveTestResults.map((category, categoryIndex) => (
+                  <Card key={categoryIndex} className="mb-3">
+                    <Card.Header>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span>
+                          <Badge bg={category.status === 'passed' ? 'success' : category.status === 'failed' ? 'danger' : 'warning'} className="me-2">
+                            {category.status === 'passed' ? 'Passed' : 
+                             category.status === 'failed' ? 'Failed' : 'Running'}
+                          </Badge>
+                          {category.category}
+                        </span>
+                        <small className="text-muted">
+                          {category.tests.filter((t: any) => t.status === 'passed').length}/{category.tests.length} tests passed
+                          {category.duration > 0 && ` • ${category.duration}ms`}
+                        </small>
+                      </div>
+                      <small className="text-muted d-block mt-1">{category.description}</small>
+                    </Card.Header>
+                    <Card.Body>
+                      {category.tests.map((test: any, testIndex: number) => (
+                        <div key={testIndex} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                          <div className="d-flex align-items-center">
+                            <span className={`me-2 ${test.status === 'passed' ? 'text-success' : test.status === 'failed' ? 'text-danger' : 'text-muted'}`}>
+                              {test.status === 'passed' ? '✓' : test.status === 'failed' ? '✗' : '⏳'}
+                            </span>
+                            <div>
+                              <span>{test.name}</span>
+                              {test.message && test.status === 'failed' && (
+                                <div className="small text-danger">{test.message}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-end">
+                            {test.category && (
+                              <Badge bg="light" text="dark" className="me-2">
+                                {test.category}
+                              </Badge>
+                            )}
+                            <small className="text-muted">{test.duration || 0}ms</small>
+                          </div>
+                        </div>
+                      ))}
+                    </Card.Body>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Test Summary */}
+            {testingStatus === 'completed' && (
+              <Alert variant="success">
+                <strong>Comprehensive Testing Complete!</strong>
+                <div className="mt-2">
+                  <div>Total Categories: {comprehensiveTestResults.length}</div>
+                  <div>
+                    Passed Categories: {comprehensiveTestResults.filter(r => r.status === 'passed').length}/{comprehensiveTestResults.length}
+                  </div>
+                  {comprehensiveTestResults.every(r => r.status === 'passed') && (
+                    <div className="mt-2">
+                      <strong>✅ All tests passed! Your agent is ready for deployment.</strong>
+                    </div>
+                  )}
+                </div>
+              </Alert>
+            )}
+
+            {testingStatus === 'failed' && (
+              <Alert variant="warning">
+                <strong>Some Tests Failed</strong>
+                <p className="mb-0">
+                  Review the failed tests above and consider fixing any issues. 
+                  You can still deploy the agent, but it may not function optimally.
+                </p>
+              </Alert>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTestingModal(false)}>
+            Close
+          </Button>
+          {testingStatus === 'completed' && comprehensiveTestResults.every(r => r.status === 'passed') && (
+            <Button variant="success" onClick={() => {
+              setShowTestingModal(false);
+              navigate('/agents');
+            }}>
+              🚀 Deploy to Catalog
+            </Button>
+          )}
+          {testingStatus === 'completed' && !comprehensiveTestResults.every(r => r.status === 'passed') && (
+            <>
+              <Button variant="warning" onClick={() => createdAgentId && runComprehensiveTests(createdAgentId)}>
+                🔄 Retry Tests
+              </Button>
+              <Button variant="outline-success" onClick={() => {
+                setShowTestingModal(false);
+                navigate('/agents');
+              }}>
+                Deploy Anyway
+              </Button>
+            </>
+          )}
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

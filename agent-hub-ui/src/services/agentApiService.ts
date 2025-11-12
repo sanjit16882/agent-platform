@@ -54,6 +54,7 @@ class AgentApiService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
           'x-user-id': this.getUserId()
         }
       });
@@ -76,6 +77,7 @@ class AgentApiService {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
           'x-user-id': this.getUserId()
         }
       });

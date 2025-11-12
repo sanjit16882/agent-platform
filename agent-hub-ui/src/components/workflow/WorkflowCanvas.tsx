@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { ComponentNode, Connection } from '../../types/hybridAgent';
 import ComponentNodeRenderer from './ComponentNodeRenderer';
 import ConnectionRenderer from './ConnectionRenderer';
+import WorkflowMinimap from './WorkflowMinimap';
 import { validateConnection } from '../../utils/connectionValidation';
 import './WorkflowCanvas.css';
 
@@ -298,12 +299,6 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           >
             -
           </button>
-          <button 
-            onClick={() => setCanvasState(prev => ({ ...prev, zoom: 1, pan: { x: 0, y: 0 } }))}
-            title="Reset View (Ctrl/Cmd + 0)"
-          >
-            Reset
-          </button>
         </div>
         
         <div className="view-controls">
@@ -423,6 +418,26 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
           </span>
         )}
       </div>
+
+      {/* Workflow Minimap */}
+      {nodes.length > 0 && (
+        <WorkflowMinimap
+          nodes={nodes}
+          connections={connections}
+          canvasSize={{ width: 800, height: 600 }} // Default canvas size
+          viewport={{
+            zoom: canvasState.zoom,
+            pan: canvasState.pan
+          }}
+          onViewportChange={(viewport) => {
+            setCanvasState(prev => ({
+              ...prev,
+              zoom: viewport.zoom,
+              pan: viewport.pan
+            }));
+          }}
+        />
+      )}
     </div>
   );
 };

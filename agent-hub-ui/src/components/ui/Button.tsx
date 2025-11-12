@@ -1,52 +1,56 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'critical' | 'warning';
+  variant?: 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'critical' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   children: React.ReactNode;
-  loading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({
-  variant = 'primary',
-  size = 'md',
-  children,
-  loading = false,
+export const Button: React.FC<ButtonProps> = ({ 
+  variant = 'primary', 
+  size = 'md', 
+  className = '', 
+  children, 
   disabled,
-  className = '',
-  ...props
+  ...props 
 }) => {
-  const baseClasses = 'af-btn';
-  const variantClasses = {
-    primary: 'af-btn-primary',
-    secondary: 'af-btn-secondary',
-    outline: 'af-btn-outline',
-    success: 'af-btn-success',
-    critical: 'af-btn-critical',
-    warning: 'af-btn-warning'
+  const getButtonClass = () => {
+    switch (variant) {
+      case 'outline':
+        return 'btn btn-outline-primary';
+      case 'secondary':
+        return 'btn btn-secondary';
+      case 'success':
+        return 'btn btn-success';
+      case 'warning':
+        return 'btn btn-warning';
+      case 'critical':
+        return 'btn btn-danger';
+      case 'ghost':
+        return 'btn btn-secondary';
+      default:
+        return 'btn btn-primary';
+    }
   };
-  const sizeClasses = {
-    sm: 'af-btn-sm',
-    md: '',
-    lg: 'af-btn-lg'
+  
+  const getSizeStyle = () => {
+    switch (size) {
+      case 'sm':
+        return { padding: 'var(--af-spacing-1) var(--af-spacing-3)', fontSize: 'var(--af-font-size-xs)' };
+      case 'lg':
+        return { padding: 'var(--af-spacing-3) var(--af-spacing-6)', fontSize: 'var(--af-font-size-base)' };
+      default:
+        return {};
+    }
   };
-
-  const classes = [
-    baseClasses,
-    variantClasses[variant],
-    sizeClasses[size],
-    className
-  ].filter(Boolean).join(' ');
-
+  
   return (
     <button
-      className={classes}
-      disabled={disabled || loading}
+      className={`${getButtonClass()} ${className}`}
+      style={getSizeStyle()}
+      disabled={disabled}
       {...props}
     >
-      {loading && (
-        <span className="loading-spinner" style={{ marginRight: '8px' }}>⟳</span>
-      )}
       {children}
     </button>
   );

@@ -83,9 +83,13 @@ class AgentManagementService {
       const allAgents = catalogData.data || [];
       console.log('✅ All agents received from catalog:', allAgents.length, allAgents);
       
+      // Filter out template agents (they're not real manageable agents)
+      const realAgents = allAgents.filter((agent: any) => agent.agent_type !== 'template');
+      console.log('✅ Filtered real agents (excluding templates):', realAgents.length, realAgents);
+      
       // Convert catalog agents to managed agents with metrics
       const managedAgents = await Promise.all(
-        allAgents.map(async (agent: any) => this.convertCatalogAgentToManagedAgent(agent))
+        realAgents.map(async (agent: any) => this.convertCatalogAgentToManagedAgent(agent))
       );
 
       console.log('✅ Converted to managed agents:', managedAgents.length, managedAgents);
@@ -601,6 +605,42 @@ class AgentManagementService {
 
     // Remove duplicates and return
     return Array.from(new Set(capabilities));
+  }
+
+  /**
+   * Update an existing agent
+   */
+  async updateAgent(updatedAgent: any): Promise<void> {
+    try {
+      console.log('🔄 Updating agent:', updatedAgent.id);
+      
+      // Update agent through S3 API endpoint
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/s3/${updatedAgent.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updatedAgent),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update agent: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Agent updated successfully:', result);
+      
+      // Clear metrics cache to force refresh
+      this.metricsCache.delete(updatedAgent.id);
+      this.lastCacheUpdate = 0;
+      
+    } catch (error) {
+      console.error('❌ Error updating agent:', error);
+      throw error;
+    }
   }
 
   /**

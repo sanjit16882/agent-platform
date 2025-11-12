@@ -7,7 +7,7 @@ interface AgentSectionHeaderProps {
   count: number;
   description: string;
   icon: string;
-  variant: 'active' | 'available';
+  variant: 'active' | 'available' | 'template';
 }
 
 const AgentSectionHeader: React.FC<AgentSectionHeaderProps> = ({
@@ -24,6 +24,13 @@ const AgentSectionHeader: React.FC<AgentSectionHeaderProps> = ({
         borderColor: '#0ea5e9',
         titleColor: '#0369a1',
         countColor: '#0ea5e9'
+      };
+    } else if (variant === 'template') {
+      return {
+        backgroundColor: '#fef3c7',
+        borderColor: '#fbbf24',
+        titleColor: '#92400e',
+        countColor: '#fbbf24'
       };
     } else {
       return {

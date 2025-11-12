@@ -1,0 +1,18 @@
+# Code Owners - Require approval for critical files
+
+# Agent Catalog - Critical endpoint configuration
+# Changing this file requires Platform Team approval
+/agent-hub-ui/src/components/AgentCatalog.tsx @platform-team @tech-lead
+
+# S3 Agent Service - Core data layer
+/agent-hub-ui/src/services/s3AgentService.ts @platform-team @backend-team
+
+# S3 Storage Backend - Data persistence
+/agent-hub-backend/src/services/s3AgentStorage.js @platform-team @backend-team
+
+# Agent Context - Shared state management
+/agent-hub-ui/src/context/AgentContext.tsx @platform-team @frontend-team
+
+# Documentation - Keep updated
+/AGENT_COUNT_SYNC_FIX.md @platform-team
+/QUICK_FIX_SUMMARY.md @platform-team

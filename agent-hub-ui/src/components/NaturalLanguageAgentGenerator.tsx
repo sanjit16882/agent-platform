@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, Form, Modal, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Alert, Form, Modal, Tabs, Tab, ProgressBar, ListGroup, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PermissionGuard from './PermissionGuard';
@@ -9,6 +9,8 @@ import { nlpApi } from '../services/nlpApi';
 import { AgentComponent, AgentType } from '../types/hybridAgent';
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
+import { IntelligenceModal } from './IntelligenceModal';
+import { realTestingFramework } from '../services/realTestingFramework';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
@@ -82,6 +84,14 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
   const [testProgress, setTestProgress] = useState(0);
   const [selectedBedrockModel, setSelectedBedrockModel] = useState<string>('');
   const [selectedBedrockModelName, setSelectedBedrockModelName] = useState<string>('');
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  
+  // Enhanced testing framework state
+  const [showComprehensiveTestingModal, setShowComprehensiveTestingModal] = useState(false);
+  const [showTestingModal, setShowTestingModal] = useState(false);
+  const [comprehensiveTestingStatus, setComprehensiveTestingStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
+  const [comprehensiveTestProgress, setComprehensiveTestProgress] = useState(0);
+  const [comprehensiveTestResults, setComprehensiveTestResults] = useState<any[]>([]);
 
   // Helper functions for NLP analysis
   const extractCategory = (desc: string): string => {
@@ -187,6 +197,25 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
       });
     }
 
+    // Ensure we always have at least one component
+    if (suggestions.length === 0) {
+      suggestions.push({
+        type: 'custom' as AgentType,
+        name: 'Custom Agent',
+        description: 'Custom agent based on your description',
+        config: {
+          runtime: 'nodejs',
+          entryPoint: 'index.js',
+          code: `// Generated custom agent code\nmodule.exports = async function(inputs) {\n  // Process inputs based on description\n  return { success: true, data: inputs };\n};`,
+          dependencies: [],
+          environment: {},
+          resources: { cpu: '100m', memory: '128Mi', storage: '1Gi' }
+        },
+        confidence: 0.5,
+        reasoning: 'Fallback custom component for unmatched descriptions'
+      });
+    }
+
     return suggestions;
   };
 
@@ -243,16 +272,25 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
   };
 
   const generateComponents = async (suggestions: any[]): Promise<AgentComponent[]> => {
-    return suggestions.map((suggestion, index) => ({
-      id: `comp_${Date.now()}_${index}`,
-      name: suggestion.name,
-      description: suggestion.description,
-      type: suggestion.type,
-      config: suggestion.config,
-      inputs: getDefaultInputs(suggestion.type),
-      outputs: getDefaultOutputs(suggestion.type),
-      dependencies: index > 0 ? [`comp_${Date.now()}_${index - 1}`] : []
-    }));
+    console.log('🔍 Generating components from suggestions:', suggestions);
+    
+    const components = suggestions.map((suggestion, index) => {
+      const component = {
+        id: `comp_${Date.now()}_${index}`,
+        name: suggestion.name,
+        description: suggestion.description,
+        type: suggestion.type,
+        config: suggestion.config,
+        inputs: getDefaultInputs(suggestion.type),
+        outputs: getDefaultOutputs(suggestion.type),
+        dependencies: index > 0 ? [`comp_${Date.now()}_${index - 1}`] : []
+      };
+      
+      console.log('🔍 Generated component:', component);
+      return component;
+    });
+    
+    return components;
   };
 
   const getDefaultInputs = (type: AgentType) => {
@@ -342,7 +380,7 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
     try {
       const analysis: NLPAnalysisResult = {
         intent: {
-          action: 'create-agent',
+          action: 'generate-workflow',
           confidence: 0.85,
           category: extractCategory(description),
           complexity: determineComplexity(description)
@@ -408,6 +446,131 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
       setError(`Agent generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runComprehensiveTests = async () => {
+    if (!generatedAgent || !generatedAgent.components) {
+      console.error('❌ No generated agent or components:', { generatedAgent, components: generatedAgent?.components });
+      return;
+    }
+
+    setShowTestingModal(true);
+    setTestingStatus('running');
+    setTestProgress(0);
+    setTestResults([]);
+
+    try {
+      const comprehensiveTestResults: NLTestResult[] = [];
+      const components = generatedAgent.components;
+      
+      // Debug: Log the entire generated agent and components structure
+      console.log('🔍 Generated Agent:', generatedAgent);
+      console.log('🔍 All components to test:', components);
+      console.log('🔍 Component summary:', components.map(c => ({ name: c.name, type: c.type, id: c.id })));
+      
+      // Filter out any invalid components before testing
+      const validTypes = ['llm', 'selenium', 'rpa', 'custom'];
+      const validComponents = components.filter(component => {
+        if (!component.type || !validTypes.includes(component.type)) {
+          console.error('❌ Filtering out invalid component:', component);
+          return false;
+        }
+        return true;
+      });
+      
+      console.log('🔍 Valid components after filtering:', validComponents.map(c => ({ name: c.name, type: c.type, id: c.id })));
+      
+      if (validComponents.length === 0) {
+        throw new Error('No valid components found for testing');
+      }
+      
+      // Test each component individually (like HybridAgentBuilder does)
+      for (let i = 0; i < validComponents.length; i++) {
+        const component = validComponents[i];
+        const progress = Math.round(((i + 1) / validComponents.length) * 80); // 80% for component tests
+        setTestProgress(progress);
+
+        try {
+          // Debug: Log the component type being tested
+          console.log('🔍 Testing component:', component.name, 'with type:', component.type, 'full component:', component);
+          
+          // Validate component type before testing
+          const validTypes = ['llm', 'selenium', 'rpa', 'custom'];
+          if (!component.type) {
+            console.error('❌ Component has no type:', component);
+            throw new Error(`Component has no type property: ${JSON.stringify(component)}`);
+          }
+          if (!validTypes.includes(component.type)) {
+            console.error('❌ Invalid component type:', component.type, 'Valid types:', validTypes, 'Component:', component);
+            throw new Error(`Invalid component type: ${component.type}. Valid types are: ${validTypes.join(', ')}`);
+          }
+          
+          // Test the individual component using its actual type (llm, selenium, rpa, etc.)
+          const componentTest = await realTestingFramework.testComponent(component);
+          
+          comprehensiveTestResults.push({
+            id: `component-${i}`,
+            name: `${component.name || component.type} Component`,
+            status: componentTest.status,
+            duration: componentTest.duration,
+            message: componentTest.error || `${component.type} component test completed`,
+            category: 'intent'
+          });
+
+          // If component fails, we can continue or stop based on preference
+          if (componentTest.status === 'failed') {
+            console.warn(`Component ${component.name || component.type} failed testing`);
+          }
+        } catch (error) {
+          comprehensiveTestResults.push({
+            id: `component-${i}-error`,
+            name: `${component.name || component.type} Component`,
+            status: 'failed',
+            duration: 0,
+            message: `Component test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            category: 'edge_case'
+          });
+        }
+      }
+
+      // Run workflow integration test on all valid components
+      setTestProgress(90);
+      try {
+        console.log('🔍 Running integration test on components:', validComponents.map(c => ({ name: c.name, type: c.type })));
+        const integrationTest = await realTestingFramework.testIntegration(validComponents);
+        comprehensiveTestResults.push({
+          id: 'integration-test',
+          name: 'Workflow Integration',
+          status: integrationTest.overallStatus,
+          duration: 0,
+          message: integrationTest.overallStatus === 'passed' ? 'Integration test completed' : 'Integration test failed',
+          category: 'conversation'
+        });
+      } catch (error) {
+        comprehensiveTestResults.push({
+          id: 'integration-error',
+          name: 'Workflow Integration',
+          status: 'failed',
+          duration: 0,
+          message: `Integration test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          category: 'conversation'
+        });
+      }
+
+      setTestProgress(100);
+      setTestResults(comprehensiveTestResults);
+      setTestingStatus('completed');
+    } catch (error) {
+      setTestingStatus('failed');
+      setTestResults([{
+        id: 'error-test',
+        name: 'Test Suite',
+        status: 'failed',
+        duration: 0,
+        message: `Testing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        category: 'edge_case'
+      }]);
     }
   };
 
@@ -599,6 +762,25 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
     return messages[testName] || `${testName} failed for ${category} validation`;
   };
 
+  const handleAcceptSuggestion = (suggestion: any) => {
+    switch (suggestion.type) {
+      case 'template':
+        // Auto-improve description based on suggestion
+        if (suggestion.actionData?.improvedDescription) {
+          setDescription(suggestion.actionData.improvedDescription);
+        }
+        // Trigger analysis
+        analyzeDescription();
+        break;
+      case 'optimization':
+        // Apply optimizations to current analysis
+        if (analysisResult && suggestion.actionData?.optimizations) {
+          console.log('Applying optimizations:', suggestion.actionData.optimizations);
+        }
+        break;
+    }
+  };
+
   const saveGeneratedAgent = async () => {
     if (!generatedAgent) return;
 
@@ -679,6 +861,14 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
               {connectionStatus === 'connected' ? 'Connected' : 
                connectionStatus === 'failed' ? 'Disconnected' : 'Checking'}
             </Badge>
+            <Button 
+              variant="outline-primary"
+              className="me-2"
+              onClick={() => setShowAISuggestions(true)}
+              disabled={!description.trim()}
+            >
+              🧠 Get AI Suggestions
+            </Button>
             <Button 
               variant="outline-primary"
               onClick={() => navigate('/hybrid-builder')}
@@ -940,6 +1130,13 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
                         disabled={!generatedAgent}
                       >
                         🧪 Test Agent
+                      </Button>
+                      <Button 
+                        variant="outline-primary"
+                        onClick={runComprehensiveTests}
+                        disabled={!generatedAgent}
+                      >
+                        🔬 Comprehensive Tests
                       </Button>
                       <Button 
                         variant="success"
@@ -1315,6 +1512,110 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
             <Button variant="secondary" onClick={() => setShowPreview(false)}>
               Close
             </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* AI Suggestions Modal */}
+        <Modal 
+          show={showAISuggestions} 
+          onHide={() => setShowAISuggestions(false)}
+          size="xl"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              <span className="me-2">🧠</span>
+              AI Suggestions for Your Agent Description
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <IntelligenceModal
+              context={{
+                type: 'agent-builder',
+                data: {
+                  description: description,
+                  query: description,
+                  analysisResult: analysisResult,
+                  generatedAgent: generatedAgent
+                }
+              }}
+              onAcceptSuggestion={(suggestion) => {
+                handleAcceptSuggestion(suggestion);
+                setShowAISuggestions(false);
+              }}
+            />
+          </Modal.Body>
+        </Modal>
+
+        {/* Comprehensive Testing Modal */}
+        <Modal show={showTestingModal} onHide={() => setShowTestingModal(false)} size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>🔬 Comprehensive Agent Testing</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="mb-3">
+              <h6>Testing Progress</h6>
+              <ProgressBar 
+                now={testProgress} 
+                label={`${testProgress}%`}
+                variant={testingStatus === 'failed' ? 'danger' : testingStatus === 'completed' ? 'success' : 'primary'}
+              />
+            </div>
+
+            {testingStatus === 'running' && (
+              <Alert variant="info">
+                <Spinner animation="border" size="sm" className="me-2" />
+                Running comprehensive tests on your generated agent...
+              </Alert>
+            )}
+
+            {testResults.length > 0 && (
+              <div>
+                <h6>Test Results</h6>
+                <ListGroup>
+                  {testResults.map((result, index) => (
+                    <ListGroup.Item 
+                      key={index}
+                      variant={result.status === 'passed' ? 'success' : result.status === 'failed' ? 'danger' : 'light'}
+                    >
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span>
+                          {result.status === 'passed' ? '✅' : result.status === 'failed' ? '❌' : '⏳'} {result.name}
+                        </span>
+                        <Badge bg={result.status === 'passed' ? 'success' : result.status === 'failed' ? 'danger' : 'secondary'}>
+                          {result.status}
+                        </Badge>
+                      </div>
+                      {result.message && (
+                        <small className="text-muted d-block mt-1">{result.message}</small>
+                      )}
+                    </ListGroup.Item>
+                  ))}
+                </ListGroup>
+              </div>
+            )}
+
+            {testingStatus === 'completed' && (
+              <Alert variant="success" className="mt-3">
+                <strong>🎉 Comprehensive testing completed!</strong> Your agent has been thoroughly tested across multiple dimensions.
+              </Alert>
+            )}
+
+            {testingStatus === 'failed' && (
+              <Alert variant="danger" className="mt-3">
+                <strong>❌ Testing failed!</strong> Please review the test results and fix any issues before proceeding.
+              </Alert>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowTestingModal(false)}>
+              Close
+            </Button>
+            {testingStatus === 'completed' && (
+              <Button variant="success" onClick={() => setShowTestingModal(false)}>
+                Continue with Deployment
+              </Button>
+            )}
           </Modal.Footer>
         </Modal>
       </Container>

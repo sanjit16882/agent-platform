@@ -5,6 +5,8 @@ import Badge from './Badge';
 import Button from './Button';
 import AgentStatusIndicator from './AgentStatusIndicator';
 import { Agent } from '../../types/agent';
+import { MCPIndicatorBadge, extractMCPConfig } from '../mcp/MCPIndicatorBadge';
+import TestingStatusBadge from '../testing/TestingStatusBadge';
 
 interface AgentCardProps {
   agent: Agent;
@@ -32,6 +34,19 @@ const AgentCard: React.FC<AgentCardProps> = ({
   const navigate = useNavigate();
 
   const getCardStyles = () => {
+    // Template agents get special styling
+    if (agent.agent_type === 'template') {
+      return {
+        border: '2px dashed #fbbf24',
+        headerBg: '#fef3c7',
+        headerBorder: '1px solid #fbbf24',
+        titleColor: '#92400e',
+        primaryButton: 'warning' as const,
+        primaryButtonText: 'View Template',
+        configButtonText: 'Reference Only'
+      };
+    }
+    
     if (variant === 'active') {
       return {
         border: '1px solid #e5e7eb',
@@ -78,6 +93,19 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 Hybrid
               </Badge>
             )}
+            {agent.agent_type === 'template' && (
+              <Badge bg="warning" className="me-1">
+                Template
+              </Badge>
+            )}
+            <MCPIndicatorBadge 
+              mcpConfig={extractMCPConfig(agent) || undefined} 
+              size="sm"
+            />
+            <TestingStatusBadge 
+              status={agent.testingStatus} 
+              size="sm"
+            />
           </div>
           <small 
             className="text-muted" 
@@ -168,6 +196,17 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 {styles.configButtonText}
               </Button>
             </div>
+            
+            {/* Testing Actions */}
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => navigate(`/agent-testing?agent=${agent.agent_id}`)}
+              className="w-100"
+              title="Run tests for this agent"
+            >
+              🧪 Run Tests
+            </Button>
             
             <div className="d-flex gap-1">
               <Button

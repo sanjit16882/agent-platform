@@ -6,6 +6,7 @@ import { createGenerateCommand } from './commands/generate';
 import { createAnalyzeCommand } from './commands/analyze';
 import { createConfigCommand } from './commands/config';
 import { createAgentsCommand } from './commands/agents';
+import { createTestCommand } from './commands/test';
 
 const program = new Command();
 
@@ -25,6 +26,7 @@ program.addCommand(createGenerateCommand());
 program.addCommand(createAnalyzeCommand());
 program.addCommand(createConfigCommand());
 program.addCommand(createAgentsCommand());
+program.addCommand(createTestCommand());
 
 // Quick commands (shortcuts)
 program

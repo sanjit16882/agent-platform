@@ -35,13 +35,48 @@ const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   }, [templates, searchTerm, selectedCategory]);
 
   const getTypeIcon = (type: string) => {
-    // Removed fancy icons for clean, professional appearance
-    return '';
+    // Clean, professional icons for component types
+    const icons: Record<string, string> = {
+      'llm_processor': '🤖',
+      'data_processor': '📊',
+      'api_caller': '🌐',
+      'file_processor': '📁',
+      'validator': '✅',
+      'transformer': '🔄',
+      'aggregator': '📈',
+      'filter': '🔍'
+    };
+    return icons[type] || '⚙️';
   };
 
   const getTypeColor = (type: string) => {
-    // Use consistent blue color for all component types
-    return 'primary';
+    // Professional color coding for component types
+    const colors: Record<string, string> = {
+      'llm_processor': 'success',
+      'data_processor': 'primary',
+      'api_caller': 'warning',
+      'file_processor': 'info',
+      'validator': 'danger',
+      'transformer': 'secondary',
+      'aggregator': 'dark',
+      'filter': 'light'
+    };
+    return colors[type] || 'primary';
+  };
+
+  const getCategoryDisplayName = (category: string) => {
+    const names: Record<string, string> = {
+      'all': 'All Components',
+      'llm_processor': 'AI Processing',
+      'data_processor': 'Data Processing',
+      'api_caller': 'API Integration',
+      'file_processor': 'File Operations',
+      'validator': 'Validation',
+      'transformer': 'Transformation',
+      'aggregator': 'Aggregation',
+      'filter': 'Filtering'
+    };
+    return names[category] || category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (

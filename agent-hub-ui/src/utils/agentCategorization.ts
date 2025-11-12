@@ -21,20 +21,25 @@ export interface AgentCategoryStats {
 export interface CategorizedAgents {
   activeAgents: Agent[];
   availableAgents: Agent[];
+  templateAgents: Agent[];
   stats: AgentCategoryStats;
 }
 
 /**
- * Categorizes agents into active (production) and available (demo) groups
+ * Categorizes agents into active (production), available (demo), and template groups
  */
 export const categorizeAgents = (agents: Agent[]): CategorizedAgents => {
-  // Include hybrid agents in active agents (production-ready)
+  // Include ALL agent types from S3 storage as active agents
+  // This includes: production, hybrid, builtin, s3_custom, custom, and any other types
   const activeAgents = agents.filter(agent => 
     agent.agent_type === 'production' || 
     agent.agent_type === 'hybrid' || 
-    agent.agent_type === 'builtin'
+    agent.agent_type === 'builtin' ||
+    agent.agent_type === 's3_custom' ||
+    agent.agent_type === 'custom' // ← ADDED: Include custom agents from S3
   );
   const availableAgents = agents.filter(agent => agent.agent_type === 'demo');
+  const templateAgents = agents.filter(agent => agent.agent_type === 'template');
 
   const stats: AgentCategoryStats = {
     total: agents.length,
@@ -49,6 +54,7 @@ export const categorizeAgents = (agents: Agent[]): CategorizedAgents => {
   return {
     activeAgents,
     availableAgents,
+    templateAgents,
     stats
   };
 };
@@ -106,6 +112,12 @@ export const getAgentStatusIndicator = (agent: Agent) => {
         variant: 'primary' as const,
         text: 'Built-in',
         icon: 'builtin'
+      };
+    case 'template':
+      return {
+        variant: 'warning' as const,
+        text: 'Template Only',
+        icon: 'template'
       };
     default:
       return {
@@ -180,8 +192,11 @@ export const sortAgentsByPriority = (agents: Agent[]): Agent[] => {
   const typePriority = {
     'production': 1,
     'hybrid': 2,
-    'builtin': 3,
-    'demo': 4
+    's3_custom': 3,
+    'custom': 3, // Same priority as s3_custom
+    'builtin': 4,
+    'demo': 5,
+    'template': 6
   };
 
   return [...agents].sort((a, b) => {

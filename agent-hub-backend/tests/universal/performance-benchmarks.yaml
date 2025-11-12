@@ -1,0 +1,28 @@
+version: '1.0'
+description: Performance Benchmarks
+tests:
+  - id: perf-001
+    name: Concurrent Request Handling
+    input:
+      type: text
+      content: Test concurrent processing
+    validation:
+      max_duration: 2000
+    metadata:
+      priority: medium
+      tags:
+        - performance
+        - universal
+      concurrent_requests: 5
+  - id: perf-002
+    name: Memory Usage Check
+    input:
+      type: text
+      content: Test memory usage with moderate input
+    validation:
+      max_memory_mb: 512
+    metadata:
+      priority: medium
+      tags:
+        - performance
+        - universal

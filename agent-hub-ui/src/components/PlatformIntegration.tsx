@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Form, Alert, Tab, Tabs, Table, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Form, Alert, Tab, Tabs, Table, ProgressBar, Spinner, ListGroup } from 'react-bootstrap';
 
 interface IntegrationExample {
   id: string;
@@ -19,6 +19,400 @@ interface PlatformMetrics {
   dailyExecutions: number;
   monthlyUsage: number;
 }
+
+// GitHub Integration Tab Component
+const GitHubIntegrationTab: React.FC = () => {
+  const [githubToken, setGithubToken] = useState('');
+  const [repoOwner, setRepoOwner] = useState('');
+  const [repoName, setRepoName] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<any>(null);
+  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<any>(null);
+  const [availableAgents, setAvailableAgents] = useState<any[]>([]);
+  const [loadingAgents, setLoadingAgents] = useState(true);
+
+  // Load available agents from backend
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        console.log('🔍 Fetching agents from API...');
+        const response = await fetch('http://localhost:3002/api/v1/agents');
+        const data = await response.json();
+        
+        console.log('📦 Received agents data:', data);
+        
+        // Filter to only production agents (not templates)
+        const productionAgents = data.data
+          .filter((agent: any) => agent.type === 'production' && agent.status === 'active')
+          .map((agent: any) => ({
+            id: agent.id,
+            name: agent.name,
+            description: agent.description
+          }));
+        
+        console.log('✅ Filtered production agents:', productionAgents);
+        setAvailableAgents(productionAgents);
+      } catch (error) {
+        console.error('❌ Failed to load agents:', error);
+        // Fallback to default agents if API fails
+        setAvailableAgents([
+          { id: 'code-reviewer', name: 'Code Review Agent', description: 'Reviews code quality and best practices' },
+          { id: 'security-scanner', name: 'Security Scanner', description: 'Scans for security vulnerabilities' },
+          { id: 'api-tester', name: 'API Testing Agent', description: 'Tests API endpoints and responses' }
+        ]);
+      } finally {
+        setLoadingAgents(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
+
+  // Load saved configuration
+  useEffect(() => {
+    const saved = localStorage.getItem('github_integration');
+    if (saved) {
+      const config = JSON.parse(saved);
+      setGithubToken(config.token || '');
+      setRepoOwner(config.owner || '');
+      setRepoName(config.repo || '');
+      setIsConnected(config.connected || false);
+      setSelectedAgents(config.agents || []);
+      if (config.connected) {
+        setConnectionStatus({ success: true, repository: { name: `${config.owner}/${config.repo}` } });
+      }
+    }
+  }, []);
+
+  const testConnection = async () => {
+    setIsConnecting(true);
+    setConnectionStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:3002/api/v1/github/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: githubToken, owner: repoOwner, repo: repoName })
+      });
+
+      const result = await response.json();
+      setConnectionStatus(result);
+      
+      if (result.success) {
+        setIsConnected(true);
+        // Save configuration
+        localStorage.setItem('github_integration', JSON.stringify({
+          token: githubToken,
+          owner: repoOwner,
+          repo: repoName,
+          connected: true
+        }));
+      }
+    } catch (error) {
+      setConnectionStatus({ success: false, error: 'Failed to connect' });
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  const saveIntegration = async () => {
+    setIsSaving(true);
+    setSaveStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:3002/api/v1/github/save-integration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: githubToken, owner: repoOwner, repo: repoName, agents: selectedAgents })
+      });
+
+      const result = await response.json();
+      setSaveStatus(result);
+      
+      if (result.success) {
+        // Update localStorage with agents
+        localStorage.setItem('github_integration', JSON.stringify({
+          token: githubToken,
+          owner: repoOwner,
+          repo: repoName,
+          connected: true,
+          agents: selectedAgents
+        }));
+      }
+    } catch (error) {
+      setSaveStatus({ success: false, error: 'Failed to save integration' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleAgent = (agentId: string) => {
+    setSelectedAgents(prev => 
+      prev.includes(agentId) 
+        ? prev.filter(id => id !== agentId)
+        : [...prev, agentId]
+    );
+  };
+
+  const disconnect = () => {
+    setIsConnected(false);
+    setConnectionStatus(null);
+    setSelectedAgents([]);
+    setSaveStatus(null);
+    localStorage.removeItem('github_integration');
+  };
+
+  return (
+    <Row>
+      <Col md={6}>
+        <Card className="mb-3">
+          <Card.Header>
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">🐙 GitHub Configuration</h5>
+              {isConnected && <Badge bg="success">Connected</Badge>}
+            </div>
+          </Card.Header>
+          <Card.Body>
+            {!isConnected ? (
+              <>
+                <Alert variant="info">
+                  <strong>Setup:</strong> Create a GitHub token with <code>repo</code> scope at{' '}
+                  <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
+                    GitHub Settings
+                  </a>
+                </Alert>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>GitHub Token</Form.Label>
+                  <Form.Control
+                    type="password"
+                    placeholder="ghp_xxxxxxxxxxxx"
+                    value={githubToken}
+                    onChange={(e) => setGithubToken(e.target.value)}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Repository Owner</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="your-username"
+                    value={repoOwner}
+                    onChange={(e) => setRepoOwner(e.target.value)}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Repository Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="my-project"
+                    value={repoName}
+                    onChange={(e) => {
+                      // Extract repo name if full URL is pasted
+                      let value = e.target.value;
+                      if (value.includes('github.com/')) {
+                        const parts = value.split('/');
+                        value = parts[parts.length - 1];
+                      }
+                      setRepoName(value);
+                    }}
+                  />
+                  <Form.Text className="text-muted">
+                    Just the repo name (e.g., "agent-platform"), not the full URL
+                  </Form.Text>
+                </Form.Group>
+
+                <Button
+                  variant="primary"
+                  onClick={testConnection}
+                  disabled={!githubToken || !repoOwner || !repoName || isConnecting}
+                  className="w-100"
+                >
+                  {isConnecting ? <><Spinner animation="border" size="sm" className="me-2" />Connecting...</> : 'Connect GitHub'}
+                </Button>
+
+                {connectionStatus && !connectionStatus.success && (
+                  <Alert variant="danger" className="mt-3 mb-0">
+                    <strong>Connection Failed:</strong> {connectionStatus.error}
+                  </Alert>
+                )}
+              </>
+            ) : (
+              <>
+                <Alert variant="success">
+                  <strong>✓ Connected to GitHub</strong>
+                  <div className="mt-2">
+                    <div>Repository: {repoOwner}/{repoName}</div>
+                    <div>
+                      <a href={`https://github.com/${repoOwner}/${repoName}`} target="_blank" rel="noopener noreferrer">
+                        View on GitHub →
+                      </a>
+                    </div>
+                  </div>
+                </Alert>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Select Agents for Auto-Issue Creation</Form.Label>
+                  {loadingAgents ? (
+                    <div className="text-center py-3">
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      <span className="text-muted">Loading agents...</span>
+                    </div>
+                  ) : availableAgents.length === 0 ? (
+                    <Alert variant="warning">No active agents found. Please create agents first.</Alert>
+                  ) : (
+                    <>
+                      <Form.Select 
+                        multiple 
+                        htmlSize={5}
+                        value={selectedAgents}
+                        onChange={(e) => {
+                          const options = Array.from(e.target.selectedOptions);
+                          setSelectedAgents(options.map(opt => opt.value));
+                        }}
+                      >
+                        {availableAgents.map(agent => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                      <Form.Text className="text-muted">
+                        Hold Ctrl (Cmd on Mac) to select multiple agents. {selectedAgents.length} selected.
+                      </Form.Text>
+                    </>
+                  )}
+                </Form.Group>
+
+                {selectedAgents.length > 0 && (
+                  <div className="mb-3">
+                    <small className="text-muted">Selected agents:</small>
+                    <div className="mt-1">
+                      {selectedAgents.map(agentId => {
+                        const agent = availableAgents.find(a => a.id === agentId);
+                        return agent ? (
+                          <Badge key={agentId} bg="primary" className="me-1 mb-1">
+                            {agent.name}
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div className="d-grid gap-2 mt-3">
+                  <Button 
+                    variant="success" 
+                    onClick={saveIntegration} 
+                    disabled={selectedAgents.length === 0 || isSaving}
+                  >
+                    {isSaving ? <><Spinner animation="border" size="sm" className="me-2" />Saving...</> : '💾 Save Integration'}
+                  </Button>
+                  
+                  <Button variant="outline-secondary" size="sm" onClick={disconnect}>
+                    Disconnect
+                  </Button>
+                </div>
+
+                {saveStatus && (
+                  <Alert variant={saveStatus.success ? 'success' : 'danger'} className="mt-3 mb-0">
+                    {saveStatus.success ? (
+                      <>
+                        <strong>✓ Integration Saved!</strong>
+                        <div>{selectedAgents.length} agent(s) configured to create GitHub issues automatically.</div>
+                      </>
+                    ) : (
+                      <><strong>✗ Failed:</strong> {saveStatus.error}</>
+                    )}
+                  </Alert>
+                )}
+              </>
+            )}
+          </Card.Body>
+        </Card>
+
+        <Card>
+          <Card.Header>
+            <h6 className="mb-0">💡 How It Works</h6>
+          </Card.Header>
+          <Card.Body>
+            <ol className="mb-0">
+              <li className="mb-2">Connect your GitHub repository</li>
+              <li className="mb-2">Select which agents can create issues</li>
+              <li className="mb-2">Run agents via UI, CLI, or IDE</li>
+              <li>Issues automatically created in GitHub when agents find problems</li>
+            </ol>
+          </Card.Body>
+        </Card>
+      </Col>
+
+      <Col md={6}>
+        <Card>
+          <Card.Header>
+            <h5 className="mb-0">📋 Recent GitHub Issues</h5>
+          </Card.Header>
+          <Card.Body>
+            {!isConnected ? (
+              <div className="text-center text-muted py-4">
+                <div style={{ fontSize: '2rem' }}>🎫</div>
+                <p className="mb-0">Connect to GitHub to see issues</p>
+              </div>
+            ) : (
+              <div className="text-center text-muted py-4">
+                <div style={{ fontSize: '2rem' }}>✅</div>
+                <p className="mb-0">Connected to {repoOwner}/{repoName}</p>
+                <small>Run agents to automatically create issues for findings</small>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
+      </Col>
+    </Row>
+  );
+};
+
+// Slack Integration Tab Component (placeholder)
+const SlackIntegrationTab: React.FC = () => {
+  return (
+    <Row>
+      <Col md={12}>
+        <Alert variant="info">
+          <strong>Slack Integration Coming Soon!</strong> Connect your Slack workspace to receive agent notifications.
+        </Alert>
+      </Col>
+    </Row>
+  );
+};
+
+// Jira Integration Tab Component (placeholder)
+const JiraIntegrationTab: React.FC = () => {
+  return (
+    <Row>
+      <Col md={12}>
+        <Alert variant="info">
+          <strong>Jira Integration Coming Soon!</strong> Create Jira tickets automatically from agent findings.
+        </Alert>
+      </Col>
+    </Row>
+  );
+};
+
+// Microsoft Teams Integration Tab Component (placeholder)
+const TeamsIntegrationTab: React.FC = () => {
+  return (
+    <Row>
+      <Col md={12}>
+        <Alert variant="info">
+          <strong>Microsoft Teams Integration Coming Soon!</strong> Get agent updates in your Teams channels.
+        </Alert>
+      </Col>
+    </Row>
+  );
+};
 
 const PlatformIntegration: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -344,242 +738,199 @@ app.post('/webhook/agent-factory', (req, res) => {
           </Row>
         </Tab>
 
-        <Tab eventKey="api-docs" title="API Documentation">
+        <Tab eventKey="slack" title="Slack Integration">
+          <Alert variant="info">
+            <strong>Looking for API documentation?</strong> Visit the <a href="/api-documentation">API Documentation</a> page for complete API reference.
+          </Alert>
           <Row>
             <Col md={6}>
               <Card>
                 <Card.Header>
-                  <h5>REST API Endpoints</h5>
+                  <h5>🔔 Slack Notifications</h5>
                 </Card.Header>
                 <Card.Body>
-                  <div className="mb-3">
-                    <h6>Agent Operations</h6>
-                    <div className="font-monospace small">
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/agents</div>
-                      <div className="mb-1"><Badge bg="primary">POST</Badge> /api/v1/agents</div>
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/agents/{'{id}'}</div>
-                      <div className="mb-1"><Badge bg="warning">PUT</Badge> /api/v1/agents/{'{id}'}</div>
-                      <div className="mb-1"><Badge bg="danger">DELETE</Badge> /api/v1/agents/{'{id}'}</div>
-                    </div>
-                  </div>
+                  <p>Receive agent execution notifications directly in Slack channels.</p>
                   
-                  <div className="mb-3">
-                    <h6>Execution Operations</h6>
-                    <div className="font-monospace small">
-                      <div className="mb-1"><Badge bg="primary">POST</Badge> /api/v1/agents/{'{id}'}/execute</div>
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/executions/{'{id}'}</div>
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/executions/{'{id}'}/results</div>
-                      <div className="mb-1"><Badge bg="danger">DELETE</Badge> /api/v1/executions/{'{id}'}</div>
+                  <h6>Setup Instructions</h6>
+                  <ol>
+                    <li>Create a Slack App in your workspace</li>
+                    <li>Add Incoming Webhook integration</li>
+                    <li>Copy the Webhook URL</li>
+                    <li>Configure in AgentHub settings</li>
+                  </ol>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Slack Webhook URL</Form.Label>
+                    <Form.Control 
+                      type="url" 
+                      placeholder="https://hooks.slack.com/services/..."
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Default Channel</Form.Label>
+                    <Form.Control 
+                      type="text" 
+                      placeholder="#agent-notifications"
+                    />
+                  </Form.Group>
+
+                  <Button variant="primary">Connect Slack</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Example Notification</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="bg-light p-3 rounded">
+                    <div className="mb-2">
+                      <Badge bg="success">✓ Completed</Badge>
+                      <strong className="ms-2">QE Test Generator</strong>
                     </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <h6>Monitoring Operations</h6>
-                    <div className="font-monospace small">
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/agents/{'{id}'}/health</div>
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/platform/status</div>
-                      <div className="mb-1"><Badge bg="success">GET</Badge> /api/v1/platform/metrics</div>
+                    <p className="mb-1 small">
+                      Generated 47 test cases for user authentication flow
+                    </p>
+                    <div className="small text-muted">
+                      Duration: 42s | Cost: $0.18
                     </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={6}>
-              <Card>
-                <Card.Header>
-                  <h5>Authentication</h5>
-                </Card.Header>
-                <Card.Body>
-                  <Alert variant="info">
-                    <h6>API Key Authentication</h6>
-                    <p className="mb-2">Include your API key in the Authorization header:</p>
-                    <code>Authorization: Bearer your-api-key</code>
-                  </Alert>
-
-                  <Alert variant="success">
-                    <h6>JWT Token Authentication</h6>
-                    <p className="mb-2">For user sessions, use JWT tokens:</p>
-                    <code>Authorization: Bearer jwt-token</code>
-                  </Alert>
-
-                  <Alert variant="warning">
-                    <h6>Rate Limits</h6>
-                    <ul className="mb-0">
-                      <li>1000 requests/hour (standard tier)</li>
-                      <li>10000 requests/hour (premium tier)</li>
-                      <li>50 concurrent executions max</li>
-                    </ul>
-                  </Alert>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Tab>
-
-        <Tab eventKey="sdk-examples" title="SDK Examples">
-          <Row>
-            <Col md={6}>
-              <Card>
-                <Card.Header>
-                  <h5>Python SDK</h5>
-                </Card.Header>
-                <Card.Body>
-                  <pre className="bg-light p-3 rounded">
-                    <code>{`# Installation
-pip install agent-factory-sdk
-
-# Usage
-from agent_factory import AgentFactoryClient
-
-async def main():
-    client = AgentFactoryClient(
-        base_url="https://agent-factory.company.com/api/v1",
-        api_key="your-api-key"
-    )
-    
-    # List available agents
-    agents = await client.list_agents(category='QE')
-    
-    # Execute agent
-    result = await client.execute_agent('qe-test-generator-v2', {
-        'requirements': 'Test login with MFA',
-        'framework': 'cypress'
-    })
-    
-    print(f"Generated {len(result.test_cases)} tests")
-
-asyncio.run(main())`}</code>
-                  </pre>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={6}>
-              <Card>
-                <Card.Header>
-                  <h5>JavaScript SDK</h5>
-                </Card.Header>
-                <Card.Body>
-                  <pre className="bg-light p-3 rounded">
-                    <code>{`// Installation
-npm install @company/agent-factory-sdk
-
-// Usage
-import { AgentFactoryClient } from '@company/agent-factory-sdk';
-
-const client = new AgentFactoryClient({
-  baseURL: 'https://agent-factory.company.com',
-  apiKey: process.env.AGENT_FACTORY_API_KEY
-});
-
-// Execute DevOps agent
-const result = await client.executeAgent('devops-monitor-v1', {
-  cloud_provider: 'aws',
-  analysis_type: 'cost-optimization'
-});
-
-console.log(\`Analysis completed: \${result.recommendations?.length || 0} recommendations\`);
-
-// Real-time monitoring
-const eventSource = client.watchExecution(result.executionId);
-eventSource.onmessage = (event) => {
-  const update = JSON.parse(event.data);
-  console.log(\`Status: \${update.status}\`);
-};`}</code>
-                  </pre>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Tab>
-
-        <Tab eventKey="webhooks" title="Webhook Integration">
-          <Row>
-            <Col md={8}>
-              <Card>
-                <Card.Header>
-                  <h5>Webhook Events</h5>
-                </Card.Header>
-                <Card.Body>
-                  <Table responsive>
-                    <thead>
-                      <tr>
-                        <th>Event Type</th>
-                        <th>Description</th>
-                        <th>Payload</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td><code>execution.started</code></td>
-                        <td>Agent execution has started</td>
-                        <td>executionId, agentId, startTime</td>
-                      </tr>
-                      <tr>
-                        <td><code>execution.completed</code></td>
-                        <td>Agent execution completed successfully</td>
-                        <td>executionId, results, duration, cost</td>
-                      </tr>
-                      <tr>
-                        <td><code>execution.failed</code></td>
-                        <td>Agent execution failed</td>
-                        <td>executionId, error, duration</td>
-                      </tr>
-                      <tr>
-                        <td><code>agent.health.degraded</code></td>
-                        <td>Agent health status degraded</td>
-                        <td>agentId, healthStatus, metrics</td>
-                      </tr>
-                      <tr>
-                        <td><code>platform.maintenance</code></td>
-                        <td>Platform maintenance scheduled</td>
-                        <td>maintenanceWindow, affectedServices</td>
-                      </tr>
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={4}>
-              <Card>
-                <Card.Header>
-                  <h6>Webhook Configuration</h6>
-                </Card.Header>
-                <Card.Body>
-                  <Form>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Webhook URL</Form.Label>
-                      <Form.Control 
-                        type="url" 
-                        placeholder="https://your-app.com/webhook"
-                        defaultValue="https://api.company.com/webhook/agent-factory"
-                      />
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Events</Form.Label>
-                      <div>
-                        <Form.Check type="checkbox" label="Execution Events" defaultChecked />
-                        <Form.Check type="checkbox" label="Health Events" defaultChecked />
-                        <Form.Check type="checkbox" label="Platform Events" />
-                      </div>
-                    </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                      <Form.Label>Secret Key</Form.Label>
-                      <Form.Control 
-                        type="password" 
-                        placeholder="webhook-secret-key"
-                        defaultValue="••••••••••••••••"
-                      />
-                      <Form.Text className="text-muted">
-                        Used for webhook signature verification
-                      </Form.Text>
-                    </Form.Group>
-                    
-                    <Button variant="primary" size="sm">
-                      Update Webhook
+                    <Button variant="link" size="sm" className="p-0 mt-2">
+                      View Results →
                     </Button>
-                  </Form>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Tab>
+
+        <Tab eventKey="jira" title="Jira Integration">
+          <Alert variant="info">
+            <strong>Looking for SDK examples?</strong> Visit the <a href="/integration-guide">Integration Guide</a> page for complete SDK documentation and code examples.
+          </Alert>
+          <Row>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>🎫 Jira Issue Tracking</h5>
+                </Card.Header>
+                <Card.Body>
+                  <p>Automatically create Jira tickets from agent execution results.</p>
+                  
+                  <h6>Configuration</h6>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Jira URL</Form.Label>
+                    <Form.Control 
+                      type="url" 
+                      placeholder="https://your-company.atlassian.net"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>API Token</Form.Label>
+                    <Form.Control 
+                      type="password" 
+                      placeholder="Your Jira API token"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Default Project</Form.Label>
+                    <Form.Control 
+                      type="text" 
+                      placeholder="PROJECT-KEY"
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Auto-create tickets for</Form.Label>
+                    <Form.Check type="checkbox" label="Security vulnerabilities" defaultChecked />
+                    <Form.Check type="checkbox" label="Failed test executions" />
+                    <Form.Check type="checkbox" label="Cost optimization recommendations" defaultChecked />
+                  </Form.Group>
+
+                  <Button variant="primary">Connect Jira</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Use Cases</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="mb-3">
+                    <h6>Security Scanner → Jira</h6>
+                    <p className="small">Automatically create tickets for critical vulnerabilities found by security agents.</p>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Test Failures → Jira</h6>
+                    <p className="small">Create bug tickets when generated tests fail in CI/CD.</p>
+                  </div>
+                  <div className="mb-3">
+                    <h6>Cost Optimization → Jira</h6>
+                    <p className="small">Track infrastructure optimization recommendations as tasks.</p>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Tab>
+
+        <Tab eventKey="github" title="GitHub Integration">
+          <GitHubIntegrationTab />
+        </Tab>
+
+        <Tab eventKey="teams" title="Microsoft Teams">
+          <Row>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>💬 Teams Notifications</h5>
+                </Card.Header>
+                <Card.Body>
+                  <p>Send agent execution updates to Microsoft Teams channels.</p>
+                  
+                  <Form.Group className="mb-3">
+                    <Form.Label>Teams Webhook URL</Form.Label>
+                    <Form.Control 
+                      type="url" 
+                      placeholder="https://outlook.office.com/webhook/..."
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Label>Notification Types</Form.Label>
+                    <Form.Check type="checkbox" label="Execution completed" defaultChecked />
+                    <Form.Check type="checkbox" label="Execution failed" defaultChecked />
+                    <Form.Check type="checkbox" label="Daily summary" />
+                  </Form.Group>
+
+                  <Button variant="primary">Connect Teams</Button>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Adaptive Card Preview</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div className="border rounded p-3">
+                    <div className="mb-2">
+                      <strong>AgentHub Notification</strong>
+                    </div>
+                    <div className="mb-2">
+                      <Badge bg="success">Completed</Badge>
+                      <span className="ms-2">Security Scanner</span>
+                    </div>
+                    <p className="small mb-2">
+                      Found 3 vulnerabilities (1 critical, 2 medium)
+                    </p>
+                    <Button variant="primary" size="sm">View Report</Button>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>

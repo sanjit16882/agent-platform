@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, ButtonGroup, Badge, Alert, Modal, Form, Dropdown } from 'react-bootstrap';
 import { analyticsService, TimeRange, ROIData, CategoryMetrics, UserActivity } from '../services/analyticsService';
+import { realAnalyticsService } from '../services/realAnalyticsService';
 import MetricsOverview from './MetricsOverview';
 import UsageChart from './UsageChart';
 import AgentPerformanceTable from './AgentPerformanceTable';
@@ -27,6 +28,7 @@ const AnalyticsDashboard: React.FC = () => {
     end: ''
   });
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [useRealData, setUseRealData] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
@@ -264,6 +266,80 @@ const AnalyticsDashboard: React.FC = () => {
         </Card.Body>
       </Card>
 
+      {/* Data Source Toggle */}
+      <Card style={{ marginBottom: theme.spacing['3xl'] }}>
+        <Card.Body style={{ padding: theme.spacing.lg }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: theme.spacing.lg
+          }}>
+            <div>
+              <h5 style={{ margin: 0, marginBottom: theme.spacing.sm }}>Data Source</h5>
+              <p style={{ margin: 0, color: theme.colors.textMuted, fontSize: theme.typography.fontSize.sm }}>
+                {useRealData ? 'Showing real-time data from your actual agent executions, S3 storage, and Bedrock usage' : 'Showing simulated demo data for presentation purposes'}
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+              <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+                Demo Data
+              </span>
+              <div 
+                style={{
+                  width: '50px',
+                  height: '24px',
+                  backgroundColor: useRealData ? theme.colors.success : theme.colors.gray300,
+                  borderRadius: '12px',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onClick={() => setUseRealData(!useRealData)}
+              >
+                <div
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    backgroundColor: theme.colors.white,
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '2px',
+                    left: useRealData ? '28px' : '2px',
+                    transition: 'left 0.2s',
+                    boxShadow: theme.shadows.sm
+                  }}
+                />
+              </div>
+              <span style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+                Real Data
+              </span>
+              {useRealData && (
+                <Badge bg="success" style={{ marginLeft: theme.spacing.sm }}>
+                  Live
+                </Badge>
+              )}
+              {useRealData && process.env.NODE_ENV === 'development' && (
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm" 
+                  style={{ marginLeft: theme.spacing.sm }}
+                  onClick={() => {
+                    import('../utils/analyticsTestData').then(({ generateTestExecutions }) => {
+                      generateTestExecutions();
+                      handleRefresh();
+                    });
+                  }}
+                >
+                  Generate Test Data
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
       {/* Key Metrics Overview */}
       <div style={{ marginBottom: theme.spacing['3xl'] }}>
         <h4 style={{ 
@@ -276,6 +352,21 @@ const AnalyticsDashboard: React.FC = () => {
         </h4>
         <MetricsOverview timeRange={timeRange} refreshTrigger={refreshTrigger} />
       </div>
+
+      {/* Real-Time Metrics (when real data is enabled) */}
+      {useRealData && (
+        <div style={{ marginBottom: theme.spacing['3xl'] }}>
+          <h4 style={{ 
+            marginBottom: theme.spacing.lg,
+            fontSize: theme.typography.fontSize.xl,
+            fontWeight: theme.typography.fontWeight.semibold,
+            color: theme.colors.textPrimary
+          }}>
+            Real-Time Platform Metrics
+          </h4>
+          <RealTimeMetrics />
+        </div>
+      )}
 
       {/* Platform Health Overview */}
       <h4 style={{ 
@@ -585,6 +676,259 @@ const AnalyticsDashboard: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+    </div>
+  );
+};
+
+// Real-Time Metrics Component
+const RealTimeMetrics: React.FC = () => {
+  const [realMetrics, setRealMetrics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadRealMetrics = async () => {
+      try {
+        setLoading(true);
+        const [execMetrics, costMetrics, systemHealth] = await Promise.all([
+          realAnalyticsService.getRealExecutionMetrics(),
+          realAnalyticsService.getRealCostMetrics(),
+          realAnalyticsService.getRealSystemHealth()
+        ]);
+        
+        setRealMetrics({ execMetrics, costMetrics, systemHealth });
+      } catch (error) {
+        console.error('Failed to load real metrics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRealMetrics();
+    // Increased interval to 2 minutes to reduce backend load
+    const interval = setInterval(loadRealMetrics, 120000); // Refresh every 2 minutes
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <Card.Body style={{ textAlign: 'center', padding: theme.spacing['3xl'] }}>
+          <div style={{ color: theme.colors.textMuted }}>Loading real-time metrics...</div>
+        </Card.Body>
+      </Card>
+    );
+  }
+
+  if (!realMetrics) {
+    return (
+      <Alert variant="warning">
+        <strong>Real-time data unavailable</strong><br />
+        Unable to connect to the analytics backend. Please check your connection and try again.
+      </Alert>
+    );
+  }
+
+  const { execMetrics, costMetrics, systemHealth } = realMetrics;
+
+  return (
+    <div style={{ 
+      display: 'grid', 
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: theme.spacing.xl,
+      marginBottom: theme.spacing['3xl']
+    }}>
+      {/* Total Executions */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.primary }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.primary,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {execMetrics.totalExecutions}
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Total Executions
+          </div>
+          <Badge bg="primary">
+            Real Data
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* Success Rate */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.success }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.success,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {execMetrics.successRate.toFixed(1)}%
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Success Rate
+          </div>
+          <Badge bg="success">
+            {execMetrics.successRate > 90 ? 'Excellent' : execMetrics.successRate > 80 ? 'Good' : 'Needs Attention'}
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* Active Agents */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.info }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.info,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {execMetrics.activeAgents}
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Active Agents
+          </div>
+          <Badge bg="info">
+            Ready
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* Cost Savings */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.warning }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.warning,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            ${costMetrics.costSavingsGenerated.toLocaleString()}
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Cost Savings Generated
+          </div>
+          <Badge bg="warning">
+            ROI: {costMetrics.roiPercentage.toFixed(0)}%
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* S3 Storage */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.secondary }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.secondary,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {execMetrics.s3StorageUsage}
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            S3 Agents Stored
+          </div>
+          <Badge bg="secondary">
+            AWS S3
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* Bedrock API Calls */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.danger }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.danger,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {execMetrics.bedrockApiCalls.toLocaleString()}
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Bedrock API Calls
+          </div>
+          <Badge bg="danger">
+            AWS Bedrock
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* System Health */}
+      <Card style={{ textAlign: 'center', borderColor: systemHealth.uptime > 99 ? theme.colors.success : theme.colors.warning }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: systemHealth.uptime > 99 ? theme.colors.success : theme.colors.warning,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {systemHealth.uptime.toFixed(1)}%
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            System Uptime
+          </div>
+          <Badge bg={systemHealth.uptime > 99 ? 'success' : 'warning'}>
+            {systemHealth.uptime > 99 ? 'Healthy' : 'Monitoring'}
+          </Badge>
+        </Card.Body>
+      </Card>
+
+      {/* Average Response Time */}
+      <Card style={{ textAlign: 'center', borderColor: theme.colors.info }}>
+        <Card.Body style={{ padding: theme.spacing.xl }}>
+          <div style={{ 
+            fontSize: theme.typography.fontSize['3xl'],
+            color: theme.colors.info,
+            fontWeight: theme.typography.fontWeight.bold,
+            marginBottom: theme.spacing.sm
+          }}>
+            {systemHealth.averageResponseTime.toFixed(0)}ms
+          </div>
+          <div style={{ 
+            color: theme.colors.textMuted,
+            fontSize: theme.typography.fontSize.sm,
+            marginBottom: theme.spacing.sm
+          }}>
+            Avg Response Time
+          </div>
+          <Badge bg="info">
+            {systemHealth.averageResponseTime < 1000 ? 'Fast' : systemHealth.averageResponseTime < 3000 ? 'Good' : 'Slow'}
+          </Badge>
+        </Card.Body>
+      </Card>
     </div>
   );
 };

@@ -167,7 +167,36 @@ const execution = await fetch('https://api.agenthub.com/v1/agents/qe-test-genera
   })
 });
 const result = await execution.json();
-console.log(\`Execution started: \${result.executionId}\`);`
+console.log(\`Execution started: \${result.executionId}\`);`,
+      'get-execution': `// Check execution status
+const response = await fetch('https://api.agenthub.com/v1/executions/exec_abc123def456', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  }
+});
+const execution = await response.json();
+console.log(\`Status: \${execution.status}\`);
+if (execution.status === 'completed') {
+  console.log('Results:', execution.results);
+}`,
+      'upload-agent': `// Upload custom agent
+const formData = new FormData();
+formData.append('name', 'Custom Security Scanner');
+formData.append('description', 'Scans code for security vulnerabilities');
+formData.append('category', 'security');
+formData.append('framework', 'openai');
+formData.append('code', agentZipFile); // File object
+
+const response = await fetch('https://api.agenthub.com/v1/agents/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  },
+  body: formData
+});
+const result = await response.json();
+console.log(\`Agent uploaded: \${result.agentId}\`);`
     },
     python: {
       'list-agents': `import requests
@@ -204,7 +233,42 @@ response = requests.post(
     }
 )
 result = response.json()
-print(f"Monitoring started: {result['executionId']}")"`
+print(f"Monitoring started: {result['executionId']}")`,
+      'get-execution': `import requests
+
+# Check execution status
+response = requests.get(
+    'https://api.agenthub.com/v1/executions/exec_abc123def456',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    }
+)
+execution = response.json()
+print(f"Status: {execution['status']}")
+if execution['status'] == 'completed':
+    print(f"Results: {execution['results']}")`,
+      'upload-agent': `import requests
+
+# Upload custom agent
+files = {
+    'code': open('my-agent.zip', 'rb')
+}
+data = {
+    'name': 'Custom Security Scanner',
+    'description': 'Scans code for security vulnerabilities',
+    'category': 'security',
+    'framework': 'openai'
+}
+
+response = requests.post(
+    'https://api.agenthub.com/v1/agents/upload',
+    headers={'Authorization': 'Bearer YOUR_API_KEY'},
+    files=files,
+    data=data
+)
+result = response.json()
+print(f"Agent uploaded: {result['agentId']}")`
     },
     curl: {
       'list-agents': `# List all available agents
@@ -225,7 +289,19 @@ curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \
       "async": true,
       "webhook": "https://your-app.com/webhooks/agent-complete"
     }
-  }'`
+  }'`,
+      'get-execution': `# Check execution status
+curl -X GET "https://api.agenthub.com/v1/executions/exec_abc123def456" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json"`,
+      'upload-agent': `# Upload custom agent
+curl -X POST "https://api.agenthub.com/v1/agents/upload" \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -F "name=Custom Security Scanner" \\
+  -F "description=Scans code for security vulnerabilities" \\
+  -F "category=security" \\
+  -F "framework=openai" \\
+  -F "code=@my-agent.zip"`
     }
   };
 
@@ -255,7 +331,7 @@ curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \
                 <Card.Header>
                   <h5 className="mb-0">
                     <Icon name="target" size="small" className="me-2" />
-                    Getting Started
+                    API Reference
                   </h5>
                 </Card.Header>
                 <Card.Body>
@@ -265,47 +341,17 @@ curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \
                     <strong>Authentication:</strong> Bearer Token (API Key)
                   </Alert>
                   
-                  <h6>Quick Start</h6>
-                  <ol>
-                    <li><strong>Get API Key:</strong> Generate from your AgentHub dashboard</li>
-                    <li><strong>List Agents:</strong> Discover available agents for your use case</li>
-                    <li><strong>Execute Agent:</strong> Run agents with your specific inputs</li>
-                    <li><strong>Monitor Results:</strong> Track execution status and retrieve results</li>
-                  </ol>
+                  <Alert variant="warning">
+                    <strong>Looking for integration examples?</strong> Check out the <a href="/integration-guide">Integration Guide</a> for complete code examples, CI/CD setup, and best practices.
+                  </Alert>
 
-                  <h6 className="mt-4">Common Use Cases</h6>
-                  <Row>
-                    <Col md={6}>
-                      <Card className="border-0 bg-light">
-                        <Card.Body>
-                          <h6 className="text-primary">
-                            <Icon name="success" size="small" className="me-2" />
-                            QE Team Integration
-                          </h6>
-                          <ul className="small mb-0">
-                            <li>Automated test generation in CI/CD</li>
-                            <li>Code coverage analysis</li>
-                            <li>Performance test creation</li>
-                          </ul>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                    <Col md={6}>
-                      <Card className="border-0 bg-light">
-                        <Card.Body>
-                          <h6 className="text-success">
-                            <Icon name="settings" size="small" className="me-2" />
-                            DevOps Integration
-                          </h6>
-                          <ul className="small mb-0">
-                            <li>Infrastructure monitoring</li>
-                            <li>Security scanning</li>
-                            <li>Deployment automation</li>
-                          </ul>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  </Row>
+                  <h6>API Capabilities</h6>
+                  <ul>
+                    <li><strong>Agent Discovery:</strong> Browse and search available agents</li>
+                    <li><strong>Agent Execution:</strong> Execute agents with custom inputs</li>
+                    <li><strong>Status Monitoring:</strong> Track execution progress in real-time</li>
+                    <li><strong>Result Retrieval:</strong> Download generated artifacts and reports</li>
+                  </ul>
                 </Card.Body>
               </Card>
             </Col>
@@ -491,6 +537,11 @@ curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \
         </Tab>
 
         <Tab eventKey="sdks" title="SDKs & Tools">
+          <Alert variant="info">
+            <strong>Looking for SDK installation and usage examples?</strong><br />
+            Visit the <a href="/integration-guide">Integration Guide</a> for complete SDK documentation, code examples, and CI/CD integration.
+          </Alert>
+
           <Row>
             <Col md={6}>
               <Card>
@@ -551,75 +602,6 @@ agenthub execute qe-test-generator-v2 \\
 agenthub upload ./my-agent.zip`}
                     </pre>
                   </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-
-          <Row className="mt-4">
-            <Col>
-              <Card>
-                <Card.Header>
-                  <h5 className="mb-0">
-                    <Icon name="enterprise" size="small" className="me-2" />
-                    CI/CD Integration Examples
-                  </h5>
-                </Card.Header>
-                <Card.Body>
-                  <Tabs defaultActiveKey="github">
-                    <Tab eventKey="github" title="GitHub Actions">
-                      <pre className="bg-dark text-light p-3">
-{`name: QE Agent Integration
-on: [push, pull_request]
-
-jobs:
-  generate-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Generate Tests with AgentHub
-        run: |
-          curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \\
-            -H "Authorization: Bearer \${{ secrets.AGENTHUB_API_KEY }}" \\
-            -H "Content-Type: application/json" \\
-            -d '{
-              "inputs": {
-                "codebase": "\${{ github.repository }}",
-                "testFramework": "jest",
-                "coverageTarget": 85
-              }
-            }'`}
-                      </pre>
-                    </Tab>
-                    <Tab eventKey="jenkins" title="Jenkins">
-                      <pre className="bg-dark text-light p-3">
-{`pipeline {
-    agent any
-    environment {
-        AGENTHUB_API_KEY = credentials('agenthub-api-key')
-    }
-    stages {
-        stage('Generate Tests') {
-            steps {
-                script {
-                    def response = sh(
-                        script: """
-                            curl -X POST "https://api.agenthub.com/v1/agents/qe-test-generator-v2/execute" \\
-                                -H "Authorization: Bearer \${AGENTHUB_API_KEY}" \\
-                                -H "Content-Type: application/json" \\
-                                -d '{"inputs": {"codebase": "\${GIT_URL}", "testFramework": "junit"}}'
-                        """,
-                        returnStdout: true
-                    )
-                    echo "Agent execution started: \${response}"
-                }
-            }
-        }
-    }
-}`}
-                      </pre>
-                    </Tab>
-                  </Tabs>
                 </Card.Body>
               </Card>
             </Col>

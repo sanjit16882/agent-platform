@@ -52,7 +52,14 @@ class S3AgentStorage {
         ...agent,
         id: agentId,
         createdAt: agent.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
+        // Ensure MCP config is preserved if provided
+        mcpConfig: agent.mcpConfig || {
+          enabled: false,
+          serverIds: [],
+          timeout: 30000,
+          autoApprove: []
+        }
       };
 
       await this.s3.putObject({
@@ -196,6 +203,44 @@ class S3AgentStorage {
       return migratedAgents;
     } catch (error) {
       console.error('❌ Error during migration:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update MCP configuration for an agent
+   */
+  async updateAgentMCPConfig(agentId, mcpConfig) {
+    try {
+      const existingAgent = await this.getAgent(agentId);
+      if (!existingAgent) {
+        throw new Error(`Agent ${agentId} not found`);
+      }
+
+      const updatedAgent = {
+        ...existingAgent,
+        mcpConfig,
+        updatedAt: new Date().toISOString()
+      };
+
+      await this.saveAgent(updatedAgent);
+      console.log(`✅ MCP config updated for agent: ${agentId}`);
+      return updatedAgent;
+    } catch (error) {
+      console.error(`❌ Error updating MCP config for agent ${agentId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get agents with MCP enabled
+   */
+  async getAgentsWithMCP() {
+    try {
+      const agents = await this.listAgents();
+      return agents.filter(agent => agent.mcpConfig && agent.mcpConfig.enabled);
+    } catch (error) {
+      console.error('❌ Error getting agents with MCP:', error);
       throw error;
     }
   }

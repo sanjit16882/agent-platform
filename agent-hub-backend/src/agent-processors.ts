@@ -578,17 +578,67 @@ This ${language} code appears to be ${complexity.toLowerCase()} complexity with 
   }
 
   static async processAgent(templateId: string, inputs: any, agent?: any): Promise<ProcessingResult> {
+    const startTime = Date.now();
+
+    // Handle production agents (from the main server)
+    if (templateId.includes('-v') || ['qe-test-generator-v2', 'devops-monitor-v1', 'security-scanner-pro', 'business-analyzer'].includes(templateId)) {
+      try {
+        // Call the production agent execution service
+        const config = require('../config');
+        const apiUrl = config.get('endpoints.api') || 'http://localhost:3002';
+        const response = await fetch(`${apiUrl}/api/v1/agents/${templateId}/execute`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': process.env.AGENT_API_KEY || 'demo-key'
+          },
+          body: JSON.stringify({ inputs })
+        });
+
+        const data = await response.json() as any;
+        const processingTime = Date.now() - startTime;
+
+        if (data.success) {
+          return {
+            success: true,
+            outputs: data.results,
+            processingTime,
+            metadata: {
+              agent_type: templateId,
+              processing_method: 'production_execution',
+              input_analysis: `Executed production agent ${templateId}`
+            }
+          };
+        } else {
+          throw new Error(data.error || 'Production agent execution failed');
+        }
+      } catch (error) {
+        return {
+          success: false,
+          outputs: { error: error instanceof Error ? error.message : 'Production agent execution failed' },
+          processingTime: Date.now() - startTime,
+          metadata: {
+            agent_type: templateId,
+            processing_method: 'production_execution_failed',
+            input_analysis: `Failed to execute production agent ${templateId}`
+          }
+        };
+      }
+    }
+
+    // Handle custom agents
     if (templateId === 'custom' && agent) {
       return this.processCustomAgent(inputs, agent);
     }
 
+    // Handle template-based agents
     const template = require('./agent-templates').AGENT_TEMPLATES.find((t: AgentTemplate) => t.id === templateId);
 
     if (!template) {
       return {
         success: false,
         outputs: { error: 'Template not found' },
-        processingTime: 0,
+        processingTime: Date.now() - startTime,
         metadata: {
           agent_type: 'unknown',
           processing_method: 'template_not_found',
@@ -608,7 +658,7 @@ This ${language} code appears to be ${complexity.toLowerCase()} complexity with 
         return {
           success: false,
           outputs: { error: 'Processing logic not implemented' },
-          processingTime: 0,
+          processingTime: Date.now() - startTime,
           metadata: {
             agent_type: template.id,
             processing_method: 'not_implemented',

@@ -1,0 +1,170 @@
+{
+  "description": "Mock definitions for MCP (Model Context Protocol) servers",
+  "version": "1.0",
+  "mocks": [
+    {
+      "id": "mcp-list-tools",
+      "service": "mcp",
+      "endpoint": "/tools/list",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": {
+          "tools": [
+            {
+              "name": "search",
+              "description": "Search the web for information",
+              "parameters": {
+                "query": {
+                  "type": "string",
+                  "description": "Search query",
+                  "required": true
+                }
+              }
+            },
+            {
+              "name": "calculator",
+              "description": "Perform mathematical calculations",
+              "parameters": {
+                "expression": {
+                  "type": "string",
+                  "description": "Mathematical expression to evaluate",
+                  "required": true
+                }
+              }
+            },
+            {
+              "name": "file_read",
+              "description": "Read contents of a file",
+              "parameters": {
+                "path": {
+                  "type": "string",
+                  "description": "File path to read",
+                  "required": true
+                }
+              }
+            }
+          ]
+        },
+        "latency_ms": 100
+      }
+    },
+    {
+      "id": "mcp-search-tool",
+      "service": "mcp",
+      "endpoint": "/tools/search",
+      "method": "POST",
+      "request_matcher": {
+        "tool": "search"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "results": [
+            {
+              "title": "Sample Search Result 1",
+              "url": "https://example.com/result1",
+              "snippet": "This is a mocked search result for demo purposes."
+            },
+            {
+              "title": "Sample Search Result 2",
+              "url": "https://example.com/result2",
+              "snippet": "Another mocked search result with relevant information."
+            }
+          ],
+          "query": "test query",
+          "count": 2
+        },
+        "latency_ms": 300
+      }
+    },
+    {
+      "id": "mcp-calculator-tool",
+      "service": "mcp",
+      "endpoint": "/tools/calculator",
+      "method": "POST",
+      "request_matcher": {
+        "tool": "calculator"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "result": 42,
+          "expression": "6 * 7",
+          "success": true
+        },
+        "latency_ms": 50
+      }
+    },
+    {
+      "id": "mcp-file-read-tool",
+      "service": "mcp",
+      "endpoint": "/tools/file_read",
+      "method": "POST",
+      "request_matcher": {
+        "tool": "file_read"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "content": "This is mocked file content for demo purposes.\nLine 2 of the file.\nLine 3 of the file.",
+          "path": "/mock/path/file.txt",
+          "size": 85,
+          "success": true
+        },
+        "latency_ms": 150
+      }
+    },
+    {
+      "id": "mcp-server-status",
+      "service": "mcp",
+      "endpoint": "/api/mcp/status",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": {
+          "status": "running",
+          "version": "1.0.0",
+          "tools_available": 3,
+          "uptime": 3600
+        },
+        "latency_ms": 50
+      }
+    },
+    {
+      "id": "mcp-tool-error",
+      "service": "mcp",
+      "endpoint": "/tools/*",
+      "method": "POST",
+      "request_matcher": {
+        "tool": "invalid_tool"
+      },
+      "response": {
+        "status": 404,
+        "body": {
+          "error": "ToolNotFound",
+          "message": "The requested tool does not exist",
+          "available_tools": ["search", "calculator", "file_read"]
+        },
+        "latency_ms": 100
+      }
+    },
+    {
+      "id": "mcp-server-error",
+      "service": "mcp",
+      "endpoint": "/tools/*",
+      "method": "POST",
+      "request_matcher": {
+        "simulate_error": true
+      },
+      "response": {
+        "status": 500,
+        "body": {
+          "error": "InternalServerError",
+          "message": "An internal error occurred while processing the request"
+        },
+        "latency_ms": 200
+      }
+    }
+  ]
+}

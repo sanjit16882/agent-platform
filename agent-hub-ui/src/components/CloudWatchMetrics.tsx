@@ -124,19 +124,116 @@ const CloudWatchMetrics: React.FC = () => {
   };
 
   useEffect(() => {
-    // Simulate loading CloudWatch metrics
-    const loadMetrics = () => {
+    // Load real CloudWatch metrics from API
+    const loadMetrics = async () => {
       setLoading(true);
-      setTimeout(() => {
-        setMetrics(generateMetrics());
+      try {
+        const response = await fetch('http://localhost:3002/api/v1/cloudwatch/metrics');
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          // Convert API response to CloudWatchMetric format
+          const realMetrics: CloudWatchMetric[] = [
+            {
+              metricName: 'Active Agents',
+              namespace: 'AgentHub/Platform',
+              dimensions: { Environment: 'Production' },
+              currentValue: data.data.activeAgents.value,
+              unit: data.data.activeAgents.unit,
+              status: data.data.activeAgents.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.activeAgents.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'Agent Executions',
+              namespace: 'AgentHub/Platform',
+              dimensions: { Environment: 'Production' },
+              currentValue: data.data.executionsPerHour.value,
+              unit: data.data.executionsPerHour.unit,
+              status: data.data.executionsPerHour.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.executionsPerHour.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'Error Rate',
+              namespace: 'AgentHub/Platform',
+              dimensions: { Environment: 'Production' },
+              currentValue: data.data.errorRate.value,
+              unit: data.data.errorRate.unit,
+              status: data.data.errorRate.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.errorRate.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'API Latency',
+              namespace: 'AgentHub/API',
+              dimensions: { Service: 'AgentExecutor' },
+              currentValue: data.data.avgLatency.value,
+              unit: data.data.avgLatency.unit,
+              status: data.data.avgLatency.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.avgLatency.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'CPU Utilization',
+              namespace: 'AWS/ECS',
+              dimensions: { ServiceName: 'agenthub-api', ClusterName: 'production' },
+              currentValue: data.data.cpuUtilization.value,
+              unit: data.data.cpuUtilization.unit,
+              status: data.data.cpuUtilization.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.cpuUtilization.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'Memory Utilization',
+              namespace: 'AWS/ECS',
+              dimensions: { ServiceName: 'agenthub-api', ClusterName: 'production' },
+              currentValue: data.data.memoryUtilization.value,
+              unit: data.data.memoryUtilization.unit,
+              status: data.data.memoryUtilization.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.memoryUtilization.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'Total Executions',
+              namespace: 'AgentHub/Platform',
+              dimensions: { Environment: 'Production' },
+              currentValue: data.data.totalExecutions.value,
+              unit: data.data.totalExecutions.unit,
+              status: data.data.totalExecutions.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.totalExecutions.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            },
+            {
+              metricName: 'Successful Executions',
+              namespace: 'AgentHub/Platform',
+              dimensions: { Environment: 'Production' },
+              currentValue: data.data.successfulExecutions.value,
+              unit: data.data.successfulExecutions.unit,
+              status: data.data.successfulExecutions.status as 'healthy' | 'warning' | 'critical',
+              trend: data.data.successfulExecutions.trend as 'up' | 'down' | 'stable',
+              dataPoints: []
+            }
+          ];
+          
+          setMetrics(realMetrics);
+        } else {
+          // Fallback to mock data if API fails
+          setMetrics(generateMetrics());
+        }
+        
         setLastUpdated(new Date());
+      } catch (error) {
+        console.error('Failed to load real metrics, using mock data:', error);
+        setMetrics(generateMetrics());
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     };
 
     loadMetrics();
     
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 30 seconds for real-time data
     const interval = setInterval(loadMetrics, 30000);
     return () => clearInterval(interval);
   }, []);

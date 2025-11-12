@@ -25,7 +25,12 @@ class S3AgentService {
     try {
       console.log('🔍 S3AgentService: Fetching from URL:', this.baseUrl);
       
-      const response = await fetch(this.baseUrl);
+      const response = await fetch(this.baseUrl, {
+        headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
+          'Content-Type': 'application/json'
+        }
+      });
       console.log('✅ S3 API response status:', response.status);
       
       const data = await response.json();
@@ -50,7 +55,12 @@ class S3AgentService {
    */
   async getAgent(agentId: string): Promise<S3Agent | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/${agentId}`);
+      const response = await fetch(`${this.baseUrl}/${agentId}`, {
+        headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       
       if (!data.success) {
@@ -75,6 +85,7 @@ class S3AgentService {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(agent),
@@ -101,6 +112,7 @@ class S3AgentService {
       const response = await fetch(`${this.baseUrl}/${agentId}`, {
         method: 'PUT',
         headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(updates),
@@ -126,6 +138,10 @@ class S3AgentService {
     try {
       const response = await fetch(`${this.baseUrl}/${agentId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
+          'Content-Type': 'application/json'
+        }
       });
       
       const data = await response.json();
@@ -149,6 +165,7 @@ class S3AgentService {
       const response = await fetch(`${this.baseUrl}/migrate`, {
         method: 'POST',
         headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ agents: localStorageAgents }),
@@ -173,7 +190,12 @@ class S3AgentService {
    */
   async getAgentStats(): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/stats`);
+      const response = await fetch(`${this.baseUrl}/stats`, {
+        headers: {
+          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await response.json();
       
       if (!data.success) {

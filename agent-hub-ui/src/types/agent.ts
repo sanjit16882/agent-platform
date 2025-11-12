@@ -6,9 +6,26 @@ export interface Agent {
   usage_count: number;
   average_rating: number;
   created_at: string;
-  agent_type: 'production' | 'demo' | 'hybrid' | 'builtin';
+  agent_type: 'production' | 'demo' | 'hybrid' | 'builtin' | 's3_custom' | 'template' | 'custom';
   configuration_status?: 'complete' | 'partial' | 'not_started';
   status?: 'active' | 'inactive' | 'configuring' | 'error';
+  // Testing Framework Integration (Task 16.1)
+  testingStatus?: {
+    lastTestRun?: string;
+    passRate?: number;
+    totalTests?: number;
+    universalTests?: {
+      total: number;
+      passed: number;
+      passRate: number;
+    };
+    customTests?: {
+      total: number;
+      passed: number;
+      passRate: number;
+    };
+    quality?: 'excellent' | 'good' | 'fair' | 'poor' | 'not-tested';
+  };
 }
 
 export interface AgentConfiguration {

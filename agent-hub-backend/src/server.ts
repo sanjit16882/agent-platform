@@ -83,9 +83,11 @@ const validateAPIKey = (req: express.Request, res: express.Response, next: expre
 // Import DevOps routes
 import devopsRoutes from './routes/devops';
 import testingRoutes from './routes/testing';
+import agentTestingRoutes from './routes/agentTesting';
 import realMCPRoutes from './routes/realMCPRoutes';
 import dockerMCPRoutes from './routes/dockerMCPRoutes';
 import finopsRoutes from './routes/finops';
+import bedrockRoutes from './routes/bedrockRoutes';
 import missingEndpoints from './routes/missingEndpoints';
 // Intelligence API temporarily disabled for compilation
 // import intelligenceRouter from './intelligence-api';
@@ -110,10 +112,14 @@ app.use('/', missingEndpoints);
 app.use('/api/devops', devopsRoutes);
 
 // Real Testing Framework API
-app.use('/api/testing', testingRoutes);
+app.use('/api/testing', agentTestingRoutes);
+app.use('/api/component-testing', testingRoutes);
 
 // FinOps & Cost Management
 app.use('/api/v1/finops', finopsRoutes);
+
+// Bedrock Model Management
+app.use('/api/v1/bedrock', bedrockRoutes);
 
 // MCP Integration Routes
 app.use('/api/mcp/real', realMCPRoutes);

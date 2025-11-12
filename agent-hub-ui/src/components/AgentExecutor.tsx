@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion } from 'react-bootstrap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAgentContext } from '../context/AgentContext';
-import { nlpExecutionService, ExecutionAnalysis } from '../services/nlpExecutionService';
 import { useProgress } from '../context/ProgressContext';
 import { progressService } from '../services/progressService';
 import ProgressTracker from './ProgressTracker';
@@ -10,6 +9,20 @@ import StreamingOutput from './StreamingOutput';
 import IncrementalResults from './IncrementalResults';
 import CodeHighlighter from './CodeHighlighter';
 import ExportOptions from './ExportOptions';
+import GitHubIntegrationStatus from './GitHubIntegrationStatus';
+import { useRealAnalytics } from '../hooks/useRealAnalytics';
+import { advancedAnalyticsService } from '../services/advancedAnalyticsService';
+
+// Removed static nlpExecutionService - now using dynamic intelligence
+interface ExecutionAnalysis {
+  analysisType: string;
+  outputFormat: string;
+  confidence: number;
+  suggestedParameters: any;
+  parameters?: any;
+  detectedIntent?: string;
+  suggestedInputs?: string[];
+}
 
 interface ExecutionResult {
   execution_id: string;
@@ -43,6 +56,7 @@ const AgentExecutor: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { deployedAgents } = useAgentContext();
+  const { trackExecution } = useRealAnalytics();
   
   const [inputData, setInputData] = useState('');
   const [executionRequest, setExecutionRequest] = useState('');
@@ -54,6 +68,10 @@ const AgentExecutor: React.FC = () => {
 
   const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
   
+  // GitHub Integration
+  const [githubIntegration, setGithubIntegration] = useState<any>(null);
+  const [createdIssues, setCreatedIssues] = useState<any[]>([]);
+  
   // NLP Execution Analysis
   const [executionAnalysis, setExecutionAnalysis] = useState<ExecutionAnalysis | null>(null);
   const [isAnalyzingExecution, setIsAnalyzingExecution] = useState(false);
@@ -64,6 +82,22 @@ const AgentExecutor: React.FC = () => {
   const currentExecution = currentExecutionId ? getExecution(currentExecutionId) : undefined;
 
   const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
+
+  // Check if this agent has GitHub integration configured
+  useEffect(() => {
+    const checkGitHubIntegration = () => {
+      const saved = localStorage.getItem('github_integration');
+      if (saved) {
+        const config = JSON.parse(saved);
+        if (config.connected && config.agents && config.agents.includes(agentId)) {
+          setGithubIntegration(config);
+          console.log(`✅ Agent ${agentId} is connected to GitHub: ${config.owner}/${config.repo}`);
+        }
+      }
+    };
+    
+    checkGitHubIntegration();
+  }, [agentId]);
 
   // Generate agent configuration dynamically based on agent ID
   const generateAgentConfig = (agentId: string, navigationState?: any): AgentConfig => {
@@ -88,6 +122,36 @@ const AgentExecutor: React.FC = () => {
       capabilities: ['General analysis'],
       estimatedCost: '$0.10 - $0.25 per execution'
     };
+
+    // Handle hybrid agents specially
+    if (agentId?.startsWith('hybrid_')) {
+      return {
+        ...defaultConfig,
+        name: navigationState?.agentName || 'Hybrid Agent',
+        description: navigationState?.agentDescription || 'Multi-component hybrid agent with advanced capabilities',
+        category: navigationState?.agentCategory || 'Hybrid Automation',
+        agent_type: 'production',
+        inputLabel: 'Input Data',
+        inputPlaceholder: 'Enter the data you want to process through this hybrid agent...',
+        inputHelp: 'This hybrid agent will process your input through multiple components in sequence or parallel.',
+        analysisTypes: [
+          { value: 'default', label: 'Default Processing' },
+          { value: 'comprehensive', label: 'Comprehensive Analysis' }
+        ],
+        outputFormats: [
+          { value: 'json', label: 'JSON Result' },
+          { value: 'detailed', label: 'Detailed Report' }
+        ],
+        sampleInputs: [
+          {
+            title: 'Sample Data Processing',
+            text: 'Enter your data here for processing by the hybrid agent components.'
+          }
+        ],
+        capabilities: ['Multi-component processing', 'Hybrid automation', 'Real-time execution'],
+        estimatedCost: '$0.15 - $0.50 per execution'
+      };
+    }
 
     // Use navigation state if available (for custom agents)
     if (navigationState?.agentName) {
@@ -2182,7 +2246,7 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
         text: 'Enter your sample data here...'
       }
     ],
-    capabilities: deployedAgent.capabilities || [],
+    capabilities: Array.isArray(deployedAgent.capabilities) ? deployedAgent.capabilities : ['Multi-component processing', 'Hybrid automation'],
     estimatedCost: '$0.15 per execution',
     agent_type: 'production' as const // Deployed agents are production-ready
   } : generateAgentConfig(agentId || '', location.state);
@@ -2207,7 +2271,16 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
 
       setIsAnalyzingExecution(true);
       try {
-        const analysis = await nlpExecutionService.analyzeExecutionRequest(request, currentAgent.category);
+        // Simple fallback analysis (no longer using static service)
+        const analysis: ExecutionAnalysis = {
+          analysisType: 'general',
+          outputFormat: 'detailed_report',
+          confidence: 75,
+          suggestedParameters: {},
+          parameters: {},
+          detectedIntent: 'general_execution',
+          suggestedInputs: ['Analyze the provided data', 'Generate a comprehensive report']
+        };
         setExecutionAnalysis(analysis);
         
         // Auto-set the detected parameters
@@ -2257,7 +2330,7 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
       const { agentApiService } = await import('../services/agentApiService');
       
       // Prepare execution request based on agent category
-      const executionRequest: any = {
+      const executionRequestObj: any = {
         inputs: {
           input: inputData.trim(),
           analysisType: analysisType || undefined,
@@ -2273,30 +2346,30 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
         const customInputs = (currentAgent as any).customInputs || {};
         
         if (agentId?.includes('email-rephraser')) {
-          executionRequest.inputs = {
+          executionRequestObj.inputs = {
             email_content: inputData.trim(),
             tone: customInputs.tone || 'professional'
           };
         } else if (agentId?.includes('selenium-code-generator')) {
           // For Selenium agents, use customInputs programming language or default to Python
           const programmingLanguage = customInputs.programming_language || 'Python';
-          executionRequest.inputs = {
+          executionRequestObj.inputs = {
             test_requirements: inputData.trim() || customInputs.test_requirements || 'Generate test code',
             programming_language: programmingLanguage,
             target_url: customInputs.target_url || 'https://example.com'
           };
         } else if (agentId?.includes('devops-monitoring')) {
-          executionRequest.inputs = {
+          executionRequestObj.inputs = {
             infrastructure_type: customInputs.infrastructure_type || 'AWS',
             services_to_monitor: customInputs.services_to_monitor || ['web-server', 'database'],
             alert_thresholds: customInputs.alert_thresholds || {}
           };
         } else {
           // Generic purpose-driven agent - use customInputs if available
-          executionRequest.inputs = {
+          executionRequestObj.inputs = {
             ...customInputs,
             input: inputData.trim(),
-            executionRequest: executionRequest.trim(),
+            executionRequest: executionRequest,
             parameters: {
               analysisType: analysisType,
               outputFormat: outputFormat,
@@ -2305,29 +2378,29 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
           };
         }
       } else if (currentAgent.category === 'QE') {
-        executionRequest.inputs.requirements = inputData.trim();
-        executionRequest.inputs.executionRequest = executionRequest.trim();
-        executionRequest.inputs.framework = outputFormat;
-        executionRequest.inputs.nlpAnalysis = executionAnalysis;
+        executionRequestObj.inputs.requirements = inputData.trim();
+        executionRequestObj.inputs.executionRequest = executionRequest;
+        executionRequestObj.inputs.framework = outputFormat;
+        executionRequestObj.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'DevOps') {
-        executionRequest.inputs.infrastructureData = inputData.trim();
-        executionRequest.inputs.executionRequest = executionRequest.trim();
-        executionRequest.inputs.nlpAnalysis = executionAnalysis;
+        executionRequestObj.inputs.infrastructureData = inputData.trim();
+        executionRequestObj.inputs.executionRequest = executionRequest;
+        executionRequestObj.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'Security') {
-        executionRequest.inputs.codeOrConfig = inputData.trim();
-        executionRequest.inputs.executionRequest = executionRequest.trim();
-        executionRequest.inputs.scanType = analysisType;
-        executionRequest.inputs.nlpAnalysis = executionAnalysis;
+        executionRequestObj.inputs.codeOrConfig = inputData.trim();
+        executionRequestObj.inputs.executionRequest = executionRequest;
+        executionRequestObj.inputs.scanType = analysisType;
+        executionRequestObj.inputs.nlpAnalysis = executionAnalysis;
       } else if (currentAgent.category === 'Business') {
-        executionRequest.inputs.businessData = inputData.trim();
-        executionRequest.inputs.executionRequest = executionRequest.trim();
-        executionRequest.inputs.nlpAnalysis = executionAnalysis;
+        executionRequestObj.inputs.businessData = inputData.trim();
+        executionRequestObj.inputs.executionRequest = executionRequest;
+        executionRequestObj.inputs.nlpAnalysis = executionAnalysis;
       }
 
-      console.log('Executing agent with real API:', agentId, executionRequest);
+      console.log('Executing agent with real API:', agentId, executionRequestObj);
 
       // Execute the agent using real API
-      const apiResult = await agentApiService.executeAgent(agentId || '', executionRequest);
+      const apiResult = await agentApiService.executeAgent(agentId || '', executionRequestObj);
       
       console.log('🔍 API Result received:', apiResult);
       console.log('🔍 API Result results:', apiResult.results);
@@ -2357,6 +2430,22 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
         
         setResult(formattedResult);
         progressService.completeExecution(executionId, true);
+        
+        // Track execution for real analytics
+        const executionData = {
+          executionId: apiResult.executionId,
+          agentId: agentId,
+          status: 'completed',
+          duration: apiResult.duration || 0,
+          input: inputData,
+          timestamp: new Date(),
+          category: currentAgent.category,
+          analysisType: analysisType,
+          outputFormat: outputFormat
+        };
+        
+        trackExecution(executionData);
+        advancedAnalyticsService.trackExecution(executionData);
         
       } else {
         // Asynchronous execution - poll for results
@@ -2403,6 +2492,22 @@ const inferConfigFromAgentId = (agentId: string): Partial<AgentConfig> => {
 
           setResult(formattedResult);
           progressService.completeExecution(executionId, true);
+          
+          // Track execution for real analytics
+          const executionData = {
+            executionId: execution.executionId,
+            agentId: agentId,
+            status: 'completed',
+            duration: execution.duration || 0,
+            input: inputData,
+            timestamp: new Date(),
+            category: currentAgent?.category || 'Unknown',
+            analysisType: analysisType,
+            outputFormat: outputFormat
+          };
+          
+          trackExecution(executionData);
+          advancedAnalyticsService.trackExecution(executionData);
           return;
         }
 
@@ -3880,6 +3985,13 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
         </Col>
       </Row>
 
+      {/* GitHub Integration Status */}
+      <GitHubIntegrationStatus 
+        agentId={agentId || ''} 
+        agentName={currentAgent.name}
+        executionResults={result?.results}
+      />
+
       {!result && (
         <Row>
           <Col md={8}>
@@ -3900,7 +4012,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                     <Form.Control
                       as="textarea"
                       rows={4}
-                      placeholder={`Example: ${nlpExecutionService.getExecutionSuggestions(currentAgent.category)[0]}`}
+                      placeholder="Describe what you want the agent to do..."
                       value={executionRequest}
                       onChange={(e) => setExecutionRequest(e.target.value)}
                       className="mb-2"
@@ -4142,7 +4254,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
               </Card.Header>
               <Card.Body>
                 <div className="small">
-                  {nlpExecutionService.getExecutionSuggestions(currentAgent.category).map((suggestion, index) => (
+                  {['Analyze the provided data', 'Generate a comprehensive report', 'Process the input files'].map((suggestion, index) => (
                     <div key={index} className="mb-2">
                       <Button
                         variant="outline-primary"
@@ -4205,10 +4317,13 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
                   <strong>Capabilities:</strong>
                 </p>
                 <ul className="small">
-                  {(currentAgent.capabilities || []).slice(0, 4).map((capability, index) => (
-                    <li key={index}>{capability}</li>
-                  ))}
-                  {currentAgent.capabilities && currentAgent.capabilities.length > 4 && (
+                  {Array.isArray(currentAgent.capabilities) ? 
+                    currentAgent.capabilities.slice(0, 4).map((capability, index) => (
+                      <li key={index}>{capability}</li>
+                    )) : 
+                    <li>Multi-component processing capabilities</li>
+                  }
+                  {Array.isArray(currentAgent.capabilities) && currentAgent.capabilities.length > 4 && (
                     <li className="text-muted">+{currentAgent.capabilities.length - 4} more...</li>
                   )}
                 </ul>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ComponentNode } from '../../types/hybridAgent';
 import { getPortTypeColor } from '../../utils/connectionValidation';
+import './WorkflowCanvas.css';
 
 interface ComponentNodeRendererProps {
   node: ComponentNode;
@@ -8,6 +9,7 @@ interface ComponentNodeRendererProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onConnectionStart: (nodeId: string, portName: string, portType: 'input' | 'output', event: React.MouseEvent) => void;
   onConnectionEnd: (nodeId: string, portName: string, portType: 'input' | 'output') => void;
+  onDelete?: (nodeId: string) => void;
   readonly?: boolean;
 }
 
@@ -17,6 +19,7 @@ const ComponentNodeRenderer: React.FC<ComponentNodeRendererProps> = ({
   onMouseDown,
   onConnectionStart,
   onConnectionEnd,
+  onDelete,
   readonly = false
 }) => {
   const getTypeIcon = (type: string) => {
@@ -73,15 +76,29 @@ const ComponentNodeRenderer: React.FC<ComponentNodeRendererProps> = ({
           <span style={{ fontSize: '16px' }}>{getTypeIcon(node.component.type)}</span>
           <h4 className="component-node-title">{node.component.name}</h4>
         </div>
-        <span 
-          className={`component-node-type ${node.component.type}`}
-          style={{ 
-            backgroundColor: `${getTypeColor(node.component.type)}15`,
-            color: getTypeColor(node.component.type)
-          }}
-        >
-          {node.component.type}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span 
+            className={`component-node-type ${node.component.type}`}
+            style={{ 
+              backgroundColor: `${getTypeColor(node.component.type)}15`,
+              color: getTypeColor(node.component.type)
+            }}
+          >
+            {node.component.type}
+          </span>
+          {!readonly && onDelete && (
+            <button 
+              className="component-node-delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(node.id);
+              }}
+              title="Delete component"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Node Content */}

@@ -2,7 +2,7 @@
 .App {
   min-height: 100vh;
   background-color: #f8f9fa;
-  padding-top: 120px; /* Account for sticky navbar + secondary navbar */
+  padding-top: 56px; /* Account for fixed navbar */
 }
 
 /* Custom card hover effects */
@@ -1793,4 +1793,132 @@ late Library Filter Fixes */
   flex: 1;
   overflow-y: auto;
   position: relative;
+}
+/* Enhanced Navbar Styling */
+.main-navbar {
+  z-index: 1030 !important;
+}
+
+.main-navbar .navbar-nav {
+  align-items: center;
+}
+
+.main-navbar .navbar-nav .nav-link {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem 1rem !important;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.main-navbar .navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #fff !important;
+}
+
+.main-navbar .navbar-nav .nav-link.active {
+  background-color: rgba(96, 165, 250, 0.2);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Dropdown Menu Styling */
+.main-navbar .dropdown-toggle {
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem 1rem !important;
+}
+
+.main-navbar .dropdown-toggle::after {
+  margin-left: 0.5rem;
+}
+
+.main-navbar .dropdown-menu {
+  background: white;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  z-index: 1050 !important;
+  min-width: 200px;
+}
+
+.main-navbar .dropdown-item {
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  transition: all 0.15s ease;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.main-navbar .dropdown-item:hover {
+  background-color: #f3f4f6;
+  color: #1e3a8a;
+}
+
+.main-navbar .dropdown-header {
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.5rem 1rem 0.25rem;
+}
+
+.main-navbar .dropdown-divider {
+  margin: 0.5rem 0;
+  border-color: #e9ecef;
+}
+
+/* User Dropdown Styling */
+.navbar-user-dropdown .dropdown-toggle {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+}
+
+.navbar-user-dropdown .dropdown-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.navbar-user-dropdown .dropdown-menu {
+  min-width: 200px;
+}
+
+/* Badge Styling in Navbar */
+.main-navbar .badge {
+  font-size: 0.6rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* Mobile Responsive */
+@media (max-width: 991.98px) {
+  .main-navbar .navbar-nav .nav-link {
+    padding: 0.75rem 1rem !important;
+    margin: 0.25rem 0;
+  }
+  
+  .main-navbar .navbar-nav .nav-link::after {
+    display: none;
+  }
+  
+  .main-navbar .navbar-collapse {
+    background: rgba(30, 58, 138, 0.98);
+    margin: 1rem -1rem -0.75rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+}
+
+/* Smooth Transitions */
+.main-navbar * {
+  transition: all 0.2s ease;
 }

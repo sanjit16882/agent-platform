@@ -1,79 +1,87 @@
 import React from 'react';
 
-export interface CardProps {
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
-  hover?: boolean;
 }
 
-export interface CardHeaderProps {
+export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export interface CardBodyProps {
+export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export interface CardFooterProps {
+export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export const Card: React.FC<CardProps> = ({ 
-  children, 
-  className = '', 
-  hover = true 
-}) => {
-  const classes = [
-    'af-card',
-    hover ? 'hover:af-shadow-md' : '',
-    className
-  ].filter(Boolean).join(' ');
+export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
 
+export interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  children: React.ReactNode;
+}
+
+export const Card: React.FC<CardProps> = ({ children, className = '', ...props }) => {
   return (
-    <div className={classes}>
+    <div 
+      className={`card ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
 };
 
-export const CardHeader: React.FC<CardHeaderProps> = ({ 
-  children, 
-  className = '' 
-}) => {
-  const classes = ['af-card-header', className].filter(Boolean).join(' ');
-  
+export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '', ...props }) => {
   return (
-    <div className={classes}>
+    <div 
+      className={`card-header ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
 };
 
-export const CardBody: React.FC<CardBodyProps> = ({ 
-  children, 
-  className = '' 
-}) => {
-  const classes = ['af-card-body', className].filter(Boolean).join(' ');
-  
+export const CardBody: React.FC<CardBodyProps> = ({ children, className = '', ...props }) => {
   return (
-    <div className={classes}>
+    <div 
+      className={`card-body ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
 };
 
-export const CardFooter: React.FC<CardFooterProps> = ({ 
-  children, 
-  className = '' 
-}) => {
-  const classes = ['af-card-footer', className].filter(Boolean).join(' ');
-  
+export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '', ...props }) => {
   return (
-    <div className={classes}>
+    <div 
+      className={`card-footer ${className}`}
+      {...props}
+    >
       {children}
     </div>
+  );
+};
+
+// Aliases for compatibility with intelligence components
+export const CardContent = CardBody;
+export const CardTitle: React.FC<CardTitleProps> = ({ children, className = '', ...props }) => {
+  return (
+    <h3 
+      className={`mb-0 ${className}`}
+      style={{ 
+        fontSize: 'var(--af-font-size-lg)', 
+        fontWeight: '600', 
+        color: 'var(--af-gray-900)' 
+      }}
+      {...props}
+    >
+      {children}
+    </h3>
   );
 };

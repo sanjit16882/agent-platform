@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "files": ["src/components/AgentCatalog.tsx"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.object.name='axios'][callee.property.name='get'] Literal[value=/\\/api\\/v1\\/agents$/]",
+            "message": "🔒 LOCKED: Must use '/api/v1/agents/s3' endpoint. See AGENT_COUNT_SYNC_FIX.md"
+          }
+        ]
+      }
+    }
+  ]
+}
