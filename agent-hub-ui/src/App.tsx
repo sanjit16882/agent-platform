@@ -59,7 +59,10 @@ import { SimpleIntelligenceDemo } from './components/SimpleIntelligenceDemo';
 import MCPTestPage from './components/MCPTestPage';
 import { RealMCPDemo } from './components/RealMCPDemo';
 import { RealMCPDashboard } from './components/RealMCPDashboard';
+import { MCPManagementPage } from './components/mcp/MCPManagementPage';
 import GitHubIntegrationDemo from './components/GitHubIntegrationDemo';
+import AgentTestingMain from './components/testing/AgentTestingMain';
+import KnowledgeBaseManagement from './components/KnowledgeBaseManagement';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 import { AuthProvider } from './context/AuthContext';
@@ -126,9 +129,12 @@ function App() {
             <Route path="/secrets" element={<SecretManagement />} />
             <Route path="/intelligence" element={<SimpleIntelligenceDemo />} />
             <Route path="/mcp-test" element={<MCPTestPage />} />
+            <Route path="/mcp-management" element={<MCPManagementPage />} />
             <Route path="/real-mcp-demo" element={<RealMCPDemo />} />
             <Route path="/real-mcp-dashboard" element={<RealMCPDashboard />} />
             <Route path="/github-demo" element={<GitHubIntegrationDemo />} />
+            <Route path="/agent-testing/*" element={<AgentTestingMain />} />
+            <Route path="/knowledge-bases" element={<KnowledgeBaseManagement />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </div>

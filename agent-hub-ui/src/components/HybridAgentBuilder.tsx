@@ -18,6 +18,9 @@ import './HybridAgentBuilder.css';
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
 import { IntelligenceModal } from './IntelligenceModal';
+import { MCPAgentCreationStep, MCPAgentConfig } from './mcp/MCPAgentCreationStep';
+import VectorDBConfigSection from './VectorDBConfigSection';
+import AgentConfigurationGuide from './AgentConfigurationGuide';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
@@ -80,7 +83,26 @@ const HybridAgentBuilder: React.FC = () => {
   const [selectedBedrockModel, setSelectedBedrockModel] = useState<string>('');
   const [selectedBedrockModelName, setSelectedBedrockModelName] = useState<string>('');
   
+  // MCP Integration state
+  const [mcpConfig, setMcpConfig] = useState<MCPAgentConfig>({
+    enabled: false,
+    selectedServers: [],
+    autoDetected: false,
+    recommendedServers: []
+  });
 
+  // Vector DB configuration state
+  const [vectorDBConfig, setVectorDBConfig] = useState({
+    enabled: false,
+    provider: 'mock',
+    knowledgeBases: [] as string[],
+    retrievalConfig: {
+      topK: 5,
+      minSimilarity: 0.7
+    }
+  });
+  const [vectorDBCost, setVectorDBCost] = useState(0);
+  const [vectorDBLatency, setVectorDBLatency] = useState(0);
   
   // AI suggestions modal state
   const [intelligenceSidebarOpen, setIntelligenceSidebarOpen] = useState(false);
@@ -826,6 +848,11 @@ const HybridAgentBuilder: React.FC = () => {
           modelName: selectedBedrockModelName,
           provider: 'aws-bedrock',
           region: 'us-east-1'
+        } : undefined,
+        mcpIntegration: mcpConfig.enabled ? {
+          enabled: true,
+          selectedServers: mcpConfig.selectedServers,
+          autoDetected: mcpConfig.autoDetected
         } : undefined
       };
 
@@ -837,11 +864,12 @@ const HybridAgentBuilder: React.FC = () => {
       
       // Show success message with options
       const bedrockInfo = selectedBedrockModel ? `\nAI Model: ${selectedBedrockModelName}` : '';
+      const mcpInfo = mcpConfig.enabled ? `\nMCP Servers: ${mcpConfig.selectedServers.length} selected` : '';
       const userChoice = window.confirm(
-        `Hybrid agent "${agentName}" created successfully!${bedrockInfo}\n\n` +
+        `Hybrid agent "${agentName}" created successfully!${bedrockInfo}${mcpInfo}\n\n` +
         `Components: ${components.length}\n` +
         `Connections: ${connections.length}\n` +
-        `MCP Integration: Available at runtime\n\n` +
+        `MCP Integration: ${mcpConfig.enabled ? 'Enabled' : 'Disabled'}\n\n` +
         `Would you like to:\n` +
         `• OK - Go to Agent Catalog\n` +
         `• Cancel - Discard Agent`
@@ -968,6 +996,9 @@ const HybridAgentBuilder: React.FC = () => {
             <BedrockStatus showDetails={false} />
           </div>
 
+          {/* Configuration Guide */}
+          <AgentConfigurationGuide compact={true} />
+
 
 
 
@@ -1041,7 +1072,16 @@ const HybridAgentBuilder: React.FC = () => {
                     agentType="hybrid"
                     label="Default AI Model"
                     required={false}
+                    disabled={mcpConfig.enabled && mcpConfig.selectedServers.length > 0}
                   />
+                  {mcpConfig.enabled && mcpConfig.selectedServers.length > 0 && (
+                    <Alert variant="info" className="mt-2">
+                      <small>
+                        <strong>ℹ️ Model Selection Disabled</strong><br />
+                        Model is configured through the selected MCP server. Go to the MCP Integration tab to change servers.
+                      </small>
+                    </Alert>
+                  )}
                 </Col>
               </Row>
             </div>
@@ -1287,6 +1327,37 @@ const HybridAgentBuilder: React.FC = () => {
                     </Row>
                   )}
                 </div>
+              </div>
+            </Tab>
+
+            <Tab eventKey="vectordb" title="Knowledge Base (RAG)">
+              <div className="p-3">
+                <Alert variant="info" className="mb-4">
+                  <strong>Retrieval Augmented Generation (RAG)</strong>
+                  <p className="mb-0 mt-2">
+                    Enable Vector DB to give your hybrid agent access to custom knowledge bases. 
+                    This allows your agent to retrieve relevant context from documents before processing, 
+                    resulting in more accurate and context-aware responses.
+                  </p>
+                </Alert>
+                
+                <VectorDBConfigSection
+                  config={vectorDBConfig}
+                  onChange={setVectorDBConfig}
+                  onCostChange={setVectorDBCost}
+                  onLatencyChange={setVectorDBLatency}
+                />
+              </div>
+            </Tab>
+
+            <Tab eventKey="mcp" title="MCP Integration">
+              <div className="p-3">
+                <MCPAgentCreationStep
+                  agentType="hybrid"
+                  agentDescription={agentDescription}
+                  onMCPConfigChange={setMcpConfig}
+                  initialConfig={mcpConfig}
+                />
               </div>
             </Tab>
 
@@ -1559,38 +1630,6 @@ const HybridAgentBuilder: React.FC = () => {
                     }
                   }}
                 />
-              </div>
-            </Tab>
-
-            <Tab eventKey="mcp" title="MCP Integration">
-              <div className="aws-card">
-                <div className="aws-card-header">
-                  <span>Model Context Protocol (MCP) Integration</span>
-                </div>
-                <div className="aws-card-body">
-                  <Alert variant="info">
-                    <div className="d-flex align-items-start">
-                      <i className="fas fa-info-circle me-2 mt-1"></i>
-                      <div>
-                        <strong>Runtime MCP Integration</strong>
-                        <p className="mb-2 mt-1">
-                          MCP integration happens automatically at runtime when your hybrid agent components need external tools. 
-                          The AI model will connect to available MCP servers (filesystem, git, database) as needed during workflow execution.
-                        </p>
-                        <p className="mb-2">
-                          Your hybrid agent can use MCP tools in any component that requires external data access or tool execution.
-                        </p>
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => window.open('/mcp-test', '_blank')}
-                        >
-                          Test MCP Integration
-                        </Button>
-                      </div>
-                    </div>
-                  </Alert>
-                </div>
               </div>
             </Tab>
 
@@ -2194,6 +2233,7 @@ const HybridAgentBuilder: React.FC = () => {
           />
         </Modal.Body>
       </Modal>
+
     </PermissionGuard>
   );
 };

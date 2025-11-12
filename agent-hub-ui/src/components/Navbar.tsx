@@ -26,19 +26,87 @@ const Navbar: React.FC = () => {
   return (
     <>
       {/* Main Navigation */}
-      <BootstrapNavbar expand="lg" className="main-navbar" style={{background: 'linear-gradient(135deg, #003d82 0%, #002a5c 100%)'}}>
-        <Container>
-          <BootstrapNavbar.Brand as={Link} to="/" className="fw-bold">
-            AgentHub
+      <BootstrapNavbar 
+        expand="lg" 
+        className="main-navbar" 
+        fixed="top"
+        variant="dark"
+        style={{
+          background: '#1e3a8a',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          padding: '0',
+          minHeight: '56px'
+        }}
+      >
+        <Container fluid style={{ padding: '0 2rem' }}>
+          <BootstrapNavbar.Brand 
+            as={Link} 
+            to="/" 
+            className="d-flex align-items-center"
+            style={{
+              padding: '0.75rem 0',
+              marginRight: '3rem',
+              textDecoration: 'none'
+            }}
+          >
+            {/* AH Logo */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+              padding: '0.4rem 0.6rem',
+              borderRadius: '8px',
+              marginRight: '0.75rem',
+              boxShadow: '0 2px 8px rgba(96, 165, 250, 0.3)',
+              letterSpacing: '-2px'
+            }}>
+              <span style={{
+                fontSize: '1.5rem',
+                fontWeight: '900',
+                color: '#fff',
+                lineHeight: '1'
+              }}>A</span>
+              <span style={{
+                fontSize: '1rem',
+                fontWeight: '800',
+                color: 'rgba(255,255,255,0.9)',
+                lineHeight: '1'
+              }}>H</span>
+            </div>
+            
+            {/* Agent Hub Text */}
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '1.2' }}>
+              <span style={{
+                fontSize: '1.1rem',
+                fontWeight: '700',
+                color: '#fff',
+                letterSpacing: '-0.3px'
+              }}>Agent Hub</span>
+              <span style={{
+                fontSize: '0.65rem',
+                fontWeight: '500',
+                color: 'rgba(255,255,255,0.7)',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase'
+              }}>AI Platform</span>
+            </div>
           </BootstrapNavbar.Brand>
+          
           <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
+          
           <BootstrapNavbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
+            <Nav className="me-auto" style={{ gap: '0.5rem' }}>
               {/* Core Features */}
               <Nav.Link 
                 as={Link} 
                 to="/" 
-                className={`px-2 ${location.pathname === '/' ? 'active' : ''}`}
+                className={location.pathname === '/' ? 'active' : ''}
+                style={{
+                  color: '#fff',
+                  fontWeight: '500',
+                  fontSize: '0.9rem',
+                  padding: '0.5rem 1rem'
+                }}
               >
                 Dashboard
               </Nav.Link>
@@ -46,7 +114,14 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/agents" 
-                className={`px-2 ${location.pathname === '/agents' ? 'active' : ''}`}
+                className={`px-4 ${location.pathname === '/agents' ? 'active' : ''}`}
+                style={{
+                  color: location.pathname === '/agents' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/agents' ? '600' : '500',
+                  borderBottom: location.pathname === '/agents' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
                 Agents
               </Nav.Link>
@@ -54,16 +129,30 @@ const Navbar: React.FC = () => {
               <Nav.Link 
                 as={Link} 
                 to="/marketplace" 
-                className={`px-2 ${location.pathname === '/marketplace' ? 'active' : ''}`}
+                className={`px-4 ${location.pathname === '/marketplace' ? 'active' : ''}`}
+                style={{
+                  color: location.pathname === '/marketplace' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/marketplace' ? '600' : '500',
+                  borderBottom: location.pathname === '/marketplace' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
-                <StoreIcon className="me-1" />
+                <StoreIcon className="me-1" style={{ fontSize: '0.9rem' }} />
                 Marketplace
               </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
                 to="/agent-builder" 
-                className={`px-2 ${(location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? 'active' : ''}`}
+                className={`px-4 ${(location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? 'active' : ''}`}
+                style={{
+                  color: (location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: (location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? '600' : '500',
+                  borderBottom: (location.pathname === '/agent-builder' || location.pathname === '/agent-builder-classic') ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
                 Agent Builder
               </Nav.Link>
@@ -72,7 +161,14 @@ const Navbar: React.FC = () => {
                 as={Link} 
                 to="/hybrid-builder" 
                 active={location.pathname === '/hybrid-builder'}
-                className="px-2"
+                className="px-4"
+                style={{
+                  color: location.pathname === '/hybrid-builder' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/hybrid-builder' ? '600' : '500',
+                  borderBottom: location.pathname === '/hybrid-builder' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
                 Hybrid Builder
               </Nav.Link>
@@ -81,20 +177,57 @@ const Navbar: React.FC = () => {
                 as={Link} 
                 to="/upload" 
                 active={location.pathname === '/upload'}
-                className="px-2"
+                className="px-4"
+                style={{
+                  color: location.pathname === '/upload' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/upload' ? '600' : '500',
+                  borderBottom: location.pathname === '/upload' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
                 Upload
               </Nav.Link>
 
               <Nav.Link 
                 as={Link} 
+                to="/agent-testing" 
+                className={`px-4 ${location.pathname.startsWith('/agent-testing') ? 'active' : ''}`}
+                style={{
+                  color: location.pathname.startsWith('/agent-testing') ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname.startsWith('/agent-testing') ? '600' : '500',
+                  borderBottom: location.pathname.startsWith('/agent-testing') ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>🧪</span> Agent Testing
+              </Nav.Link>
+
+              <Nav.Link 
+                as={Link} 
                 to="/manage" 
-                className={`px-2 ${location.pathname === '/manage' ? 'active' : ''}`}
+                className={`px-4 ${location.pathname === '/manage' ? 'active' : ''}`}
+                style={{
+                  color: location.pathname === '/manage' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/manage' ? '600' : '500',
+                  borderBottom: location.pathname === '/manage' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
               >
                 Manage
               </Nav.Link>
 
-              <NavDropdown title="Developer Tools" id="developer-tools-dropdown" className="px-2">
+              <NavDropdown 
+                title={<span style={{ fontSize: '0.95rem' }}>Resources</span>} 
+                id="resources-dropdown" 
+                className="px-4"
+                style={{
+                  color: 'rgba(255,255,255,0.85)',
+                  fontWeight: '500'
+                }}
+              >
                 <NavDropdown.Header>📚 Documentation</NavDropdown.Header>
                 <NavDropdown.Item as={Link} to="/api-docs">
                   API Documentation
@@ -104,11 +237,26 @@ const Navbar: React.FC = () => {
                 </NavDropdown.Item>
                 
                 <NavDropdown.Divider />
-                <NavDropdown.Header>🔌 Integration & Testing</NavDropdown.Header>
+                <NavDropdown.Header>🗄️ Data & Knowledge</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/knowledge-bases">
+                  📖 Knowledge Base Management
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                <NavDropdown.Header>🔌 MCP (Model Context Protocol)</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/mcp-management">
+                  🔧 Manage MCP Servers
+                  <Badge bg="primary" className="ms-1">NEW</Badge>
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/real-mcp-dashboard">
+                  🐳 MCP Dashboard
+                </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/mcp-test">
                   🔌 MCP Test & Integration
-                  <Badge bg="success" className="ms-1">NEW</Badge>
                 </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                <NavDropdown.Header>🔗 Integration</NavDropdown.Header>
                 <NavDropdown.Item as={Link} to="/integration">
                   Platform Integration
                 </NavDropdown.Item>
@@ -142,7 +290,15 @@ const Navbar: React.FC = () => {
               </NavDropdown>
 
               {canAccessFeature('cost-management') && (
-                <NavDropdown title="Analytics" id="analytics-dropdown" className="px-2">
+                <NavDropdown 
+                  title={<span style={{ fontSize: '0.95rem' }}>Analytics</span>} 
+                  id="analytics-dropdown" 
+                  className="px-4"
+                  style={{
+                    color: 'rgba(255,255,255,0.85)',
+                    fontWeight: '500'
+                  }}
+                >
                   <NavDropdown.Item as={Link} to="/analytics">
                     📊 Real Analytics
                   </NavDropdown.Item>
@@ -171,13 +327,39 @@ const Navbar: React.FC = () => {
                 </NavDropdown>
               )}
             </Nav>
-            <Nav>
+            <Nav className="ms-auto">
               {isAuthenticated && user ? (
                 <NavDropdown
                   title={
-                    <span className="d-flex align-items-center">
-                      <span className="me-2">{user.name.split(' ')[0]}</span>
-                      <Badge bg="primary" className="small">
+                    <span className="d-flex align-items-center" style={{ color: '#fff' }}>
+                      <div 
+                        className="me-2 d-flex align-items-center justify-content-center"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+                          fontWeight: '600',
+                          fontSize: '0.9rem',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        {user.name.split(' ')[0].charAt(0).toUpperCase()}
+                      </div>
+                      <span className="me-2" style={{ fontWeight: '600', fontSize: '0.95rem' }}>{user.name.split(' ')[0]}</span>
+                      <Badge 
+                        className="small"
+                        style={{
+                          backgroundColor: '#ffffff',
+                          color: '#1e3a8a',
+                          fontWeight: '700',
+                          fontSize: '0.7rem',
+                          padding: '0.35rem 0.65rem',
+                          letterSpacing: '0.5px',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                        }}
+                      >
                         {user.role}
                       </Badge>
                     </span>
