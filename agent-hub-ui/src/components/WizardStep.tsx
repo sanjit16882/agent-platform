@@ -400,7 +400,7 @@ if __name__ == "__main__":
         </Card>
 
         {/* Preview Modal */}
-        <Modal show={showPreview} onHide={() => setShowPreview(false)} size="lg">
+        <Modal show={showPreview} onHide={() => setShowPreview(false)} size="lg" centered>
           <Modal.Header closeButton>
             <Modal.Title>Generated Code Preview</Modal.Title>
           </Modal.Header>

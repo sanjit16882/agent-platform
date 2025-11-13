@@ -220,53 +220,46 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
   if (!selectedNode) {
     return (
-      <Card className="property-panel">
-        <Card.Body className="text-center py-5">
-          <div className="text-muted mb-3" style={{ fontSize: '2rem' }}>⚙️</div>
-          <h5>No Component Selected</h5>
-          <p className="text-muted">
+      <div className="property-panel h-100 d-flex align-items-center justify-content-center" style={{ background: '#f8f9fa' }}>
+        <div className="text-center p-4">
+          <div className="mb-3" style={{ fontSize: '3rem', opacity: 0.3 }}>
+            <CogIcon />
+          </div>
+          <h6 className="mb-2" style={{ color: '#495057' }}>No Component Selected</h6>
+          <p className="text-muted small mb-0" style={{ maxWidth: '250px' }}>
             Select a component from the workflow canvas to view and edit its properties.
           </p>
-        </Card.Body>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="property-panel">
-      <Card.Header>
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 className="mb-0">
-              ⚙️ Component Properties
-            </h6>
-            <small className="text-muted">
-              {selectedNode.component.type} - {selectedNode.component.name}
-            </small>
+    <div className="property-panel h-100" style={{ background: '#fff', borderLeft: '1px solid #dee2e6' }}>
+      <div className="p-3 border-bottom bg-light">
+        <div className="d-flex justify-content-between align-items-start">
+          <div className="flex-grow-1">
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <Badge bg="primary" className="px-2 py-1">
+                {selectedNode.component.type.toUpperCase()}
+              </Badge>
+              <small className="text-muted">ID: {selectedNode.id.substring(0, 8)}</small>
+            </div>
+            <h6 className="mb-0">{selectedNode.component.name}</h6>
           </div>
-          <Button variant="outline-secondary" size="sm" onClick={onClose}>
-            ✕
+          <Button variant="link" size="sm" onClick={onClose} className="text-muted p-0">
+            <TimesIcon />
           </Button>
         </div>
-      </Card.Header>
+      </div>
       
-      <Card.Body>
-        {/* Component Type Badge */}
-        <div className="mb-3">
-          <Badge bg="primary" className="me-2">
-            {selectedNode.component.type}
-          </Badge>
-          <Badge bg="secondary">
-            ID: {selectedNode.id}
-          </Badge>
-        </div>
-
+      <div className="p-3" style={{ overflowY: 'auto', height: 'calc(100% - 80px)' }}>
         {/* Validation Errors Alert */}
         {Object.keys(validationErrors).length > 0 && (
-          <Alert variant="danger" className="py-2">
+          <Alert variant="danger" className="py-2 mb-3">
             <small>
-              <strong>Validation Errors:</strong>
-              <ul className="mb-0 mt-1">
+              <strong>⚠️ Validation Errors:</strong>
+              <ul className="mb-0 mt-1 ps-3">
                 {Object.entries(validationErrors).map(([key, error]) => (
                   <li key={key}>{error}</li>
                 ))}
@@ -277,7 +270,10 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
 
         {/* Properties Form */}
         <div className="mb-4">
-          <h6 className="mb-3">Configuration</h6>
+          <div className="d-flex align-items-center gap-2 mb-3">
+            <CodeIcon style={{ fontSize: '14px', color: '#6c757d' }} />
+            <h6 className="mb-0 small fw-bold">Configuration</h6>
+          </div>
           {properties.map(prop => (
             <Form.Group key={prop.key} className="mb-3">
               <Form.Label>
@@ -331,36 +327,39 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({
           </Row>
         </div>
 
+        {/* Unsaved Changes Warning */}
+        {hasUnsavedChanges && (
+          <Alert variant="warning" className="py-2 mb-3">
+            <small>
+              <strong>⚠️ Unsaved Changes:</strong> Remember to save your changes.
+            </small>
+          </Alert>
+        )}
+
         {/* Action Buttons */}
         {!readonly && (
-          <div className="d-flex gap-2">
+          <div className="d-grid gap-2">
             <Button
               variant="primary"
               onClick={handleSave}
               disabled={!hasUnsavedChanges || Object.keys(validationErrors).length > 0}
+              className="d-flex align-items-center justify-content-center gap-2"
             >
-              ✓ Save Changes
+              <CheckIcon style={{ fontSize: '12px' }} />
+              Save Changes
             </Button>
             <Button
               variant="outline-secondary"
               onClick={handleReset}
               disabled={!hasUnsavedChanges}
+              size="sm"
             >
               Reset
             </Button>
           </div>
         )}
-
-        {/* Unsaved Changes Warning */}
-        {hasUnsavedChanges && (
-          <Alert variant="warning" className="mt-3 py-2">
-            <small>
-              <strong>Unsaved Changes:</strong> You have unsaved changes to this component.
-            </small>
-          </Alert>
-        )}
-      </Card.Body>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -9,7 +9,14 @@ import { MCPIndicatorBadge, extractMCPConfig } from '../mcp/MCPIndicatorBadge';
 import TestingStatusBadge from '../testing/TestingStatusBadge';
 
 interface AgentCardProps {
-  agent: Agent;
+  agent: Agent & {
+    vectorDB?: {
+      enabled: boolean;
+      knowledgeBases?: string[];
+    };
+    executionMode?: 'bedrock-only' | 'rag' | 'mcp' | 'full-stack';
+    estimatedCost?: number; // cost per 1000 queries
+  };
   variant: 'active' | 'available';
   isDeployed: boolean;
   isActive: boolean;
@@ -72,6 +79,37 @@ const AgentCard: React.FC<AgentCardProps> = ({
 
   const styles = getCardStyles();
 
+  // Helper function to get execution mode badge
+  const getExecutionModeBadge = () => {
+    if (!agent.executionMode) return null;
+    
+    const modeConfig = {
+      'bedrock-only': { bg: 'primary', label: 'LLM Only', icon: '🤖' },
+      'rag': { bg: 'success', label: 'RAG', icon: '📚' },
+      'mcp': { bg: 'warning', label: 'MCP', icon: '🔧' },
+      'full-stack': { bg: 'danger', label: 'Full Stack', icon: '⚡' }
+    };
+    
+    const config = modeConfig[agent.executionMode];
+    return (
+      <Badge bg={config.bg} className="me-1" title={`Execution Mode: ${config.label}`}>
+        {config.icon} {config.label}
+      </Badge>
+    );
+  };
+
+  // Helper function to get Vector DB status badge
+  const getVectorDBBadge = () => {
+    if (!agent.vectorDB?.enabled) return null;
+    
+    const kbCount = agent.vectorDB.knowledgeBases?.length || 0;
+    return (
+      <Badge bg="success" className="me-1" title={`Vector DB enabled with ${kbCount} knowledge base(s)`}>
+        📊 Vector DB ({kbCount})
+      </Badge>
+    );
+  };
+
   return (
     <Card className="h-100" style={{ border: styles.border }}>
       <Card.Header style={{ 
@@ -98,6 +136,8 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 Template
               </Badge>
             )}
+            {getExecutionModeBadge()}
+            {getVectorDBBadge()}
             <MCPIndicatorBadge 
               mcpConfig={extractMCPConfig(agent) || undefined} 
               size="sm"
@@ -148,9 +188,14 @@ const AgentCard: React.FC<AgentCardProps> = ({
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontWeight: 'bold', color: '#374151' }}>
-              {variant === 'active' ? 'Ready' : 'Demo'}
+              {agent.estimatedCost 
+                ? `$${agent.estimatedCost.toFixed(2)}`
+                : variant === 'active' ? 'Ready' : 'Demo'
+              }
             </div>
-            <div style={{ color: '#6b7280' }}>Status</div>
+            <div style={{ color: '#6b7280' }}>
+              {agent.estimatedCost ? 'Cost/1K' : 'Status'}
+            </div>
           </div>
         </div>
         

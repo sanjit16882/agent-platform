@@ -170,7 +170,7 @@ const SearchTestModal: React.FC<SearchTestModalProps> = ({
   };
   
   return (
-    <Modal show={show} onHide={onHide} size="xl">
+    <Modal show={show} onHide={onHide} size="xl" centered>
       <Modal.Header closeButton>
         <Modal.Title>Test Search</Modal.Title>
       </Modal.Header>

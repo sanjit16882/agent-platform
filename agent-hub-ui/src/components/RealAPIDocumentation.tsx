@@ -440,6 +440,144 @@ const RealAPIDocumentation: React.FC = () => {
         }
       }
     },
+    analytics: {
+      title: '📊 Agent Analytics & Insights',
+      color: '#6f42c1',
+      endpoints: {
+        'agent-executions': {
+          method: 'GET',
+          path: '/api/v1/agents/:id/executions',
+          description: 'Get detailed execution history for a specific agent with filtering and pagination',
+          cli: `curl "http://localhost:3002/api/v1/agents/code-reviewer/executions?execution_mode=rag&limit=20"`,
+          response: `{
+  "success": true,
+  "data": {
+    "executions": [
+      {
+        "id": "exec-123",
+        "agent_id": "code-reviewer",
+        "execution_mode": "rag",
+        "status": "success",
+        "started_at": "2024-11-12T10:30:00Z",
+        "completed_at": "2024-11-12T10:30:02Z",
+        "duration_ms": 2150,
+        "documents_retrieved": 5,
+        "tools_invoked": 0,
+        "llm_cost": 0.008,
+        "vector_db_cost": 0.001,
+        "mcp_cost": 0.000,
+        "total_cost": 0.009,
+        "llm_latency_ms": 1800,
+        "vector_db_latency_ms": 350,
+        "input_tokens": 450,
+        "output_tokens": 320
+      }
+    ],
+    "pagination": {
+      "total": 1250,
+      "limit": 20,
+      "offset": 0,
+      "hasMore": true
+    }
+  }
+}`
+        },
+        'agent-analytics': {
+          method: 'GET',
+          path: '/api/v1/agents/:id/analytics',
+          description: 'Get comprehensive analytics for a specific agent including cost, latency, and success rates',
+          cli: `curl "http://localhost:3002/api/v1/agents/code-reviewer/analytics?days=30"`,
+          response: `{
+  "success": true,
+  "data": {
+    "agent_id": "code-reviewer",
+    "period_days": 30,
+    "overall": {
+      "total_executions": 1250,
+      "successful_executions": 1180,
+      "avg_duration_ms": 850,
+      "total_cost": 12.45,
+      "avg_cost_per_execution": 0.00996,
+      "avg_documents_retrieved": 3.2
+    },
+    "execution_mode_distribution": [
+      {
+        "execution_mode": "rag",
+        "count": 1100,
+        "avg_duration_ms": 820,
+        "avg_cost": 0.0095
+      }
+    ],
+    "cost_breakdown": [...],
+    "latency_breakdown": [...],
+    "success_rates": [...],
+    "daily_trend": [...]
+  }
+}`
+        },
+        'vector-db-analytics': {
+          method: 'GET',
+          path: '/api/v1/analytics/vector-db',
+          description: 'Get Vector DB usage statistics across all agents',
+          cli: `curl "http://localhost:3002/api/v1/analytics/vector-db?days=30"`,
+          response: `{
+  "success": true,
+  "data": {
+    "period_days": 30,
+    "overall": {
+      "total_rag_executions": 5420,
+      "avg_documents_retrieved": 4.2,
+      "avg_search_latency_ms": 120,
+      "total_vector_db_cost": 2.15,
+      "avg_cost_per_search": 0.000397
+    },
+    "usage_by_agent": [
+      {
+        "agent_id": "code-reviewer",
+        "rag_executions": 1100,
+        "avg_documents": 3.2,
+        "avg_latency_ms": 170,
+        "total_cost": 0.55
+      }
+    ],
+    "knowledge_base_usage": [...]
+  }
+}`
+        },
+        'cost-optimization': {
+          method: 'GET',
+          path: '/api/v1/analytics/cost-optimization',
+          description: 'Get cost optimization recommendations based on execution patterns',
+          cli: `curl "http://localhost:3002/api/v1/analytics/cost-optimization?days=30"`,
+          response: `{
+  "success": true,
+  "data": {
+    "period_days": 30,
+    "high_cost_agents": [...],
+    "execution_mode_efficiency": [...],
+    "recommendations": [
+      {
+        "type": "execution_mode_optimization",
+        "priority": "high",
+        "agent_id": "data-analyst",
+        "current_mode": "full-stack",
+        "suggested_mode": "rag",
+        "reason": "Agent uses full-stack mode but may not need all MCP tools",
+        "current_cost": 15.30,
+        "estimated_savings": 4.59,
+        "impact": "high"
+      }
+    ],
+    "summary": {
+      "total_recommendations": 12,
+      "high_priority": 3,
+      "total_potential_savings": 8.45
+    }
+  }
+}`
+        }
+      }
+    },
     catalog: {
       title: '📚 Agent Catalog',
       color: '#20c997',

@@ -4,6 +4,7 @@ import Button from './Button';
 import { Agent, AgentConfiguration } from '../../types/agent';
 import { Icon } from '../Icon';
 import { theme } from '../../styles/theme';
+import AgentAnalytics from '../AgentAnalytics';
 
 interface AgentDetailsModalProps {
   agent: Agent | null;
@@ -189,6 +190,21 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
               <AgentMetricsTab agent={agent} />
             </div>
           </Tab>
+
+          {/* Analytics Tab */}
+          <Tab 
+            eventKey="analytics" 
+            title={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon name="chart" size="small" />
+                Analytics
+              </span>
+            }
+          >
+            <div style={{ padding: theme.spacing.xl }}>
+              <AgentAnalytics agentId={agent.agent_id} agentName={agent.name} />
+            </div>
+          </Tab>
         </Tabs>
       </Modal.Body>
 
@@ -233,59 +249,133 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
 };
 
 // Tab Components
-const AgentOverviewTab: React.FC<{ agent: Agent }> = ({ agent }) => (
-  <div>
-    <div style={{ marginBottom: theme.spacing.xl }}>
-      <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
-        Agent Information
-      </h5>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: theme.spacing.lg,
-        padding: theme.spacing.lg,
-        backgroundColor: '#f9fafb',
-        borderRadius: theme.borderRadius.lg,
-        border: '1px solid #e5e7eb'
-      }}>
-        <div>
-          <strong>Name:</strong> {agent.name}
-        </div>
-        <div>
-          <strong>Category:</strong> {agent.category}
-        </div>
-        <div>
-          <strong>Type:</strong> {agent.agent_type === 'production' ? 'Production-Ready' : 'Demo'}
-        </div>
-        <div>
-          <strong>Usage Count:</strong> {agent.usage_count.toLocaleString()}
-        </div>
-        <div>
-          <strong>Rating:</strong> {agent.average_rating.toFixed(1)}★
-        </div>
-        <div>
-          <strong>Created:</strong> {new Date(agent.created_at).toLocaleDateString()}
+const AgentOverviewTab: React.FC<{ agent: Agent & { 
+  vectorDB?: { enabled: boolean; knowledgeBases?: string[]; provider?: string };
+  executionMode?: 'bedrock-only' | 'rag' | 'mcp' | 'full-stack';
+  estimatedCost?: number;
+  estimatedLatency?: number;
+}}> = ({ agent }) => {
+  const getExecutionModeLabel = (mode?: string) => {
+    const labels: Record<string, string> = {
+      'bedrock-only': '🤖 Bedrock Only (LLM)',
+      'rag': '📚 RAG (Vector DB + LLM)',
+      'mcp': '🔧 MCP (LLM + Tools)',
+      'full-stack': '⚡ Full Stack (All Components)'
+    };
+    return labels[mode || ''] || 'Not configured';
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: theme.spacing.xl }}>
+        <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+          Agent Information
+        </h5>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: theme.spacing.lg,
+          padding: theme.spacing.lg,
+          backgroundColor: '#f9fafb',
+          borderRadius: theme.borderRadius.lg,
+          border: '1px solid #e5e7eb'
+        }}>
+          <div>
+            <strong>Name:</strong> {agent.name}
+          </div>
+          <div>
+            <strong>Category:</strong> {agent.category}
+          </div>
+          <div>
+            <strong>Type:</strong> {agent.agent_type === 'production' ? 'Production-Ready' : 'Demo'}
+          </div>
+          <div>
+            <strong>Usage Count:</strong> {agent.usage_count.toLocaleString()}
+          </div>
+          <div>
+            <strong>Rating:</strong> {agent.average_rating.toFixed(1)}★
+          </div>
+          <div>
+            <strong>Created:</strong> {new Date(agent.created_at).toLocaleDateString()}
+          </div>
         </div>
       </div>
-    </div>
 
-    <div>
-      <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
-        Description
-      </h5>
-      <p style={{ 
-        lineHeight: 1.6, 
-        color: '#6b7280',
-        padding: theme.spacing.lg,
-        backgroundColor: '#f9fafb',
-        borderRadius: theme.borderRadius.lg,
-        border: '1px solid #e5e7eb'
-      }}>
-        {agent.description}
-      </p>
+      {/* Execution Mode Section */}
+      {agent.executionMode && (
+        <div style={{ marginBottom: theme.spacing.xl }}>
+          <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+            Execution Configuration
+          </h5>
+          <div style={{ 
+            padding: theme.spacing.lg,
+            backgroundColor: '#f0f9ff',
+            borderRadius: theme.borderRadius.lg,
+            border: '1px solid #0ea5e9'
+          }}>
+            <div style={{ marginBottom: theme.spacing.md }}>
+              <strong>Execution Mode:</strong> {getExecutionModeLabel(agent.executionMode)}
+            </div>
+            
+            {/* Vector DB Configuration */}
+            {agent.vectorDB?.enabled && (
+              <div style={{ marginBottom: theme.spacing.md }}>
+                <strong>Vector DB:</strong> Enabled
+                <div style={{ marginLeft: theme.spacing.lg, marginTop: theme.spacing.sm }}>
+                  <div>Provider: {agent.vectorDB.provider || 'Not specified'}</div>
+                  <div>Knowledge Bases: {agent.vectorDB.knowledgeBases?.length || 0} configured</div>
+                </div>
+              </div>
+            )}
+            
+            {/* Cost and Latency Estimates */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: theme.spacing.md,
+              marginTop: theme.spacing.lg,
+              paddingTop: theme.spacing.lg,
+              borderTop: '1px solid #bae6fd'
+            }}>
+              {agent.estimatedCost !== undefined && (
+                <div>
+                  <strong>Estimated Cost:</strong>
+                  <div style={{ fontSize: '1.2rem', color: '#0369a1' }}>
+                    ${agent.estimatedCost.toFixed(2)}/1K queries
+                  </div>
+                </div>
+              )}
+              {agent.estimatedLatency !== undefined && (
+                <div>
+                  <strong>Estimated Latency:</strong>
+                  <div style={{ fontSize: '1.2rem', color: '#0369a1' }}>
+                    {agent.estimatedLatency}ms avg
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+          Description
+        </h5>
+        <p style={{ 
+          lineHeight: 1.6, 
+          color: '#6b7280',
+          padding: theme.spacing.lg,
+          backgroundColor: '#f9fafb',
+          borderRadius: theme.borderRadius.lg,
+          border: '1px solid #e5e7eb'
+        }}>
+          {agent.description}
+        </p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AgentConfigurationTab: React.FC<{
   agent: Agent;

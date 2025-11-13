@@ -1,4 +1,18 @@
 /* AgentHub Custom Styles with LSEG Blue Theme */
+
+/* CRITICAL: Modal Centering - Override Bootstrap defaults */
+.modal.show .modal-dialog.modal-dialog-centered,
+.modal .modal-dialog.modal-dialog-centered {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: calc(100vh - 3.5rem) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
 .App {
   min-height: 100vh;
   background-color: #f8f9fa;
@@ -1921,4 +1935,66 @@ late Library Filter Fixes */
 /* Smooth Transitions */
 .main-navbar * {
   transition: all 0.2s ease;
+}
+
+/* Global Modal Centering Fix - Force all modals to center */
+.modal-dialog {
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 1rem) !important;
+  margin: 0.5rem auto !important;
+}
+
+@media (min-width: 576px) {
+  .modal-dialog {
+    min-height: calc(100% - 3.5rem) !important;
+    margin: 1.75rem auto !important;
+  }
+}
+
+/* Center modal content horizontally */
+.modal-content {
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+/* Ensure modal body content is properly aligned */
+.modal-body {
+  text-align: left !important;
+}
+
+/* Fix for all modal sizes */
+.modal-sm .modal-dialog,
+.modal-lg .modal-dialog,
+.modal-xl .modal-dialog {
+  display: flex !important;
+  align-items: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Vertical centering for all modals */
+.modal.show .modal-dialog {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: calc(100vh - 1rem) !important;
+}
+
+@media (min-width: 576px) {
+  .modal.show .modal-dialog {
+    min-height: calc(100vh - 3.5rem) !important;
+  }
+}
+
+/* Ensure modal doesn't overflow on small screens */
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem !important;
+    width: calc(100% - 1rem) !important;
+  }
+  
+  .modal.show .modal-dialog {
+    min-height: calc(100vh - 1rem) !important;
+  }
 }

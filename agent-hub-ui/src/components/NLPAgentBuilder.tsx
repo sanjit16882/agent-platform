@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, Form, Button, Alert, Row, Col, Badge, Spinner, Accordion, Modal } from 'react-bootstrap';
 // Removed static nlpAnalysisService - now using dynamic intelligence
 import BedrockStatus from './BedrockStatus';
@@ -8,6 +8,7 @@ import { IntelligenceModal } from './IntelligenceModal';
 import { MCPAgentCreationStep, MCPAgentConfig } from './mcp/MCPAgentCreationStep';
 import VectorDBConfigSection from './VectorDBConfigSection';
 import AgentConfigurationGuide from './AgentConfigurationGuide';
+import AgentTemplateSelector from './AgentTemplateSelector';
 
 // Local type definitions (previously from nlpAnalysisService)
 interface NLPAnalysis {
@@ -102,6 +103,7 @@ const formatCapability = (capability: string): string => {
 
 const NLPAgentBuilder: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Core agent data
   const [agentName, setAgentName] = useState('');
@@ -378,7 +380,7 @@ const NLPAgentBuilder: React.FC = () => {
       const finalFrameworks = manualFrameworks.length > 0 ? manualFrameworks : nlpAnalysis?.frameworks || [];
 
       const requestBody = {
-        templateId: 'custom',
+        templateId: selectedTemplate?.id || 'custom',
         name: agentName,
         description: agentDescription,
         purpose: agentDescription, // Use description as purpose
@@ -405,11 +407,15 @@ const NLPAgentBuilder: React.FC = () => {
         ],
         processingLogic: processingLogic,
         selectedModel: selectedBedrockModel,
+        vectorDB: vectorDBConfig.enabled ? vectorDBConfig : undefined,
         metadata: {
           nlpAnalysis: nlpAnalysis,
           detectedFrameworks: finalFrameworks,
           confidence: nlpAnalysis?.confidence || 0,
-          mcpConfig: mcpConfig
+          mcpConfig: mcpConfig,
+          templateId: selectedTemplate?.id,
+          templateName: selectedTemplate?.name,
+          vectorDBConfig: vectorDBConfig
         },
         mcpIntegration: mcpConfig.enabled ? {
           enabled: true,
@@ -442,11 +448,6 @@ const NLPAgentBuilder: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const applyTemplate = (template: TemplateMatch) => {
-    setAgentName(template.name);
-    setProcessingLogic(`This agent is designed to ${template.description.toLowerCase()}. It will process the input data according to the following logic:\n\n1. Analyze the input data\n2. Apply ${template.name.toLowerCase()} processing\n3. Generate structured output\n4. Provide analysis metadata`);
   };
 
   const applyNameSuggestion = (name: string) => {
@@ -556,12 +557,158 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
     }
   };
 
+  // Template selection state
+  const [showTemplateSelector, setShowTemplateSelector] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+
+  // Apply template configuration
+  const applyTemplate = (template: any | null) => {
+    if (!template) {
+      // Custom agent - just close template selector
+      setShowTemplateSelector(false);
+      setSelectedTemplate(null);
+      return;
+    }
+
+    setSelectedTemplate(template);
+    setShowTemplateSelector(false);
+
+    // Pre-fill agent configuration based on template
+    setAgentName(template.name);
+    setAgentDescription(template.description);
+    
+    // Set processing logic based on template
+    setProcessingLogic(`// ${template.name} - ${template.useCase}
+
+1. Receive and validate input
+2. Process according to ${template.name} logic
+3. Generate appropriate response
+4. Return results
+
+// Customize the processing steps above for your specific needs`);
+
+    // Apply Vector DB configuration
+    if (template.config?.vectorDB?.enabled) {
+      setVectorDBConfig({
+        enabled: true,
+        provider: template.config.vectorDB.provider || 'mock',
+        knowledgeBases: template.config.vectorDB.knowledgeBases || [],
+        retrievalConfig: template.config.vectorDB.retrievalConfig || {
+          topK: 5,
+          minSimilarity: 0.7
+        }
+      });
+    } else {
+      setVectorDBConfig({
+        enabled: false,
+        provider: 'mock',
+        knowledgeBases: [],
+        retrievalConfig: {
+          topK: 5,
+          minSimilarity: 0.7
+        }
+      });
+    }
+
+    // Apply MCP configuration
+    if (template.config?.mcpConfig?.enabled) {
+      setMcpConfig({
+        enabled: true,
+        selectedServers: template.config.mcpConfig.serverId ? [template.config.mcpConfig.serverId] : [],
+        autoDetected: false,
+        recommendedServers: []
+      });
+    } else {
+      setMcpConfig({
+        enabled: false,
+        selectedServers: [],
+        autoDetected: false,
+        recommendedServers: []
+      });
+    }
+
+    // Apply LLM configuration
+    if (template.config?.llmConfig?.model) {
+      setSelectedBedrockModel(template.config.llmConfig.model);
+      setSelectedBedrockModelName(template.config.llmConfig.model);
+    }
+
+    // Set NLP analysis to match template
+    setNlpAnalysis({
+      type: template.id,
+      frameworks: [],
+      languages: [],
+      capabilities: [],
+      suggestedTemplates: [template.name],
+      confidence: 100,
+      keywords: []
+    });
+
+    console.log('✅ Applied template:', template.name);
+  };
+
+  // Auto-apply template from navigation state (when coming from /agent-templates page)
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.selectedTemplate) {
+      console.log('🎯 Auto-applying template from navigation:', state.selectedTemplate);
+      applyTemplate(state.selectedTemplate);
+      // Clear the state to prevent re-applying on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
   return (
     <div className="container-fluid py-4">
       <Row>
         <Col lg={8}>
           {/* Configuration Guide */}
           <AgentConfigurationGuide compact={true} />
+
+          {/* Template Selector Modal/Section */}
+          {showTemplateSelector && (
+            <Card className="mb-4 border-primary">
+              <Card.Header className="bg-light">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="mb-1">🎯 Quick Start with Templates</h5>
+                    <small className="text-muted">Choose a pre-configured template or start from scratch</small>
+                  </div>
+                  <Button 
+                    variant="outline-secondary" 
+                    size="sm"
+                    onClick={() => setShowTemplateSelector(false)}
+                  >
+                    Skip Templates
+                  </Button>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <AgentTemplateSelector onSelectTemplate={applyTemplate} />
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* Show selected template info */}
+          {selectedTemplate && !showTemplateSelector && (
+            <Alert variant="success" className="mb-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{selectedTemplate.icon} Using Template: {selectedTemplate.name}</strong>
+                  <div className="small text-muted mt-1">
+                    Configuration pre-filled. You can modify any settings below.
+                  </div>
+                </div>
+                <Button 
+                  variant="outline-success" 
+                  size="sm"
+                  onClick={() => setShowTemplateSelector(true)}
+                >
+                  Change Template
+                </Button>
+              </div>
+            </Alert>
+          )}
 
           <Card>
             <Card.Header className="bg-primary text-white">

@@ -177,12 +177,7 @@ interface AgentTemplateSelectorProps {
 const AgentTemplateSelector: React.FC<AgentTemplateSelectorProps> = ({ onSelectTemplate }) => {
   
   const getComplexityColor = (complexity: string) => {
-    switch (complexity) {
-      case 'simple': return 'success';
-      case 'medium': return 'warning';
-      case 'complex': return 'danger';
-      default: return 'secondary';
-    }
+    return 'secondary';
   };
   
   const getExecutionMode = (template: AgentTemplate) => {
@@ -240,14 +235,14 @@ const AgentTemplateSelector: React.FC<AgentTemplateSelectorProps> = ({ onSelectT
                     </Badge>
                   </div>
                   
-                  <div className="d-flex gap-2 mb-2 flex-wrap">
-                    <Badge bg={template.config.vectorDB.enabled ? 'success' : 'secondary'}>
+                  <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
+                    <Badge bg={template.config.vectorDB.enabled ? 'success' : 'light'} text={template.config.vectorDB.enabled ? 'white' : 'dark'}>
                       {template.config.vectorDB.enabled ? '✓' : '✗'} Vector DB
                     </Badge>
-                    <Badge bg={template.config.mcpConfig.enabled ? 'success' : 'secondary'}>
+                    <Badge bg={template.config.mcpConfig.enabled ? 'success' : 'light'} text={template.config.mcpConfig.enabled ? 'white' : 'dark'}>
                       {template.config.mcpConfig.enabled ? '✓' : '✗'} MCP
                     </Badge>
-                    <Badge bg="primary">
+                    <Badge bg="dark">
                       {getExecutionMode(template)}
                     </Badge>
                   </div>
@@ -300,7 +295,7 @@ const AgentTemplateSelector: React.FC<AgentTemplateSelectorProps> = ({ onSelectT
               <Card.Text className="text-muted">
                 Configure your agent from scratch with full control over all options
               </Card.Text>
-              <Badge bg="info" className="mt-2">Advanced</Badge>
+              <Badge bg="dark" className="mt-2">Advanced</Badge>
             </Card.Body>
           </Card>
         </Col>

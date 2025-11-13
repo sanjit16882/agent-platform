@@ -1192,7 +1192,7 @@ const AgentUpload: React.FC = () => {
                               <Button 
                                 variant="outline-primary" 
                                 size="sm"
-                                onClick={() => window.location.href = `/agents/${agent.id}`}
+                                onClick={() => window.location.href = `/agents`}
                               >
                                 View
                               </Button>

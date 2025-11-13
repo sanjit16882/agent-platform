@@ -17,7 +17,8 @@ const PORT = 3002;
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3003', 'http://agenthub.ai:3000', 'http://agenthub.ai', /\.ngrok\.io$/, /\.ngrok-free\.app$/],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-demo-password']
 }));
 app.use(express.json());
 
@@ -33,6 +34,20 @@ const s3AgentStorage = new S3AgentStorage();
 // Learning Analytics Service
 const LearningAnalyticsService = require('./services/learningAnalyticsService');
 const learningAnalytics = new LearningAnalyticsService();
+
+// Analytics Routes
+const analyticsRoutes = require('./routes/analyticsRoutes');
+
+// Vector DB Provider Routes
+const vectorDBProviderRoutes = require('./dist/routes/vectorDBProviderRoutes').default;
+
+// Vector DB Config Service
+const { vectorDBConfigService } = require('./dist/services/vectorDBConfigService');
+
+// Initialize Vector DB Config Service
+vectorDBConfigService.initialize().catch(err => {
+  console.error('❌ Failed to initialize Vector DB Config Service:', err);
+});
 
 // Initialize S3 bucket
 s3AgentStorage.initializeBucket().catch(err => {
@@ -2405,6 +2420,12 @@ app.post('/api/intelligence/learning/track-feedback', async (req, res) => {
 // Testing Framework Routes - MUST be before catch-all
 const testingRoutes = require('./routes/testingRoutes');
 app.use('/api', testingRoutes);
+
+// Analytics Routes
+app.use('/api/v1', analyticsRoutes);
+
+// Vector DB Provider Routes
+app.use('/api/v1/vector-db', vectorDBProviderRoutes);
 
 // Catch-all for missing endpoints - MUST be last
 app.use('*', (req, res) => {

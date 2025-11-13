@@ -63,6 +63,9 @@ import { MCPManagementPage } from './components/mcp/MCPManagementPage';
 import GitHubIntegrationDemo from './components/GitHubIntegrationDemo';
 import AgentTestingMain from './components/testing/AgentTestingMain';
 import KnowledgeBaseManagement from './components/KnowledgeBaseManagement';
+import AgentTemplatesPage from './components/AgentTemplatesPage';
+import VectorDBPage from './pages/VectorDBPage';
+import VectorDBAdminPage from './pages/VectorDBAdminPage';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 import { AuthProvider } from './context/AuthContext';
@@ -135,6 +138,9 @@ function App() {
             <Route path="/github-demo" element={<GitHubIntegrationDemo />} />
             <Route path="/agent-testing/*" element={<AgentTestingMain />} />
             <Route path="/knowledge-bases" element={<KnowledgeBaseManagement />} />
+            <Route path="/agent-templates" element={<AgentTemplatesPage />} />
+            <Route path="/vector-db" element={<VectorDBPage />} />
+            <Route path="/vector-db-admin" element={<VectorDBAdminPage />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </div>

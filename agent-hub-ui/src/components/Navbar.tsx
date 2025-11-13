@@ -237,9 +237,23 @@ const Navbar: React.FC = () => {
                 </NavDropdown.Item>
                 
                 <NavDropdown.Divider />
+                <NavDropdown.Header>🤖 Agent Resources</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/agent-templates">
+                  📋 Agent Templates
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
                 <NavDropdown.Header>🗄️ Data & Knowledge</NavDropdown.Header>
                 <NavDropdown.Item as={Link} to="/knowledge-bases">
                   📖 Knowledge Base Management
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/vector-db">
+                  🎨 Vector DB Providers
+                  <Badge bg="success" className="ms-1">NEW</Badge>
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/vector-db-admin">
+                  🔐 Vector DB Admin
+                  <Badge bg="warning" className="ms-1">ADMIN</Badge>
                 </NavDropdown.Item>
                 
                 <NavDropdown.Divider />

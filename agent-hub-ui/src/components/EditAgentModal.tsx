@@ -117,7 +117,13 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
   };
 
   return (
-    <Modal show={show} onHide={onHide} size="lg">
+    <Modal 
+      show={show} 
+      onHide={onHide} 
+      size="lg" 
+      centered
+      dialogClassName="modal-dialog-centered"
+    >
       <Modal.Header closeButton>
         <Modal.Title>Edit Agent</Modal.Title>
       </Modal.Header>
