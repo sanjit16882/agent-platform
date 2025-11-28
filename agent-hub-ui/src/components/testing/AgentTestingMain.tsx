@@ -8,6 +8,7 @@ import TestResultsViewer from './TestResultsViewer';
 import VersionComparison from './VersionComparison';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import MultimodalTestingPanel from './MultimodalTestingPanel';
+import ApiCliDocumentationPage from './ApiCliDocumentationPage';
 
 /**
  * AgentTestingMain Component
@@ -30,6 +31,7 @@ const AgentTestingMain: React.FC = () => {
         <Route path="/comparison" element={<VersionComparison />} />
         <Route path="/analytics" element={<AnalyticsDashboard />} />
         <Route path="/multimodal" element={<MultimodalTestingPanel agentId="" testId="" />} />
+        <Route path="/api-cli-docs" element={<ApiCliDocumentationPage />} />
       </Routes>
     );
   }
@@ -158,6 +160,31 @@ const AgentTestingMain: React.FC = () => {
               style={{ width: '100%' }}
             >
               Test Multimodal →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* API & CLI Documentation */}
+        <Card>
+          <Card.Header>
+            <Card.Title>💻 API & CLI</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Programmatic access to agent testing via REST API, CLI tool, and SDK.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>REST API endpoints</li>
+              <li>CLI commands & examples</li>
+              <li>SDK/Client library</li>
+              <li>CI/CD integration</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/api-cli-docs')}
+              style={{ width: '100%' }}
+            >
+              View Documentation →
             </Button>
           </Card.Body>
         </Card>

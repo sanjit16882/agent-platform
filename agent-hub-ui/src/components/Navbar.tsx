@@ -232,8 +232,8 @@ const Navbar: React.FC = () => {
                 <NavDropdown.Item as={Link} to="/api-docs">
                   API Documentation
                 </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/api-cli-docs">
-                  💻 API & CLI for Testing
+                <NavDropdown.Item as={Link} to="/agent-testing/api-cli-docs">
+                  💻 Agent Testing API & CLI
                 </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/integration-guide">
                   Integration Guide

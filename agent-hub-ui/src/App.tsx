@@ -66,7 +66,6 @@ import KnowledgeBaseManagement from './components/KnowledgeBaseManagement';
 import AgentTemplatesPage from './components/AgentTemplatesPage';
 import VectorDBPage from './pages/VectorDBPage';
 import VectorDBAdminPage from './pages/VectorDBAdminPage';
-import ApiCliDocumentationPage from './pages/ApiCliDocumentationPage';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 import { AuthProvider } from './context/AuthContext';
@@ -138,7 +137,6 @@ function App() {
             <Route path="/real-mcp-dashboard" element={<RealMCPDashboard />} />
             <Route path="/github-demo" element={<GitHubIntegrationDemo />} />
             <Route path="/agent-testing/*" element={<AgentTestingMain />} />
-            <Route path="/api-cli-docs" element={<ApiCliDocumentationPage />} />
             <Route path="/knowledge-bases" element={<KnowledgeBaseManagement />} />
             <Route path="/agent-templates" element={<AgentTemplatesPage />} />
             <Route path="/vector-db" element={<VectorDBPage />} />
