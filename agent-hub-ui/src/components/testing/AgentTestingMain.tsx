@@ -1,170 +1,301 @@
-/**
- * Agent Testing Main Component
- * 
- * Main container for the Agent Testing Framework with sub-routing
- * Implements Task 10.1: Create AgentTestingMain component
- */
-
-import React, { useState, useEffect } from 'react';
-import { Container, Nav, Tab, Badge, Alert } from 'react-bootstrap';
-import { useNavigate, useLocation } from 'react-router-dom';
-import TestingOverview from './TestingOverview';
-import TestSuitesList from './TestSuitesList';
-import TestRunList from './TestRunList';
-import MetricsDashboard from './MetricsDashboard';
-import InsightsPanel from './InsightsPanel';
+import React, { useState } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import Card from '../common/Card';
+import Button from '../common/Button';
 import { theme } from '../../styles/theme';
+import DDTFWorkflow from './DDTFWorkflow';
+import TestResultsViewer from './TestResultsViewer';
+import VersionComparison from './VersionComparison';
+import AnalyticsDashboard from './AnalyticsDashboard';
+import MultimodalTestingPanel from './MultimodalTestingPanel';
 
+/**
+ * AgentTestingMain Component
+ * 
+ * Main entry point for the AI Agent Testing Framework.
+ * Provides navigation between different testing features.
+ */
 const AgentTestingMain: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [featureEnabled, setFeatureEnabled] = useState(true);
 
-  useEffect(() => {
-    // Check feature flag (Task 10.4)
-    checkFeatureFlag();
+  // Check if we're on a sub-route
+  const isSubRoute = location.pathname !== '/agent-testing' && location.pathname !== '/agent-testing/';
 
-    // Set active tab based on URL
-    const path = location.pathname;
-    if (path.includes('/suites')) setActiveTab('suites');
-    else if (path.includes('/results')) setActiveTab('results');
-    else if (path.includes('/metrics')) setActiveTab('metrics');
-    else if (path.includes('/insights')) setActiveTab('insights');
-    else setActiveTab('overview');
-  }, [location]);
-
-  useEffect(() => {
-    console.log('🎯 Active tab changed to:', activeTab);
-  }, [activeTab]);
-
-  const checkFeatureFlag = async () => {
-    try {
-      // Check if testing feature is enabled
-      const enabled = localStorage.getItem('testing_feature_enabled') !== 'false';
-      setFeatureEnabled(enabled);
-    } catch (error) {
-      console.error('Failed to check feature flag:', error);
-      setFeatureEnabled(true); // Default to enabled
-    }
-  };
-
-  const handleTabSelect = (key: string | null) => {
-    if (key) {
-      console.log('🔄 Tab selected:', key);
-      setActiveTab(key);
-      // Update URL without full navigation
-      const basePath = '/agent-testing';
-      const newPath = key === 'overview' ? basePath : `${basePath}/${key}`;
-      window.history.pushState({}, '', newPath);
-      console.log('✅ Active tab set to:', key);
-    }
-  };
-
-  if (!featureEnabled) {
+  if (isSubRoute) {
     return (
-      <Container className="mt-5">
-        <Alert variant="info">
-          <Alert.Heading>Feature Not Available</Alert.Heading>
-          <p>
-            The Agent Testing Framework is currently not enabled for your account.
-            Please contact your administrator to enable this enterprise feature.
-          </p>
-        </Alert>
-      </Container>
+      <Routes>
+        <Route path="/workflow" element={<DDTFWorkflow />} />
+        <Route path="/results/:runId" element={<TestResultsViewer />} />
+        <Route path="/comparison" element={<VersionComparison />} />
+        <Route path="/analytics" element={<AnalyticsDashboard />} />
+        <Route path="/multimodal" element={<MultimodalTestingPanel agentId="" testId="" />} />
+      </Routes>
     );
   }
 
   return (
-    <div style={{ 
-      backgroundColor: theme.colors.backgroundSecondary,
-      minHeight: '100vh',
-      paddingTop: theme.spacing.xl
-    }}>
-      <Container fluid>
-        {/* Header */}
-        <div style={{ 
-          marginBottom: theme.spacing['2xl'],
-          paddingBottom: theme.spacing.lg,
-          borderBottom: `2px solid ${theme.colors.border}`
+    <div style={{ padding: theme.spacing.xl }}>
+      {/* Header */}
+      <div style={{ marginBottom: theme.spacing['3xl'] }}>
+        <h1 style={{
+          fontSize: theme.typography.fontSize['3xl'],
+          fontWeight: theme.typography.fontWeight.bold,
+          color: theme.colors.primary,
+          marginBottom: theme.spacing.sm
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          AI Agent Testing Framework
+        </h1>
+        <p style={{
+          fontSize: theme.typography.fontSize.lg,
+          color: theme.colors.textSecondary
+        }}>
+          Comprehensive testing, insights, and analytics for your AI agents
+        </p>
+      </div>
+
+      {/* Feature Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: theme.spacing.xl,
+        marginBottom: theme.spacing['3xl']
+      }}>
+        {/* DDTF Workflow */}
+        <Card>
+          <Card.Header>
+            <Card.Title>🧪 Run Tests</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Execute comprehensive tests against your agents with our 8-step workflow wizard.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Select agent and AI models</li>
+              <li>Choose tests to run</li>
+              <li>Configure test inputs</li>
+              <li>Compare model performance</li>
+              <li>Get AI-powered insights</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/workflow')}
+              style={{ width: '100%' }}
+            >
+              Start Testing →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* Version Comparison */}
+        <Card>
+          <Card.Header>
+            <Card.Title>📊 Compare Versions</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Compare test results across different runs to track improvements and regressions.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Side-by-side comparison</li>
+              <li>Diff highlighting</li>
+              <li>Score deltas</li>
+              <li>Export reports</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/comparison')}
+              style={{ width: '100%' }}
+            >
+              Compare Results →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* Analytics Dashboard */}
+        <Card>
+          <Card.Header>
+            <Card.Title>📈 Analytics</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Visualize testing trends, performance metrics, and insights over time.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Pass rate trends</li>
+              <li>Category performance</li>
+              <li>Cost analysis</li>
+              <li>Historical data</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/analytics')}
+              style={{ width: '100%' }}
+            >
+              View Analytics →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* Multimodal Testing */}
+        <Card>
+          <Card.Header>
+            <Card.Title>🎭 Multimodal Testing</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Test your agents with images, audio, video, and text inputs.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Image analysis testing</li>
+              <li>Audio transcription</li>
+              <li>Video processing</li>
+              <li>Multi-input validation</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/multimodal')}
+              style={{ width: '100%' }}
+            >
+              Test Multimodal →
+            </Button>
+          </Card.Body>
+        </Card>
+      </div>
+
+      {/* Quick Stats */}
+      <Card>
+        <Card.Header>
+          <Card.Title>Quick Start Guide</Card.Title>
+        </Card.Header>
+        <Card.Body>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: theme.spacing.xl
+          }}>
             <div>
-              <h1 style={{ 
-                fontSize: theme.typography.fontSize['3xl'],
-                fontWeight: theme.typography.fontWeight.bold,
-                color: theme.colors.primary,
-                marginBottom: theme.spacing.sm,
-                display: 'flex',
-                alignItems: 'center',
-                gap: theme.spacing.md
-              }}>
-                🧪 Agent Testing
-                <Badge bg="warning" text="dark" style={{ fontSize: theme.typography.fontSize.sm }}>
-                  ENTERPRISE
-                </Badge>
-              </h1>
-              <p style={{ 
+              <h3 style={{
                 fontSize: theme.typography.fontSize.lg,
-                color: theme.colors.textSecondary,
-                margin: 0
+                fontWeight: theme.typography.fontWeight.semibold,
+                marginBottom: theme.spacing.md
               }}>
-                Comprehensive testing framework for AI agents with automated evaluation and continuous improvement
+                1. Run Your First Test
+              </h3>
+              <p style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing.sm }}>
+                Click "Start Testing" to launch the workflow wizard. Select an agent, choose tests, and execute.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{
+                fontSize: theme.typography.fontSize.lg,
+                fontWeight: theme.typography.fontWeight.semibold,
+                marginBottom: theme.spacing.md
+              }}>
+                2. Review Results
+              </h3>
+              <p style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing.sm }}>
+                View detailed test results with pass/fail status, scores, and AI-generated insights.
+              </p>
+            </div>
+
+            <div>
+              <h3 style={{
+                fontSize: theme.typography.fontSize.lg,
+                fontWeight: theme.typography.fontWeight.semibold,
+                marginBottom: theme.spacing.md
+              }}>
+                3. Track Progress
+              </h3>
+              <p style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing.sm }}>
+                Use analytics and comparison tools to track improvements over time.
               </p>
             </div>
           </div>
+        </Card.Body>
+      </Card>
+
+      {/* Features Overview */}
+      <div style={{ marginTop: theme.spacing['3xl'] }}>
+        <h2 style={{
+          fontSize: theme.typography.fontSize['2xl'],
+          fontWeight: theme.typography.fontWeight.bold,
+          marginBottom: theme.spacing.xl
+        }}>
+          Features
+        </h2>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: theme.spacing.lg
+        }}>
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>✅</div>
+            <strong>5 Evaluation Methods</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Hallucination, Functional, Tool Usage, Emotional, Safety
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>🤖</div>
+            <strong>AI-Powered Insights</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Get intelligent recommendations from Claude 3.5
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>📊</div>
+            <strong>Rich Visualizations</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Charts, trends, and performance metrics
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>📤</div>
+            <strong>Export Data</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Export results to JSON and CSV formats
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>🔄</div>
+            <strong>Version Tracking</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Compare results across test runs
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>⚡</div>
+            <strong>Real-time Updates</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Live progress tracking during execution
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>🔬</div>
+            <strong>Multi-Model Testing</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Compare performance across AI models
+            </p>
+          </div>
+
+          <div>
+            <div style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm }}>🎭</div>
+            <strong>Multimodal Testing</strong>
+            <p style={{ fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary }}>
+              Test with images, audio, and video
+            </p>
+          </div>
         </div>
-
-        {/* Navigation Tabs */}
-        <Tab.Container activeKey={activeTab} onSelect={handleTabSelect}>
-          <Nav variant="tabs" className="mb-4" style={{ borderBottom: `2px solid ${theme.colors.border}` }}>
-            <Nav.Item>
-              <Nav.Link eventKey="overview" style={{ fontWeight: 500 }}>
-                📊 Overview
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="suites" style={{ fontWeight: 500 }}>
-                📋 Test Suites
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="results" style={{ fontWeight: 500 }}>
-                📝 Test Results
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="metrics" style={{ fontWeight: 500 }}>
-                📈 Metrics
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link eventKey="insights" style={{ fontWeight: 500 }}>
-                💡 Insights
-              </Nav.Link>
-            </Nav.Item>
-          </Nav>
-
-          {/* Tab Content */}
-          <Tab.Content>
-            <Tab.Pane eventKey="overview">
-              {activeTab === 'overview' && <TestingOverview />}
-            </Tab.Pane>
-            <Tab.Pane eventKey="suites">
-              {activeTab === 'suites' && <TestSuitesList />}
-            </Tab.Pane>
-            <Tab.Pane eventKey="results">
-              {activeTab === 'results' && <TestRunList />}
-            </Tab.Pane>
-            <Tab.Pane eventKey="metrics">
-              {activeTab === 'metrics' && <MetricsDashboard />}
-            </Tab.Pane>
-            <Tab.Pane eventKey="insights">
-              {activeTab === 'insights' && <InsightsPanel />}
-            </Tab.Pane>
-          </Tab.Content>
-        </Tab.Container>
-      </Container>
+      </div>
     </div>
   );
 };

@@ -48,6 +48,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   const [selectedAgent, setSelectedAgent] = useState(initialAgentId || 'all');
   const [selectedDays, setSelectedDays] = useState('30');
   const [availableAgents, setAvailableAgents] = useState<Array<{ id: string; name: string }>>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAvailableAgents();
@@ -575,11 +576,13 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div style={{ 
                   display: 'flex', 
                   alignItems: 'flex-end', 
-                  justifyContent: 'space-around',
+                  justifyContent: 'flex-start',
                   height: '180px',
-                  gap: theme.spacing.md,
+                  gap: theme.spacing.lg,
                   borderBottom: `2px solid ${theme.colors.border}`,
                   paddingBottom: theme.spacing.md,
+                  paddingLeft: theme.spacing.lg,
+                  paddingRight: theme.spacing.lg,
                   position: 'relative'
                 }}>
                   {/* Y-axis reference lines */}
@@ -614,8 +617,8 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                       <div
                         key={index}
                         style={{
-                          flex: 1,
-                          maxWidth: '80px',
+                          width: '80px',
+                          minWidth: '60px',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -783,78 +786,222 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </Card>
       )}
 
-      {/* Recent Test Runs */}
+      {/* Recent Test Runs - Grouped by Agent */}
       <Card>
         <Card.Header>
-          <Card.Title>Recent Test Runs (Individual)</Card.Title>
+          <Card.Title>Recent Test Runs (Grouped by Agent)</Card.Title>
           <Card.Text>
-            Each row shows the pass rate for a single test run. These may differ from the daily averages shown in the trend chart above.
+            Test runs organized by agent. Click on an agent to expand and see individual runs.
           </Card.Text>
         </Card.Header>
         <Card.Body>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: theme.typography.fontSize.sm
-            }}>
-              <thead>
-                <tr style={{ borderBottom: `2px solid ${theme.colors.border}` }}>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'left' }}>Date</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'left' }}>Agent</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'center' }}>Results</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'center' }}>Pass Rate</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'center' }}>Score</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'right' }}>Cost</th>
-                  <th style={{ padding: theme.spacing.md, textAlign: 'center' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {analytics.recentRuns.map(run => (
-                  <tr 
-                    key={run.id} 
-                    style={{ 
-                      borderBottom: `1px solid ${theme.colors.border}`,
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <td style={{ padding: theme.spacing.md }}>
-                      {formatDate(run.startTime)}
-                    </td>
-                    <td style={{ padding: theme.spacing.md }}>
-                      {run.agentName || run.agentId}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      {run.passedTests}/{run.totalTests}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      <Badge variant={run.passRate >= 75 ? 'success' : run.passRate >= 60 ? 'warning' : 'danger'}>
-                        {run.passRate.toFixed(0)}%
-                      </Badge>
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      {run.averageScore?.toFixed(1) || 'N/A'}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'right' }}>
-                      ${(run.cost || 0).toFixed(2)}
-                    </td>
-                    <td style={{ padding: theme.spacing.md, textAlign: 'center' }}>
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => window.location.href = `/agent-testing/results/${run.id}`}
+          {(() => {
+            // Group runs by agent
+            const groupedRuns = analytics.recentRuns.reduce((acc, run) => {
+              const agentKey = run.agentName || run.agentId;
+              if (!acc[agentKey]) {
+                acc[agentKey] = {
+                  agentName: agentKey,
+                  agentId: run.agentId,
+                  runs: [],
+                  totalRuns: 0,
+                  avgPassRate: 0,
+                  avgScore: 0,
+                  totalCost: 0
+                };
+              }
+              acc[agentKey].runs.push(run);
+              acc[agentKey].totalRuns++;
+              acc[agentKey].avgPassRate += run.passRate;
+              acc[agentKey].avgScore += run.averageScore || 0;
+              acc[agentKey].totalCost += run.cost || 0;
+              return acc;
+            }, {} as Record<string, any>);
+
+            // Calculate averages
+            Object.values(groupedRuns).forEach((group: any) => {
+              group.avgPassRate = group.avgPassRate / group.totalRuns;
+              group.avgScore = group.avgScore / group.totalRuns;
+            });
+
+            const toggleGroup = (agentName: string) => {
+              const newExpanded = new Set(expandedGroups);
+              if (newExpanded.has(agentName)) {
+                newExpanded.delete(agentName);
+              } else {
+                newExpanded.add(agentName);
+              }
+              setExpandedGroups(newExpanded);
+            };
+
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
+                {Object.values(groupedRuns).map((group: any) => {
+                  const isExpanded = expandedGroups.has(group.agentName);
+                  
+                  return (
+                    <div
+                      key={group.agentName}
+                      style={{
+                        border: `1px solid ${theme.colors.border}`,
+                        borderRadius: theme.borderRadius.md,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {/* Group Header */}
+                      <div
+                        onClick={() => toggleGroup(group.agentName)}
+                        style={{
+                          padding: theme.spacing.lg,
+                          backgroundColor: theme.colors.backgroundSecondary,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.colors.gray200}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary}
                       >
-                        View Details
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                          <span style={{ fontSize: theme.typography.fontSize.lg }}>
+                            {isExpanded ? '▼' : '▶'}
+                          </span>
+                          <div>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.base,
+                              fontWeight: theme.typography.fontWeight.semibold,
+                              color: theme.colors.textPrimary
+                            }}>
+                              {group.agentName}
+                            </div>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.xs,
+                              color: theme.colors.textMuted
+                            }}>
+                              {group.totalRuns} test run{group.totalRuns !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: theme.spacing.xl, alignItems: 'center' }}>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.xs,
+                              color: theme.colors.textMuted,
+                              marginBottom: '2px'
+                            }}>
+                              Avg Pass Rate
+                            </div>
+                            <Badge variant={group.avgPassRate >= 75 ? 'success' : group.avgPassRate >= 60 ? 'warning' : 'danger'}>
+                              {group.avgPassRate.toFixed(0)}%
+                            </Badge>
+                          </div>
+                          
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.xs,
+                              color: theme.colors.textMuted,
+                              marginBottom: '2px'
+                            }}>
+                              Avg Score
+                            </div>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.sm,
+                              fontWeight: theme.typography.fontWeight.semibold
+                            }}>
+                              {group.avgScore.toFixed(1)}
+                            </div>
+                          </div>
+                          
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.xs,
+                              color: theme.colors.textMuted,
+                              marginBottom: '2px'
+                            }}>
+                              Total Cost
+                            </div>
+                            <div style={{
+                              fontSize: theme.typography.fontSize.sm,
+                              fontWeight: theme.typography.fontWeight.semibold
+                            }}>
+                              ${group.totalCost.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded Runs Table */}
+                      {isExpanded && (
+                        <div style={{ overflowX: 'auto' }}>
+                          <table style={{
+                            width: '100%',
+                            borderCollapse: 'collapse',
+                            fontSize: theme.typography.fontSize.sm
+                          }}>
+                            <thead>
+                              <tr style={{
+                                backgroundColor: theme.colors.gray100,
+                                borderBottom: `1px solid ${theme.colors.border}`
+                              }}>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'left', paddingLeft: theme.spacing.xl }}>Date</th>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'center' }}>Results</th>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'center' }}>Pass Rate</th>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'center' }}>Score</th>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'right' }}>Cost</th>
+                                <th style={{ padding: theme.spacing.sm, textAlign: 'center' }}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {group.runs.map((run: TestRun) => (
+                                <tr
+                                  key={run.id}
+                                  style={{
+                                    borderBottom: `1px solid ${theme.colors.border}`,
+                                    transition: 'background-color 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = theme.colors.backgroundSecondary}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                  <td style={{ padding: theme.spacing.sm, paddingLeft: theme.spacing.xl }}>
+                                    {formatDate(run.startTime)}
+                                  </td>
+                                  <td style={{ padding: theme.spacing.sm, textAlign: 'center' }}>
+                                    {run.passedTests}/{run.totalTests}
+                                  </td>
+                                  <td style={{ padding: theme.spacing.sm, textAlign: 'center' }}>
+                                    <Badge variant={run.passRate >= 75 ? 'success' : run.passRate >= 60 ? 'warning' : 'danger'}>
+                                      {run.passRate.toFixed(0)}%
+                                    </Badge>
+                                  </td>
+                                  <td style={{ padding: theme.spacing.sm, textAlign: 'center' }}>
+                                    {run.averageScore?.toFixed(1) || 'N/A'}
+                                  </td>
+                                  <td style={{ padding: theme.spacing.sm, textAlign: 'right' }}>
+                                    ${(run.cost || 0).toFixed(2)}
+                                  </td>
+                                  <td style={{ padding: theme.spacing.sm, textAlign: 'center' }}>
+                                    <Button
+                                      variant="outline-primary"
+                                      size="sm"
+                                      onClick={() => window.location.href = `/agent-testing/results/${run.id}`}
+                                    >
+                                      View Details
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </Card.Body>
       </Card>
     </div>
