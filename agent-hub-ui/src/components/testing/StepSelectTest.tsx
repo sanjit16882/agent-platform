@@ -61,6 +61,14 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
   const [samplePrompts, setSamplePrompts] = useState<string[]>([]);
   const [expandedTest, setExpandedTest] = useState<string | null>(null);
 
+  // Helper function to render scoring rules (handles objects)
+  const renderScoringRules = (scoringRules: any): string => {
+    if (!scoringRules) return 'Standard scoring applied';
+    if (typeof scoringRules === 'string') return scoringRules;
+    if (typeof scoringRules === 'object') return JSON.stringify(scoringRules, null, 2);
+    return String(scoringRules);
+  };
+
   useEffect(() => {
     loadTests();
   }, []);
@@ -779,9 +787,11 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                                 padding: theme.spacing.sm,
                                 backgroundColor: theme.colors.white,
                                 borderRadius: theme.borderRadius.sm,
-                                border: `1px solid ${theme.colors.border}`
+                                border: `1px solid ${theme.colors.border}`,
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap'
                               }}>
-                                {test.scoring_rules || 'Standard scoring applied'}
+                                {renderScoringRules(test.scoring_rules)}
                               </div>
                             </div>
                             
@@ -982,9 +992,11 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                                 padding: theme.spacing.sm,
                                 backgroundColor: theme.colors.white,
                                 borderRadius: theme.borderRadius.sm,
-                                border: `1px solid ${theme.colors.border}`
+                                border: `1px solid ${theme.colors.border}`,
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap'
                               }}>
-                                {test.scoring_rules || 'Standard scoring applied'}
+                                {renderScoringRules(test.scoring_rules)}
                               </div>
                             </div>
                             
