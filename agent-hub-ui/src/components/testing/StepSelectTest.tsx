@@ -708,7 +708,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                           <div style={{
                             display: 'inline-block',
                             padding: `2px ${theme.spacing.xs}`,
-                            backgroundColor: test.badgeColor || theme.colors.danger,
+                            backgroundColor: test.badgeColor || '#667eea',
                             color: theme.colors.white,
                             borderRadius: theme.borderRadius.sm,
                             fontSize: '10px',
@@ -953,8 +953,8 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                         <div style={{
                           display: 'inline-block',
                           padding: `2px ${theme.spacing.xs}`,
-                          backgroundColor: theme.colors.infoLight,
-                          color: theme.colors.info,
+                          backgroundColor: '#f5576c',
+                          color: theme.colors.white,
                           borderRadius: theme.borderRadius.sm,
                           fontSize: '10px',
                           fontWeight: theme.typography.fontWeight.bold,
