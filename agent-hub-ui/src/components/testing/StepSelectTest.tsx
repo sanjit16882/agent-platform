@@ -154,6 +154,12 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
         return 'security-scan';
       }
       
+      // E2E/QA Testing agents (more specific match first)
+      if (name.includes('e2e') || name.includes('end to end') || name.includes('qa') || name.includes('quality assurance')) {
+        console.log('✅ Matched qa-tester');
+        return 'qa-tester';
+      }
+      
       // API/Testing agents
       if (name.includes('api') || name.includes('test')) {
         console.log('✅ Matched api-tester');
@@ -225,6 +231,13 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
         'adversarial': 5,
         'rag_grounding': 4,
         'monitoring': 3
+      },
+      'qa-tester': {
+        'adversarial': 8,        // Test edge cases and failures
+        'multi_turn': 7,         // Test conversation flows
+        'monitoring': 5,         // May monitor test results
+        'tool_usage': 4,         // Lower priority unless agent uses tools
+        'rag_grounding': 3       // Lower priority unless agent uses RAG
       },
       'data-validator': {
         'rag_grounding': 10,
