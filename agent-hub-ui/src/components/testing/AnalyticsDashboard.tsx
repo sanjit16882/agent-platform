@@ -189,10 +189,28 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         }))
         .sort((a, b) => b.passRate - a.passRate);
 
-      // Get recent runs
-      const recentRuns = runs
-        .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
-        .slice(0, 10);
+      // Get recent runs - group by agent first to ensure all agents are represented
+      const runsByAgent = new Map<string, any[]>();
+      runs.forEach((run: any) => {
+        const agentKey = run.agentName || run.agentId;
+        if (!runsByAgent.has(agentKey)) {
+          runsByAgent.set(agentKey, []);
+        }
+        runsByAgent.get(agentKey)!.push(run);
+      });
+
+      // Get most recent run from each agent, then sort by time
+      const recentRuns: any[] = [];
+      runsByAgent.forEach((agentRuns) => {
+        // Sort agent's runs by time and take the most recent 3
+        const sortedRuns = agentRuns
+          .sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
+          .slice(0, 3); // Take up to 3 most recent runs per agent
+        recentRuns.push(...sortedRuns);
+      });
+
+      // Sort all recent runs by time
+      recentRuns.sort((a: any, b: any) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
 
       setAnalytics({
         totalTests,
