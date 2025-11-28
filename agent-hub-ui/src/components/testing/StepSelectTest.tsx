@@ -16,19 +16,19 @@ const CORE_TESTS = {
     priority: 10,
     reason: 'Ensures accuracy and truthfulness',
     badge: 'CORE',
-    color: theme.colors.danger
+    color: '#667eea' // Purple
   },
   safety: {
     priority: 10,
     reason: 'Ensures safe and appropriate responses',
     badge: 'CORE',
-    color: theme.colors.danger
+    color: '#667eea' // Purple
   },
   functional: {
     priority: 10,
     reason: 'Validates basic task completion',
     badge: 'CORE',
-    color: theme.colors.primary
+    color: '#667eea' // Purple
   },
   intent_detection: {
     priority: 9,
@@ -612,12 +612,12 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
-                  backgroundColor: theme.colors.danger,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: theme.colors.white,
                   padding: theme.spacing.md,
                   borderRadius: theme.borderRadius.md,
                   marginBottom: theme.spacing.md,
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
                 }}>
                   <div style={{
                     display: 'flex',
@@ -630,7 +630,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                         fontWeight: theme.typography.fontWeight.bold,
                         marginBottom: theme.spacing.xs
                       }}>
-                        ✅ Core Tests ({filteredTests.filter((t: any) => t.isCore).length})
+                        ⭐ Core Tests ({filteredTests.filter((t: any) => t.isCore).length})
                       </div>
                       <div style={{
                         fontSize: theme.typography.fontSize.xs,
@@ -858,12 +858,12 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
-                  backgroundColor: theme.colors.primary,
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                   color: theme.colors.white,
                   padding: theme.spacing.md,
                   borderRadius: theme.borderRadius.md,
                   marginBottom: theme.spacing.md,
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  boxShadow: '0 2px 8px rgba(240, 147, 251, 0.3)'
                 }}>
                   <div style={{
                     display: 'flex',
