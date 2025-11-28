@@ -975,9 +975,10 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                           borderRadius: theme.borderRadius.sm,
                           fontSize: '10px',
                           fontWeight: theme.typography.fontWeight.bold,
-                          marginBottom: theme.spacing.xs
+                          marginBottom: theme.spacing.xs,
+                          textTransform: 'uppercase'
                         }}>
-                          {test.category}
+                          {test.category.replace(/_/g, ' ')}
                         </div>
 
                         {/* Description */}
