@@ -263,8 +263,20 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     
     // STEP 1: Get Core Tests (Always included)
     const coreTestCategories = Object.keys(CORE_TESTS);
+    
+    // Exclude code-specific tests from core (they should be agent-specific)
+    const isCodeSpecificTest = (test: any): boolean => {
+      const name = test.name?.toLowerCase() || '';
+      return name.includes('code generation') || 
+             name.includes('python') || 
+             name.includes('javascript') ||
+             name.includes('java ') ||
+             name.includes('c++') ||
+             name.includes('programming');
+    };
+    
     const coreTests = tests
-      .filter(test => coreTestCategories.includes(test.category))
+      .filter(test => coreTestCategories.includes(test.category) && !isCodeSpecificTest(test))
       .map(test => ({
         ...test,
         relevanceScore: CORE_TESTS[test.category as keyof typeof CORE_TESTS].priority,
@@ -277,9 +289,15 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     
     console.log(`✅ Found ${coreTests.length} core tests`);
     
-    // STEP 2: Get Agent-Specific Tests (exclude core categories)
+    // STEP 2: Get Agent-Specific Tests (exclude core categories, but include code-specific tests)
     const agentSpecificTests = tests
-      .filter(test => !coreTestCategories.includes(test.category)) // Exclude core
+      .filter(test => {
+        // Include if not in core categories
+        if (!coreTestCategories.includes(test.category)) return true;
+        // OR if it's a code-specific test (even if category is "functional")
+        if (isCodeSpecificTest(test)) return true;
+        return false;
+      })
       .map(test => ({
         ...test,
         relevanceScore: priorityMap[test.category] || 0,
