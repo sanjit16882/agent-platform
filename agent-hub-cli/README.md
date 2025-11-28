@@ -1,249 +1,177 @@
-# AgentHub CLI
+# Agent Hub Testing CLI
 
-Developer tools for agent-powered development. Create, test, and analyze code using AI agents directly from your terminal.
+Command-line interface for Agent Hub testing. Run tests, manage test suites, and view analytics from your terminal.
 
 ## Installation
 
+### Global Installation
 ```bash
-npm install -g @agenthub/cli
+npm install -g @agent-hub/testing-cli
 ```
 
-## Quick Start
-
-1. **Initialize in your project:**
-   ```bash
-   agent init
-   ```
-
-2. **Configure API connection:**
-   ```bash
-   agent config setup
-   ```
-
-3. **Generate tests:**
-   ```bash
-   agent test
-   # or for specific file
-   agent test src/utils.ts
-   ```
-
-4. **Run security scan:**
-   ```bash
-   agent scan
-   ```
-
-## Commands
-
-### Configuration
-
+### Local Development
 ```bash
-# Interactive setup
-agent config setup
-
-# Set specific values
-agent config set --api-url https://agenthub.company.com
-agent config set --api-key your-api-key
-
-# View current config
-agent config get
-
-# Test connection
-agent config test
-```
-
-### Agent Management
-
-```bash
-# List available agents
-agent agents list
-
-# Get agent details
-agent agents info code-quality
-
-# Run agent interactively
-agent agents run test-generator --file src/app.ts
-```
-
-### Code Generation
-
-```bash
-# Generate tests
-agent generate tests --file src/utils.ts
-agent generate tests --directory src/components
-agent generate tests --framework jest --coverage
-
-# Generate documentation
-agent generate docs --file src/api.ts --format markdown
-```
-
-### Code Analysis
-
-```bash
-# Analyze failures
-agent analyze failure --log test-results.log
-agent analyze failure --error "TypeError: Cannot read property"
-
-# Security analysis
-agent analyze security --severity high
-agent analyze security --file src/auth.ts --format sarif
-
-# Performance analysis
-agent analyze performance --file src/heavy-computation.ts
-agent analyze performance --profile performance.json
-```
-
-## Project Integration
-
-### Initialize Project
-
-```bash
-agent init
-```
-
-This creates `.agenthub/config.json` with project-specific settings:
-
-```json
-{
-  "version": "1.0.0",
-  "project": {
-    "name": "my-app",
-    "language": "typescript",
-    "framework": "react",
-    "testFramework": "jest"
-  },
-  "agents": {
-    "preferred": {
-      "code-quality": "code-quality-agent",
-      "test-generator": "test-generator-agent"
-    }
-  },
-  "hooks": {
-    "pre-commit": ["security-scan"],
-    "pre-push": ["test-coverage"]
-  }
-}
-```
-
-### Git Hooks Integration
-
-Add to your `package.json`:
-
-```json
-{
-  "husky": {
-    "hooks": {
-      "pre-commit": "agent scan --severity medium",
-      "pre-push": "agent test --coverage"
-    }
-  }
-}
-```
-
-## Examples
-
-### Generate Tests for Entire Project
-
-```bash
-agent generate tests --coverage --edge-cases
-```
-
-### Analyze Build Failure
-
-```bash
-# From log file
-agent analyze failure --log build.log --context src/
-
-# Direct error message
-agent analyze failure --error "Module not found: Can't resolve './utils'"
-```
-
-### Security Scan with Custom Output
-
-```bash
-agent analyze security --severity high --format sarif --output security-report.sarif
-```
-
-### Interactive Agent Execution
-
-```bash
-agent agents run code-quality
-# Opens editor for input, then shows results
-```
-
-## Configuration
-
-### Global Config Location
-
-- **Linux/Mac:** `~/.agenthub/config.json`
-- **Windows:** `%USERPROFILE%\.agenthub\config.json`
-
-### Environment Variables
-
-```bash
-export AGENTHUB_API_URL=https://agenthub.company.com
-export AGENTHUB_API_KEY=your-api-key
-```
-
-### Project Config
-
-Each project can have `.agenthub/config.json` for project-specific settings.
-
-## API Integration
-
-The CLI connects to your AgentHub platform via REST API:
-
-```
-POST /api/agents/{agentId}/execute
-{
-  "input": {
-    "source_code": "...",
-    "context": {...}
-  }
-}
-```
-
-## Troubleshooting
-
-### Connection Issues
-
-```bash
-# Test connection
-agent config test
-
-# Check configuration
-agent config get
-```
-
-### Common Issues
-
-1. **"No agents found"** - Check API URL and ensure agents are deployed
-2. **"Connection failed"** - Verify API URL and network connectivity
-3. **"Authentication failed"** - Check API key configuration
-
-### Debug Mode
-
-```bash
-agent --verbose generate tests
-```
-
-## Development
-
-### Build from Source
-
-```bash
-git clone https://github.com/agenthub/cli
-cd cli
+cd agent-hub-cli
 npm install
 npm run build
 npm link
 ```
 
-### Run in Development
+## Configuration
+
+Create `~/.agent-hub/config.json`:
+```json
+{
+  "apiUrl": "http://localhost:3002",
+  "apiKey": "your-api-key-here",
+  "defaultAgent": "agent_123"
+}
+```
+
+Or use environment variables:
+```bash
+export AGENT_HUB_API_URL=http://localhost:3002
+export AGENT_HUB_API_KEY=your-api-key-here
+```
+
+## Quick Start
 
 ```bash
-npm run dev -- generate tests --file example.ts
+# List available tests
+agent-test list
+
+# Run tests
+agent-test run \
+  --agent agent_123 \
+  --models claude-3-5-sonnet \
+  --tests test_001,test_002 \
+  --watch
+
+# View results
+agent-test results <run_id>
+
+# View analytics
+agent-test analytics --days 7
+```
+
+## Commands
+
+### Test Management
+
+```bash
+# List tests
+agent-test list [--category <category>] [--tags <tags>]
+
+# Create test
+agent-test create --name "Test Name" --category functional --file test.json
+
+# Show test details
+agent-test show <testId>
+
+# Delete test
+agent-test delete <testId> [--yes]
+```
+
+### Test Execution
+
+```bash
+# Run tests
+agent-test run \
+  --agent <agentId> \
+  --models <model1,model2> \
+  --tests <test1,test2> \
+  [--watch] \
+  [--vector-db] \
+  [--knowledge-bases <kb1,kb2>] \
+  [--mcp] \
+  [--mcp-servers <server1,server2>]
+
+# Run from test suite file
+agent-test run --suite test-suite.yaml
+
+# Watch execution
+agent-test watch <runId>
+```
+
+### Results & Analytics
+
+```bash
+# Show results
+agent-test results <runId> [--detailed] [--export json] [--output file.json]
+
+# List runs
+agent-test runs [--agent <agentId>] [--status <status>]
+
+# Show analytics
+agent-test analytics [--agent <agentId>] [--days <days>]
+```
+
+### CI/CD Mode
+
+```bash
+# Run in CI mode (exits with status code)
+agent-test run \
+  --agent agent_123 \
+  --models claude-3-5-sonnet \
+  --tests test_001 \
+  --ci-mode \
+  --fail-threshold 80 \
+  --report junit \
+  --output test-results.xml
+```
+
+## Test Suite File Format
+
+Create a `test-suite.yaml` file:
+
+```yaml
+name: "My Test Suite"
+agent: agent_123
+models:
+  - claude-3-5-sonnet
+  - gpt-4
+tests:
+  - id: test_001
+    input:
+      content: "Test input 1"
+      format: plain_text
+  - id: test_002
+    input:
+      content: '{"data": "test"}'
+      format: json
+knowledgeConfig:
+  vectorDB:
+    enabled: true
+    knowledgeBases:
+      - kb_001
+    retrievalConfig:
+      topK: 5
+      minSimilarity: 0.7
+  mcp:
+    enabled: false
+    selectedServers: []
+```
+
+## Examples
+
+See [API_CLI_TESTING_GUIDE.md](../docs/API_CLI_TESTING_GUIDE.md) for detailed examples.
+
+## Development
+
+```bash
+# Build
+npm run build
+
+# Development mode
+npm run dev
+
+# Run tests
+npm test
+
+# Lint
+npm run lint
 ```
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT
