@@ -593,7 +593,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
           </div>
         )}
 
-        {/* Test List */}
+        {/* Test List - Redesigned with Sticky Headers */}
         {filteredTests.length === 0 ? (
           <div style={{
             textAlign: 'center',
@@ -603,135 +603,154 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
             No tests found
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xl }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
             {/* Core Tests Section */}
             {recommendedTests.length > 0 && filteredTests.some((t: any) => t.isCore) && (
               <div>
+                {/* Sticky Section Header */}
                 <div style={{
-                  fontSize: theme.typography.fontSize.lg,
-                  fontWeight: theme.typography.fontWeight.bold,
-                  color: theme.colors.textPrimary,
-                  marginBottom: theme.spacing.sm,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: theme.spacing.sm
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: theme.colors.danger,
+                  color: theme.colors.white,
+                  padding: theme.spacing.md,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.md,
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
-                  ✅ Core Tests (Always Included)
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{
+                        fontSize: theme.typography.fontSize.lg,
+                        fontWeight: theme.typography.fontWeight.bold,
+                        marginBottom: theme.spacing.xs
+                      }}>
+                        ✅ Core Tests ({filteredTests.filter((t: any) => t.isCore).length})
+                      </div>
+                      <div style={{
+                        fontSize: theme.typography.fontSize.xs,
+                        opacity: 0.9
+                      }}>
+                        Always included • Essential for all agents
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.fontSize['2xl'],
+                      fontWeight: theme.typography.fontWeight.bold
+                    }}>
+                      CORE
+                    </div>
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: theme.typography.fontSize.sm,
-                  color: theme.colors.textSecondary,
-                  marginBottom: theme.spacing.lg
+
+                {/* Compact Test Cards */}
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+                  gap: theme.spacing.md,
+                  marginBottom: theme.spacing.xl
                 }}>
-                  These essential tests are included for all agents to ensure basic quality and safety.
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
                   {filteredTests.filter((t: any) => t.isCore).map((test) => {
                     const isSelected = selectedTests.some(t => t.id === test.id);
                     return (
                       <div
                         key={test.id}
+                        onClick={() => toggleTest(test)}
                         style={{
-                          border: `2px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+                          border: `2px solid ${isSelected ? theme.colors.success : theme.colors.border}`,
                           borderRadius: theme.borderRadius.md,
-                          backgroundColor: isSelected ? theme.colors.primaryLight : theme.colors.white,
-                          transition: 'all 0.2s ease'
+                          backgroundColor: isSelected ? theme.colors.successLight : theme.colors.white,
+                          padding: theme.spacing.md,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          position: 'relative'
                         }}
                       >
-                        <div 
-                          onClick={() => toggleTest(test)}
+                        {/* Selection Indicator */}
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: theme.spacing.sm,
+                            right: theme.spacing.sm,
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            backgroundColor: theme.colors.success,
+                            color: theme.colors.white,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: theme.typography.fontSize.xs,
+                            fontWeight: theme.typography.fontWeight.bold
+                          }}>
+                            ✓
+                          </div>
+                        )}
+
+                        {/* Test Name */}
+                        <div style={{
+                          fontSize: theme.typography.fontSize.base,
+                          fontWeight: theme.typography.fontWeight.bold,
+                          color: theme.colors.textPrimary,
+                          marginBottom: theme.spacing.xs,
+                          paddingRight: '30px'
+                        }}>
+                          {test.name}
+                        </div>
+
+                        {/* Badge */}
+                        {test.badge && (
+                          <div style={{
+                            display: 'inline-block',
+                            padding: `2px ${theme.spacing.xs}`,
+                            backgroundColor: test.badgeColor || theme.colors.danger,
+                            color: theme.colors.white,
+                            borderRadius: theme.borderRadius.sm,
+                            fontSize: '10px',
+                            fontWeight: theme.typography.fontWeight.bold,
+                            marginBottom: theme.spacing.xs
+                          }}>
+                            {test.badge}
+                          </div>
+                        )}
+
+                        {/* Reason */}
+                        {test.reason && (
+                          <div style={{
+                            fontSize: theme.typography.fontSize.xs,
+                            color: theme.colors.textSecondary,
+                            fontStyle: 'italic',
+                            marginBottom: theme.spacing.sm
+                          }}>
+                            💡 {test.reason}
+                          </div>
+                        )}
+
+                        {/* Expand Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTest(expandedTest === test.id ? null : test.id);
+                          }}
                           style={{
-                            padding: theme.spacing.lg,
-                            cursor: 'pointer'
+                            marginTop: theme.spacing.sm,
+                            padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                            backgroundColor: 'transparent',
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius: theme.borderRadius.sm,
+                            fontSize: theme.typography.fontSize.xs,
+                            cursor: 'pointer',
+                            color: theme.colors.primary,
+                            width: '100%'
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{
-                                fontSize: theme.typography.fontSize.base,
-                                fontWeight: theme.typography.fontWeight.semibold,
-                                color: theme.colors.textPrimary,
-                                marginBottom: theme.spacing.xs
-                              }}>
-                                {isSelected && '✓ '}{test.name}
-                              </div>
-                              {test.reason && (
-                                <div style={{
-                                  fontSize: theme.typography.fontSize.xs,
-                                  color: theme.colors.textSecondary,
-                                  fontStyle: 'italic',
-                                  marginBottom: theme.spacing.xs
-                                }}>
-                                  {test.reason}
-                                </div>
-                              )}
-                              <div style={{
-                                fontSize: theme.typography.fontSize.sm,
-                                color: theme.colors.textSecondary,
-                                marginBottom: theme.spacing.sm
-                              }}>
-                                {test.description || 'No description'}
-                              </div>
-                              <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap', alignItems: 'center' }}>
-                                {test.badge && (
-                                  <span style={{
-                                    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                    backgroundColor: test.badgeColor || theme.colors.danger,
-                                    color: theme.colors.white,
-                                    borderRadius: theme.borderRadius.sm,
-                                    fontSize: theme.typography.fontSize.xs,
-                                    fontWeight: theme.typography.fontWeight.bold
-                                  }}>
-                                    {test.badge}
-                                  </span>
-                                )}
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.gray100,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.type}
-                                </span>
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.infoLight,
-                                  color: theme.colors.info,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.category}
-                                </span>
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.secondaryLight,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.input_format}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedTest(expandedTest === test.id ? null : test.id);
-                                  }}
-                                  style={{
-                                    marginLeft: 'auto',
-                                    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                    backgroundColor: 'transparent',
-                                    border: `1px solid ${theme.colors.border}`,
-                                    borderRadius: theme.borderRadius.sm,
-                                    fontSize: theme.typography.fontSize.xs,
-                                    cursor: 'pointer',
-                                    color: theme.colors.primary
-                                  }}
-                                >
-                                  {expandedTest === test.id ? '▼ Hide Details' : '▶ How is this tested?'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          {expandedTest === test.id ? '▼ Hide Details' : '▶ View Details'}
+                        </button>
                         
                         {/* Expanded Test Methodology Section */}
                         {expandedTest === test.id && (
@@ -834,109 +853,149 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
             {/* Agent-Specific Tests Section */}
             {recommendedTests.length > 0 && filteredTests.some((t: any) => !t.isCore) && (
               <div>
+                {/* Sticky Section Header */}
                 <div style={{
-                  fontSize: theme.typography.fontSize.lg,
-                  fontWeight: theme.typography.fontWeight.bold,
-                  color: theme.colors.textPrimary,
-                  marginBottom: theme.spacing.sm,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: theme.spacing.sm
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.white,
+                  padding: theme.spacing.md,
+                  borderRadius: theme.borderRadius.md,
+                  marginBottom: theme.spacing.md,
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
-                  🎯 Recommended for {getAgentType(selectedAgent).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Agents
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{
+                        fontSize: theme.typography.fontSize.lg,
+                        fontWeight: theme.typography.fontWeight.bold,
+                        marginBottom: theme.spacing.xs
+                      }}>
+                        🎯 {getAgentType(selectedAgent).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Tests ({filteredTests.filter((t: any) => !t.isCore).length})
+                      </div>
+                      <div style={{
+                        fontSize: theme.typography.fontSize.xs,
+                        opacity: 0.9
+                      }}>
+                        Recommended for this agent type
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.fontSize.lg,
+                      fontWeight: theme.typography.fontWeight.bold
+                    }}>
+                      SPECIFIC
+                    </div>
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: theme.typography.fontSize.sm,
-                  color: theme.colors.textSecondary,
-                  marginBottom: theme.spacing.lg
+
+                {/* Compact Test Cards */}
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+                  gap: theme.spacing.md,
+                  marginBottom: theme.spacing.xl
                 }}>
-                  Additional tests specifically relevant to this agent type.
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
                   {filteredTests.filter((t: any) => !t.isCore).map((test) => {
                     const isSelected = selectedTests.some(t => t.id === test.id);
                     return (
                       <div
                         key={test.id}
+                        onClick={() => toggleTest(test)}
                         style={{
-                          border: `2px solid ${isSelected ? theme.colors.primary : theme.colors.border}`,
+                          border: `2px solid ${isSelected ? theme.colors.success : theme.colors.border}`,
                           borderRadius: theme.borderRadius.md,
-                          backgroundColor: isSelected ? theme.colors.primaryLight : theme.colors.white,
-                          transition: 'all 0.2s ease'
+                          backgroundColor: isSelected ? theme.colors.successLight : theme.colors.white,
+                          padding: theme.spacing.md,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          position: 'relative'
                         }}
                       >
-                        <div 
-                          onClick={() => toggleTest(test)}
+                        {/* Selection Indicator */}
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            top: theme.spacing.sm,
+                            right: theme.spacing.sm,
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '50%',
+                            backgroundColor: theme.colors.success,
+                            color: theme.colors.white,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: theme.typography.fontSize.xs,
+                            fontWeight: theme.typography.fontWeight.bold
+                          }}>
+                            ✓
+                          </div>
+                        )}
+
+                        {/* Test Name */}
+                        <div style={{
+                          fontSize: theme.typography.fontSize.base,
+                          fontWeight: theme.typography.fontWeight.bold,
+                          color: theme.colors.textPrimary,
+                          marginBottom: theme.spacing.xs,
+                          paddingRight: '30px'
+                        }}>
+                          {test.name}
+                        </div>
+
+                        {/* Category Badge */}
+                        <div style={{
+                          display: 'inline-block',
+                          padding: `2px ${theme.spacing.xs}`,
+                          backgroundColor: theme.colors.infoLight,
+                          color: theme.colors.info,
+                          borderRadius: theme.borderRadius.sm,
+                          fontSize: '10px',
+                          fontWeight: theme.typography.fontWeight.bold,
+                          marginBottom: theme.spacing.xs
+                        }}>
+                          {test.category}
+                        </div>
+
+                        {/* Description */}
+                        <div style={{
+                          fontSize: theme.typography.fontSize.xs,
+                          color: theme.colors.textSecondary,
+                          marginBottom: theme.spacing.sm,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {test.description || 'No description'}
+                        </div>
+
+                        {/* Expand Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTest(expandedTest === test.id ? null : test.id);
+                          }}
                           style={{
-                            padding: theme.spacing.lg,
-                            cursor: 'pointer'
+                            marginTop: theme.spacing.sm,
+                            padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                            backgroundColor: 'transparent',
+                            border: `1px solid ${theme.colors.border}`,
+                            borderRadius: theme.borderRadius.sm,
+                            fontSize: theme.typography.fontSize.xs,
+                            cursor: 'pointer',
+                            color: theme.colors.primary,
+                            width: '100%'
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{
-                                fontSize: theme.typography.fontSize.base,
-                                fontWeight: theme.typography.fontWeight.semibold,
-                                color: theme.colors.textPrimary,
-                                marginBottom: theme.spacing.xs
-                              }}>
-                                {isSelected && '✓ '}{test.name}
-                              </div>
-                              <div style={{
-                                fontSize: theme.typography.fontSize.sm,
-                                color: theme.colors.textSecondary,
-                                marginBottom: theme.spacing.sm
-                              }}>
-                                {test.description || 'No description'}
-                              </div>
-                              <div style={{ display: 'flex', gap: theme.spacing.sm, flexWrap: 'wrap', alignItems: 'center' }}>
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.gray100,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.type}
-                                </span>
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.infoLight,
-                                  color: theme.colors.info,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.category}
-                                </span>
-                                <span style={{
-                                  padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                  backgroundColor: theme.colors.secondaryLight,
-                                  borderRadius: theme.borderRadius.sm,
-                                  fontSize: theme.typography.fontSize.xs
-                                }}>
-                                  {test.input_format}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedTest(expandedTest === test.id ? null : test.id);
-                                  }}
-                                  style={{
-                                    marginLeft: 'auto',
-                                    padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
-                                    backgroundColor: 'transparent',
-                                    border: `1px solid ${theme.colors.border}`,
-                                    borderRadius: theme.borderRadius.sm,
-                                    fontSize: theme.typography.fontSize.xs,
-                                    cursor: 'pointer',
-                                    color: theme.colors.primary
-                                  }}
-                                >
-                                  {expandedTest === test.id ? '▼ Hide Details' : '▶ How is this tested?'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          {expandedTest === test.id ? '▼ Hide Details' : '▶ View Details'}
+                        </button>
                         
                         {/* Expanded Test Methodology Section */}
                         {expandedTest === test.id && (
