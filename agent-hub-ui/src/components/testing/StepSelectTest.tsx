@@ -72,18 +72,18 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
   // Helper function to get category badge color
   const getCategoryBadgeColor = (category: string): string => {
     const categoryColors: Record<string, string> = {
-      'tool_usage': '#f5576c',      // Pink (matches agent-specific header)
-      'rag_grounding': '#f5576c',   // Pink
-      'monitoring': '#f5576c',      // Pink
-      'adversarial': '#f5576c',     // Pink
-      'multi_turn': '#f5576c',      // Pink
+      'tool_usage': '#06b6d4',      // Cyan/Teal
+      'rag_grounding': '#06b6d4',   // Cyan/Teal
+      'monitoring': '#06b6d4',      // Cyan/Teal
+      'adversarial': '#06b6d4',     // Cyan/Teal
+      'multi_turn': '#06b6d4',      // Cyan/Teal
       'hallucination': '#667eea',   // Purple (core)
       'safety': '#667eea',          // Purple (core)
       'functional': '#667eea',      // Purple (core)
       'intent_detection': '#667eea',// Purple (core)
       'emotional': '#667eea'        // Purple (core)
     };
-    return categoryColors[category] || '#f5576c'; // Default to pink for agent-specific
+    return categoryColors[category] || '#06b6d4'; // Default to cyan for agent-specific
   };
 
   useEffect(() => {
@@ -906,12 +906,12 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                   position: 'sticky',
                   top: 0,
                   zIndex: 10,
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
                   color: theme.colors.white,
                   padding: theme.spacing.md,
                   borderRadius: theme.borderRadius.md,
                   marginBottom: theme.spacing.md,
-                  boxShadow: '0 2px 8px rgba(240, 147, 251, 0.3)'
+                  boxShadow: '0 2px 8px rgba(6, 182, 212, 0.3)'
                 }}>
                   <div style={{
                     display: 'flex',
