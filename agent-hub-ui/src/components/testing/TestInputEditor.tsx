@@ -29,11 +29,16 @@ const TestInputEditor: React.FC<TestInputEditorProps> = ({
   const [previewContent, setPreviewContent] = useState<string>('');
   const [parameters, setParameters] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState<boolean>(false);
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   // Update content when initialValue changes (e.g., when sample prompt is applied)
   useEffect(() => {
     if (initialValue !== content) {
       setContent(initialValue);
+      // Auto-collapse when content is added
+      if (initialValue.trim()) {
+        setIsCollapsed(true);
+      }
     }
   }, [initialValue]);
 
@@ -199,11 +204,81 @@ const TestInputEditor: React.FC<TestInputEditorProps> = ({
   return (
     <Card style={{ marginBottom: theme.spacing.xl }}>
       <Card.Header>
-        <Card.Title>Test Input Editor</Card.Title>
-        <Card.Text>Configure your test input format and content</Card.Text>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <Card.Title>Test Input Editor</Card.Title>
+            <Card.Text>Configure your test input format and content</Card.Text>
+          </div>
+          {content.trim() && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+            >
+              {isCollapsed ? '📝 Edit' : '✓ Collapse'}
+            </Button>
+          )}
+        </div>
       </Card.Header>
 
       <Card.Body>
+        {/* Collapsed View - Show compact preview when content exists */}
+        {isCollapsed && content.trim() ? (
+          <div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: theme.spacing.sm
+            }}>
+              <div style={{
+                fontSize: theme.typography.fontSize.sm,
+                fontWeight: theme.typography.fontWeight.semibold,
+                color: theme.colors.success
+              }}>
+                ✓ Configured ({format.replace('_', ' ')})
+              </div>
+            </div>
+            <div style={{
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.successLight,
+              border: `1px solid ${theme.colors.success}`,
+              borderRadius: theme.borderRadius.md,
+              fontSize: theme.typography.fontSize.sm,
+              color: theme.colors.textPrimary,
+              maxHeight: '60px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              <div style={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontFamily: format === 'json' || format === 'multi_turn' ? 'monospace' : 'inherit'
+              }}>
+                {content.length > 150 ? `${content.substring(0, 150)}...` : content}
+              </div>
+              {content.length > 150 && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
+                  height: '30px',
+                  background: `linear-gradient(to bottom, transparent, ${theme.colors.successLight})`,
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  fontSize: theme.typography.fontSize.xs,
+                  color: theme.colors.textSecondary
+                }}>
+                  Click "Edit" to view full content
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Expanded View - Show full editor */
+          <div>
         {/* Format Selector */}
         <div style={{ marginBottom: theme.spacing.xl }}>
           <label style={{
@@ -405,10 +480,12 @@ const TestInputEditor: React.FC<TestInputEditorProps> = ({
             )}
           </div>
         )}
+          </div>
+        )}
       </Card.Body>
 
       {/* Actions */}
-      {!readOnly && (
+      {!readOnly && !isCollapsed && (
         <Card.Footer>
           <div style={{ display: 'flex', gap: theme.spacing.md, justifyContent: 'flex-end' }}>
             <Button
