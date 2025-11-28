@@ -69,6 +69,23 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     return String(scoringRules);
   };
 
+  // Helper function to get category badge color
+  const getCategoryBadgeColor = (category: string): string => {
+    const categoryColors: Record<string, string> = {
+      'tool_usage': '#f5576c',      // Pink (matches agent-specific header)
+      'rag_grounding': '#f5576c',   // Pink
+      'monitoring': '#f5576c',      // Pink
+      'adversarial': '#f5576c',     // Pink
+      'multi_turn': '#f5576c',      // Pink
+      'hallucination': '#667eea',   // Purple (core)
+      'safety': '#667eea',          // Purple (core)
+      'functional': '#667eea',      // Purple (core)
+      'intent_detection': '#667eea',// Purple (core)
+      'emotional': '#667eea'        // Purple (core)
+    };
+    return categoryColors[category] || '#f5576c'; // Default to pink for agent-specific
+  };
+
   useEffect(() => {
     loadTests();
   }, []);
@@ -953,7 +970,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                         <div style={{
                           display: 'inline-block',
                           padding: `2px ${theme.spacing.xs}`,
-                          backgroundColor: '#f5576c',
+                          backgroundColor: getCategoryBadgeColor(test.category),
                           color: theme.colors.white,
                           borderRadius: theme.borderRadius.sm,
                           fontSize: '10px',
