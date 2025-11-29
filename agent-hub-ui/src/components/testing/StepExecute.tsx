@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import Button from '../common/Button';
 import { theme } from '../../styles/theme';
+import { KnowledgeConfig } from '../../types/testing';
 
 interface StepExecuteProps {
   agent: any;
   models: string[];
   tests: any[];
   inputs: Record<string, { content: string; format: string }>;
+  knowledgeConfig: KnowledgeConfig;
   onExecutionComplete: (runId: string, status: 'completed' | 'failed') => void;
 }
 
@@ -16,6 +18,7 @@ const StepExecute: React.FC<StepExecuteProps> = ({
   models,
   tests,
   inputs,
+  knowledgeConfig,
   onExecutionComplete
 }) => {
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -56,7 +59,8 @@ const StepExecute: React.FC<StepExecuteProps> = ({
               tests: tests, // Send full test objects
               options: {
                 modelId: modelId,
-                customInputs: Object.keys(inputs).length > 0 ? inputs : undefined
+                customInputs: Object.keys(inputs).length > 0 ? inputs : undefined,
+                knowledgeConfig: knowledgeConfig // Include knowledge config
               }
             })
           });
@@ -96,7 +100,8 @@ const StepExecute: React.FC<StepExecuteProps> = ({
             tests: tests, // Send full test objects
             options: {
               modelId: modelId,
-              customInputs: Object.keys(inputs).length > 0 ? inputs : undefined
+              customInputs: Object.keys(inputs).length > 0 ? inputs : undefined,
+              knowledgeConfig: knowledgeConfig // Include knowledge config
             }
           })
         });
@@ -192,7 +197,57 @@ const StepExecute: React.FC<StepExecuteProps> = ({
                 Tests
               </div>
             </div>
+            <div>
+              <div style={{
+                fontSize: theme.typography.fontSize.xl,
+                fontWeight: theme.typography.fontWeight.bold,
+                color: theme.colors.primary
+              }}>
+                {knowledgeConfig.vectorDB.enabled && knowledgeConfig.mcp.enabled
+                  ? 'Full-stack'
+                  : knowledgeConfig.vectorDB.enabled
+                  ? 'RAG'
+                  : knowledgeConfig.mcp.enabled
+                  ? 'MCP'
+                  : 'LLM Only'}
+              </div>
+              <div style={{
+                fontSize: theme.typography.fontSize.xs,
+                color: theme.colors.textSecondary
+              }}>
+                Execution Mode
+              </div>
+            </div>
           </div>
+
+          {/* Knowledge Sources Info */}
+          {(knowledgeConfig.vectorDB.enabled || knowledgeConfig.mcp.enabled) && (
+            <div style={{
+              marginTop: theme.spacing.lg,
+              padding: theme.spacing.md,
+              backgroundColor: theme.colors.infoLight,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.info}`,
+              fontSize: theme.typography.fontSize.sm,
+              color: theme.colors.info
+            }}>
+              <div style={{ fontWeight: theme.typography.fontWeight.semibold, marginBottom: theme.spacing.xs }}>
+                Knowledge Sources Enabled:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+                {knowledgeConfig.vectorDB.enabled && (
+                  <div>
+                    📚 Vector DB: {knowledgeConfig.vectorDB.knowledgeBases.length} knowledge base(s)
+                  </div>
+                )}
+                {knowledgeConfig.mcp.enabled && (
+                  <div>
+                    🔌 MCP: {knowledgeConfig.mcp.selectedServers.length} server(s)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Status Display */}

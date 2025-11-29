@@ -123,16 +123,56 @@ class AdvancedAnalyticsService {
   // Load execution history from backend
   private async loadExecutionHistoryFromBackend(): Promise<void> {
     try {
-      const response = await fetch('http://localhost:3002/api/v1/analytics/executions');
-      if (response.ok) {
-        const data = await response.json();
+      // Fetch both FinOps executions and Agent Testing executions
+      const [finopsResponse, testingResponse] = await Promise.all([
+        fetch('http://localhost:3002/api/v1/analytics/executions').catch(() => null),
+        fetch('http://localhost:3002/api/testing/runs?limit=1000').catch(() => null)
+      ]);
+
+      let finopsExecutions: any[] = [];
+      let testingExecutions: any[] = [];
+
+      // Process FinOps executions (model usage tracking)
+      if (finopsResponse && finopsResponse.ok) {
+        const data = await finopsResponse.json();
         if (data.success && data.data) {
-          this.executionHistory = data.data;
-          console.log(`📊 Loaded ${this.executionHistory.length} executions from backend`);
-          // Save to localStorage for offline access
-          this.saveExecutionHistory();
+          finopsExecutions = data.data;
+          console.log(`📊 Loaded ${finopsExecutions.length} FinOps executions from backend`);
         }
       }
+
+      // Process Agent Testing executions
+      if (testingResponse && testingResponse.ok) {
+        const data = await testingResponse.json();
+        if (data.success && data.data) {
+          // Convert test runs to execution history format
+          testingExecutions = data.data.map((run: any) => ({
+            executionId: run.id,
+            agentId: run.agentId,
+            agentName: run.agentName,
+            timestamp: new Date(run.startTime),
+            status: run.status === 'completed' ? 'completed' : 'failed',
+            duration: run.duration || 0,
+            category: 'Testing',
+            costSavings: 0, // Testing doesn't generate cost savings
+            inputTokens: run.tokenUsage?.input || 0,
+            outputTokens: run.tokenUsage?.output || 0,
+            model: run.modelId || 'unknown',
+            testRun: true, // Flag to identify test executions
+            testScore: run.overallScore,
+            testsPassed: run.summary?.passed || 0,
+            testsFailed: run.summary?.failed || 0
+          }));
+          console.log(`🧪 Loaded ${testingExecutions.length} Agent Testing executions from backend`);
+        }
+      }
+
+      // Merge both sources
+      this.executionHistory = [...finopsExecutions, ...testingExecutions];
+      console.log(`📊 Total executions loaded: ${this.executionHistory.length} (${finopsExecutions.length} FinOps + ${testingExecutions.length} Testing)`);
+      
+      // Save to localStorage for offline access
+      this.saveExecutionHistory();
     } catch (error) {
       console.error('Failed to load execution history from backend:', error);
     }
@@ -248,7 +288,7 @@ class AdvancedAnalyticsService {
         // AWS Services (based on actual usage)
         s3RequestCount: this.calculateS3Requests(recentExecutions),
         bedrockInvocations: this.calculateBedrockInvocations(recentExecutions),
-        lambdaExecutions: recentExecutions.length * 3, // Estimate 3 lambda calls per execution
+        lambdaExecutions: 0, // Not using Lambda - set to 0 (would track from CloudWatch if used)
         cloudWatchAlerts: this.calculateCloudWatchAlerts(recentExecutions)
       };
 
@@ -270,29 +310,47 @@ class AdvancedAnalyticsService {
       // Debug: Log execution history
       console.log('📊 Analytics Debug - Total executions in history:', this.executionHistory.length);
       console.log('📊 Analytics Debug - Execution history sample:', this.executionHistory.slice(0, 3));
+      
+      const uniqueAgentIdsSet = new Set(this.executionHistory.map(e => e.agentId));
+      const uniqueAgentIdsList = Array.from(uniqueAgentIdsSet);
+      console.log('📊 Analytics Debug - Unique agent IDs in executions:', uniqueAgentIdsList);
 
       const agents = await agentApiService.getAgents();
       const s3Agents = await s3AgentService.getAllAgents();
       const allAgents = [...agents, ...s3Agents];
       
+      console.log('📊 Analytics Debug - Agent IDs in catalog:', allAgents.map(a => a.id));
+      
+      // Create a map of agent IDs to agent objects for quick lookup
+      const agentMap = new Map(allAgents.map(a => [a.id, a]));
+      
       const insights: AgentInsights[] = [];
       
-      for (const agent of allAgents) {
-        const agentExecutions = this.executionHistory.filter(e => e.agentId === agent.id);
+      // Process all agents that have executions (even if not in catalog)
+      for (const agentId of uniqueAgentIdsList) {
+        const agentExecutions = this.executionHistory.filter(e => e.agentId === agentId);
         const recentExecutions = agentExecutions.filter(e => 
           new Date(e.timestamp).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000
         );
 
+        // Get agent info from catalog or use execution data
+        const catalogAgent = agentMap.get(agentId);
+        const agentName = catalogAgent?.name || agentExecutions[0]?.agentName || agentId;
+        const agentCategory = catalogAgent?.category || 'Unknown';
+
         // Debug: Log agent execution data
+        console.log(`📊 Agent ${agentName} (${agentId}) - Executions: ${agentExecutions.length}, Recent: ${recentExecutions.length}`);
         if (agentExecutions.length > 0) {
-          console.log(`📊 Agent ${agent.name} - Executions: ${agentExecutions.length}, Recent: ${recentExecutions.length}`);
-          console.log(`📊 Agent ${agent.name} - Sample execution:`, agentExecutions[0]);
+          console.log(`📊 Agent ${agentName} - Sample execution:`, agentExecutions[0]);
         }
         
+        // Create a mock agent object for optimization opportunities
+        const agentObj = catalogAgent || { id: agentId, name: agentName, category: agentCategory };
+        
         const insight: AgentInsights = {
-          agentId: agent.id,
-          name: agent.name,
-          category: agent.category || 'Custom',
+          agentId: agentId,
+          name: agentName,
+          category: agentCategory,
           
           // Performance Metrics
           executionCount: agentExecutions.length,
@@ -312,7 +370,7 @@ class AdvancedAnalyticsService {
           // Predictive Analytics
           predictedGrowth: this.predictGrowth(agentExecutions),
           riskScore: this.calculateRiskScore(agentExecutions),
-          optimizationOpportunities: this.identifyOptimizationOpportunities(agent, agentExecutions)
+          optimizationOpportunities: this.identifyOptimizationOpportunities(agentObj, agentExecutions)
         };
         
         insights.push(insight);
@@ -513,20 +571,29 @@ class AdvancedAnalyticsService {
     return Math.min(100, (uniqueUsers / totalPotentialUsers) * 100);
   }
 
+  private async getRealCloudWatchMetric(metricName: string, namespace: string = 'AWS/EC2'): Promise<number> {
+    // In production, this would fetch real CloudWatch metrics
+    // For now, return 0 to indicate no real data available
+    // TODO: Implement real CloudWatch API integration
+    return 0;
+  }
+
   private simulateMetricWithTrend(base: number, variance: number, type: string): number {
-    // Simulate realistic metrics with trends
+    // DEPRECATED: This simulates metrics instead of using real data
+    // Kept for backward compatibility but should be replaced with real CloudWatch data
+    console.warn(`⚠️  Using simulated ${type} metric - configure CloudWatch for real data`);
     const trend = this.getMetricTrend(type);
     const random = (Math.random() - 0.5) * variance;
     return Math.max(0, Math.min(100, base + trend + random));
   }
 
   private getMetricTrend(type: string): number {
-    // Simulate realistic trends based on time of day, system load, etc.
+    // DEPRECATED: Simulates trends - should use real CloudWatch data
     const hour = new Date().getHours();
     const trends = {
-      'cpu': hour > 9 && hour < 17 ? 5 : -3, // Higher during business hours
+      'cpu': hour > 9 && hour < 17 ? 5 : -3,
       'memory': hour > 10 && hour < 16 ? 8 : -2,
-      'disk': 0, // Relatively stable
+      'disk': 0,
       'network': hour > 8 && hour < 18 ? 3 : -5
     };
     
@@ -585,14 +652,32 @@ class AdvancedAnalyticsService {
 
   private calculateSuccessRate(executions: any[]): number {
     if (executions.length === 0) return 0;
-    const successful = executions.filter(e => e.status === 'completed' || e.status === 'success').length;
-    const successRate = (successful / executions.length) * 100;
+    
+    // For test executions, use test pass rate; for regular executions, use completion status
+    let totalTests = 0;
+    let passedTests = 0;
+    
+    executions.forEach(e => {
+      if (e.testRun) {
+        // This is a test execution - use test results
+        const passed = e.testsPassed || 0;
+        const failed = e.testsFailed || 0;
+        totalTests += (passed + failed);
+        passedTests += passed;
+      } else {
+        // Regular execution - use status
+        totalTests += 1;
+        if (e.status === 'completed' || e.status === 'success') {
+          passedTests += 1;
+        }
+      }
+    });
+    
+    const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
     
     // Debug: Log success rate calculation
-    console.log(`📊 Success Rate Debug - Total: ${executions.length}, Successful: ${successful}, Rate: ${successRate}%`);
-    if (executions.length > 0) {
-      console.log('📊 Execution statuses:', executions.map(e => e.status));
-    }
+    console.log(`📊 Success Rate Debug - Total tests: ${totalTests}, Passed: ${passedTests}, Rate: ${successRate.toFixed(2)}%`);
+    console.log(`📊 Execution breakdown: ${executions.filter(e => e.testRun).length} test runs, ${executions.filter(e => !e.testRun).length} regular executions`);
     
     return successRate;
   }

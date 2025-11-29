@@ -11,8 +11,10 @@ import AgentSectionHeader from './common/AgentSectionHeader';
 import AgentStatusIndicator from './common/AgentStatusIndicator';
 import AgentCard from './common/AgentCard';
 import AgentDetailsModal from './common/AgentDetailsModal';
+import { EditAgentModal } from './EditAgentModal';
 import { theme } from '../styles/theme';
 import { Agent } from '../types/agent';
+import { MCPIndicatorBadge, extractMCPConfig } from './mcp/MCPIndicatorBadge';
 import { 
   categorizeAgents, 
   getAgentCategories, 
@@ -427,6 +429,8 @@ const AgentCatalog: React.FC = () => {
   const [builtInAgentStatus, setBuiltInAgentStatus] = useState<Record<string, boolean>>({});
   const [selectedAgentForDetails, setSelectedAgentForDetails] = useState<Agent | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedAgentForEdit, setSelectedAgentForEdit] = useState<Agent | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
 
 
@@ -437,28 +441,33 @@ const AgentCatalog: React.FC = () => {
 
   // Handle agent management actions
   const handleEditAgent = (agentId: string) => {
-    // Check if it's a deployed agent or built-in agent
-    const deployedAgent = deployedAgents.find(a => a.id === agentId);
-    const builtInAgent = agents.find(a => a.agent_id === agentId);
+    // Find the agent to edit
+    const agent = agents.find(a => a.agent_id === agentId);
     
-    if (deployedAgent) {
-      // Navigate to agent management page with the deployed agent data
-      navigate('/manage', { 
-        state: { 
-          editAgent: deployedAgent,
-          agentType: 'deployed'
-        } 
-      });
-    } else if (builtInAgent) {
-      // For built-in agents, navigate to agent management page with agent data
-      navigate('/manage', { 
-        state: { 
-          editAgent: builtInAgent,
-          agentType: 'builtin'
-        } 
-      });
+    if (agent) {
+      // Open edit modal with agent data
+      setSelectedAgentForEdit(agent);
+      setShowEditModal(true);
     } else {
       alert(`Agent "${agentId}" not found.`);
+    }
+  };
+
+  const handleSaveAgent = async (updatedAgent: any) => {
+    try {
+      // Update agent via API
+      const agentId = updatedAgent.agent_id || updatedAgent.id;
+      await axios.put(`${API_BASE_URL}/api/v1/agents/s3/${agentId}`, updatedAgent);
+      
+      // Refresh agents list
+      await fetchAgents();
+      
+      // Close modal
+      setShowEditModal(false);
+      setSelectedAgentForEdit(null);
+    } catch (error) {
+      console.error('Failed to save agent:', error);
+      throw error;
     }
   };
 
@@ -532,47 +541,159 @@ const AgentCatalog: React.FC = () => {
     }
   };
 
+  // Helper function to enrich agents with testing data
+  const enrichAgentsWithTestingData = async (agents: Agent[]): Promise<Agent[]> => {
+    try {
+      // Fetch test runs for all agents
+      const testRunsResponse = await axios.get(`${API_BASE_URL}/api/testing/runs`);
+      
+      if (!testRunsResponse.data || !Array.isArray(testRunsResponse.data)) {
+        console.log('No test runs data available');
+        return agents;
+      }
+      
+      const testRuns = testRunsResponse.data;
+      
+      // Enrich each agent with its testing data
+      return agents.map(agent => {
+        // Find all test runs for this agent
+        const agentTestRuns = testRuns.filter((run: any) => 
+          run.agentIds && run.agentIds.includes(agent.agent_id)
+        );
+        
+        if (agentTestRuns.length === 0) {
+          return agent; // No test data for this agent
+        }
+        
+        // Get the most recent completed test run
+        const completedRuns = agentTestRuns.filter((run: any) => run.status === 'completed');
+        
+        if (completedRuns.length === 0) {
+          return agent; // No completed tests
+        }
+        
+        // Sort by start time to get the latest
+        completedRuns.sort((a: any, b: any) => 
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+        );
+        
+        const latestRun = completedRuns[0];
+        
+        // Calculate testing status
+        const totalTests = latestRun.totalTests || 0;
+        const passedTests = latestRun.passedTests || 0;
+        const passRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
+        
+        // Determine quality based on pass rate
+        let quality: 'excellent' | 'good' | 'fair' | 'poor' | 'not-tested' = 'not-tested';
+        if (passRate >= 90) quality = 'excellent';
+        else if (passRate >= 75) quality = 'good';
+        else if (passRate >= 60) quality = 'fair';
+        else if (passRate > 0) quality = 'poor';
+        
+        return {
+          ...agent,
+          testingStatus: {
+            lastTestRun: latestRun.startTime,
+            passRate: Math.round(passRate),
+            totalTests: totalTests,
+            universalTests: {
+              total: totalTests,
+              passed: passedTests,
+              passRate: Math.round(passRate)
+            },
+            quality: quality
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Error enriching agents with testing data:', error);
+      return agents; // Return agents without testing data on error
+    }
+  };
+
   const fetchAgents = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Fetching agents from API...');
       console.log('API_BASE_URL:', API_BASE_URL);
       
-      // Fetch from actual API
-      const response = await axios.get(`${API_BASE_URL}/api/v1/agents`);
-      console.log('API response status:', response.status);
-      console.log('API response:', response.data);
-      console.log('API response success:', response.data?.success);
-      console.log('API response data:', response.data?.data);
-      console.log('API response data length:', response.data?.data?.length);
+      // Fetch from S3 API endpoint to get all agents
+      const response = await axios.get(`${API_BASE_URL}/api/v1/agents/s3`);
+      
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('🔍 AGENT CATALOG - DETAILED API RESPONSE DEBUG');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('1. API URL:', `${API_BASE_URL}/api/v1/agents/s3`);
+      console.log('2. Response Status:', response.status);
+      console.log('3. Response Object:', response);
+      console.log('4. Response Data:', response.data);
+      console.log('5. Response Data Type:', typeof response.data);
+      console.log('6. Response.data.success:', response.data?.success);
+      console.log('7. Response.data.data:', response.data?.data);
+      console.log('8. Response.data.data Type:', typeof response.data?.data);
+      console.log('9. Is Array?:', Array.isArray(response.data?.data));
+      console.log('10. Array Length:', response.data?.data?.length);
+      console.log('═══════════════════════════════════════════════════════');
+      
+      // Validation check with detailed logging
+      const hasResponseData = !!response.data;
+      const hasSuccess = response.data?.success === true;
+      const hasDataArray = !!response.data?.data;
+      const isArray = Array.isArray(response.data?.data);
+      
+      console.log('🔍 VALIDATION CHECKS:');
+      console.log('  ✓ Has response.data?', hasResponseData);
+      console.log('  ✓ Has success=true?', hasSuccess);
+      console.log('  ✓ Has data array?', hasDataArray);
+      console.log('  ✓ Is array?', isArray);
+      console.log('═══════════════════════════════════════════════════════');
       
       if (response.data && response.data.success && response.data.data && Array.isArray(response.data.data)) {
+        console.log('✅ ALL VALIDATIONS PASSED - Processing S3 agents...');
+        
         const apiAgents = response.data.data.map((agent: any) => ({
           agent_id: agent.id || agent.agent_id,
           name: agent.name,
           description: agent.description,
           category: agent.category,
-          usage_count: agent.usage_count || 0,
-          average_rating: agent.average_rating || 0,
-          created_at: agent.created_at || agent.created,
-          agent_type: agent.agent_type || 'hybrid'
+          usage_count: agent.usage_count || agent.metrics?.totalExecutions || 0,
+          average_rating: agent.average_rating || 4.5,
+          created_at: agent.createdAt || agent.created_at || agent.created || new Date().toISOString(),
+          agent_type: agent.type || agent.agent_type || 'hybrid',
+          testingStatus: agent.testingStatus // Include testing status from API
         }));
         
-        // Combine API agents with mock agents for a complete catalog
-        const allAgents = [...apiAgents, ...mockAgents];
-        console.log('Combined agents (API + Mock):', allAgents.length);
-        console.log('API agents:', apiAgents.length);
-        console.log('Mock agents:', mockAgents.length);
-        setAgents(allAgents);
+        console.log('✅ Mapped agents:', apiAgents.length);
+        console.log('✅ Agent IDs:', apiAgents.map((a: Agent) => a.agent_id));
+        
+        // Fetch and enrich with testing data
+        const enrichedAgents = await enrichAgentsWithTestingData(apiAgents);
+        
+        console.log('✅ Enriched agents with testing data');
+        console.log('✅ Setting agents state and returning...');
+        console.log('═══════════════════════════════════════════════════════');
+        
+        setAgents(enrichedAgents);
         setLoading(false);
         return;
       } else {
-        console.log('API response not successful or no data, falling back to mock data');
-        console.log('Response data structure:', typeof response.data, response.data);
+        console.log('❌ VALIDATION FAILED - Using fallback logic');
+        console.log('❌ Reason:');
+        if (!hasResponseData) console.log('   - No response.data');
+        if (!hasSuccess) console.log('   - success is not true');
+        if (!hasDataArray) console.log('   - No data array');
+        if (!isArray) console.log('   - data is not an array');
+        console.log('═══════════════════════════════════════════════════════');
       }
       
       // Fallback to mock data if API fails
-      console.log('API failed, using mock data');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('⚠️ USING FALLBACK LOGIC - API validation failed');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('📦 Deployed Agents from Context:', deployedAgents.length);
+      console.log('📦 Deployed Agents:', deployedAgents);
+      
       // Convert deployed agents to Agent format and combine with mock agents
       const deployedAgentsAsAgents: Agent[] = deployedAgents
         .filter(agent => agent.status === 'active')
@@ -587,12 +708,17 @@ const AgentCatalog: React.FC = () => {
           agent_type: 'demo' as const // Deployed agents are custom/demo agents
         }));
 
-      // Combine deployed agents with mock agents (deployed agents first)
-      const allAgents = [...deployedAgentsAsAgents, ...mockAgents];
-      console.log('Setting fallback agents:', allAgents.length, 'agents');
-      console.log('Mock agents:', mockAgents.length);
-      console.log('Deployed agents:', deployedAgentsAsAgents.length);
-      setAgents(allAgents);
+      // Use only deployed agents (no mock data)
+      console.log('📦 Filtered Active Deployed Agents:', deployedAgentsAsAgents.length);
+      console.log('📦 Agent IDs:', deployedAgentsAsAgents.map((a: Agent) => a.agent_id));
+      console.log('⚠️ Setting agents to FALLBACK data (deployedAgents)');
+      
+      // Enrich with testing data
+      const enrichedDeployedAgents = await enrichAgentsWithTestingData(deployedAgentsAsAgents);
+      console.log('✅ Enriched deployed agents with testing data');
+      console.log('═══════════════════════════════════════════════════════');
+      
+      setAgents(enrichedDeployedAgents);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching agents:', error);
@@ -611,7 +737,15 @@ const AgentCatalog: React.FC = () => {
           agent_type: 'demo' as const // Deployed agents are custom/demo agents
         }));
       
-      setAgents([...deployedAgentsAsAgents, ...mockAgents]);
+      // Try to enrich with testing data even in error case
+      try {
+        const enrichedAgents = await enrichAgentsWithTestingData(deployedAgentsAsAgents);
+        setAgents(enrichedAgents);
+      } catch (enrichError) {
+        console.error('Error enriching agents with testing data:', enrichError);
+        setAgents(deployedAgentsAsAgents);
+      }
+      
       setLoading(false);
     }
   }, [deployedAgents]);
@@ -619,6 +753,20 @@ const AgentCatalog: React.FC = () => {
   useEffect(() => {
     fetchAgents();
   }, [fetchAgents, deployedAgents.length]);
+
+  // Listen for test result updates and refresh agents
+  useEffect(() => {
+    const handleTestResultsUpdate = (event: any) => {
+      console.log('🔔 Test results updated, refreshing Agent Catalog...');
+      fetchAgents();
+    };
+
+    window.addEventListener('test-results-updated', handleTestResultsUpdate);
+    
+    return () => {
+      window.removeEventListener('test-results-updated', handleTestResultsUpdate);
+    };
+  }, [fetchAgents]);
 
   useEffect(() => {
     // Check if we need to refresh after creating an agent
@@ -668,9 +816,10 @@ const AgentCatalog: React.FC = () => {
   // Sort agents by priority
   const sortedActiveAgents = sortAgentsByPriority(filteredActiveAgents);
   const sortedAvailableAgents = sortAgentsByPriority(filteredAvailableAgents);
+  const sortedTemplateAgents = sortAgentsByPriority(categorizedAgents.templateAgents);
 
   // Combined filtered agents for backward compatibility
-  const filteredAgents = [...sortedActiveAgents, ...sortedAvailableAgents];
+  const filteredAgents = [...sortedActiveAgents, ...sortedAvailableAgents, ...sortedTemplateAgents];
 
   const categories = ['All', 'QE', 'DevOps', 'Security', 'Business', 'Market Data', 'Custom'];
 
@@ -988,6 +1137,36 @@ const AgentCatalog: React.FC = () => {
         </>
       )}
 
+      {/* Template Agents Section */}
+      {sortedTemplateAgents.length > 0 && (
+        <>
+          <AgentSectionHeader
+            title="📋 Template Agents"
+            count={sortedTemplateAgents.length}
+            description="Reference templates and examples - not executable agents"
+            icon="📋"
+            variant="template"
+          />
+          <Row className="mb-5">
+            {sortedTemplateAgents.map((agent) => (
+              <Col md={6} lg={4} key={agent.agent_id} className="mb-4">
+                <AgentCard
+                  agent={agent}
+                  variant="available"
+                  isDeployed={isDeployedAgent(agent.agent_id)}
+                  isActive={builtInAgentStatus[agent.agent_id] || false}
+                  onEdit={handleEditAgent}
+                  onToggle={handleToggleAgent}
+                  onDelete={handleDeleteAgent}
+                  onViewDetails={handleViewDetails}
+                  getCategoryColor={getCategoryColor}
+                />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
+
       {filteredAgents.length === 0 && (
         <Row>
           <Col>
@@ -1015,6 +1194,19 @@ const AgentCatalog: React.FC = () => {
         onClose={handleCloseDetailsModal}
         mode="view"
       />
+
+      {/* Edit Agent Modal with MCP Configuration */}
+      {selectedAgentForEdit && (
+        <EditAgentModal
+          show={showEditModal}
+          onHide={() => {
+            setShowEditModal(false);
+            setSelectedAgentForEdit(null);
+          }}
+          agent={selectedAgentForEdit}
+          onSave={handleSaveAgent}
+        />
+      )}
     </div>
   );
 };

@@ -88,12 +88,232 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
   const passedTests = testResults.filter((r: any) => r.passed).length;
   const failedTests = testResults.filter((r: any) => !r.passed).length;
 
+  const exportToJSON = () => {
+    const exportData = {
+      runId,
+      exportedAt: new Date().toISOString(),
+      summary: {
+        totalTests: testResults.length,
+        passed: passedTests,
+        failed: failedTests,
+        passRate: testResults.length > 0 ? (passedTests / testResults.length * 100).toFixed(1) : 0
+      },
+      results: testResults.map((r: any) => ({
+        ...r,
+        knowledgeSource: r.knowledgeSource || 'llm',
+        retrievedDocuments: r.retrievedDocuments || 0,
+        mcpToolsUsed: r.mcpToolsUsed || [],
+        ragLatency: r.ragLatency || 0,
+        mcpLatency: r.mcpLatency || 0,
+        llmLatency: r.llmLatency || 0,
+        totalLatency: r.totalLatency || 0
+      })),
+      scores
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `test-results-${runId}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Test Name', 'Category', 'Status', 'Score', 'Knowledge Source', 'Retrieved Docs', 'MCP Tools', 'RAG Latency (ms)', 'MCP Latency (ms)', 'LLM Latency (ms)', 'Total Latency (ms)', 'Cost ($)', 'Error'];
+    const rows = testResults.map((result: any) => [
+      result.test_name || result.testName || 'Unknown',
+      result.test_category || result.category || 'N/A',
+      result.passed ? 'PASS' : 'FAIL',
+      result.score || 0,
+      result.knowledgeSource || 'llm',
+      result.retrievedDocuments || 0,
+      (result.mcpToolsUsed || []).join('; '),
+      result.ragLatency || 0,
+      result.mcpLatency || 0,
+      result.llmLatency || 0,
+      result.totalLatency || result.latency || result.execution_time || 0,
+      (result.cost || 0).toFixed(4),
+      result.error || ''
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row: any[]) => row.map((cell: any) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `test-results-${runId}-${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportToHTML = () => {
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Results - ${runId}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #1e3a8a; margin-bottom: 10px; }
+    .meta { color: #666; font-size: 14px; margin-bottom: 30px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+    .summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; }
+    .summary-card .value { font-size: 32px; font-weight: bold; margin-bottom: 5px; }
+    .summary-card .label { color: #666; font-size: 14px; }
+    .pass { color: #10b981; }
+    .fail { color: #ef4444; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f8f9fa; font-weight: 600; color: #374151; }
+    tr:hover { background: #f9fafb; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .badge-pass { background: #d1fae5; color: #065f46; }
+    .badge-fail { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Test Results Report</h1>
+    <div class="meta">
+      <strong>Run ID:</strong> ${runId}<br>
+      <strong>Generated:</strong> ${new Date().toLocaleString()}
+    </div>
+    
+    <div class="summary">
+      <div class="summary-card">
+        <div class="value">${testResults.length}</div>
+        <div class="label">Total Tests</div>
+      </div>
+      <div class="summary-card">
+        <div class="value pass">${passedTests}</div>
+        <div class="label">Passed</div>
+      </div>
+      <div class="summary-card">
+        <div class="value fail">${failedTests}</div>
+        <div class="label">Failed</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">${testResults.length > 0 ? (passedTests / testResults.length * 100).toFixed(1) : 0}%</div>
+        <div class="label">Pass Rate</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Test Name</th>
+          <th>Category</th>
+          <th>Status</th>
+          <th>Score</th>
+          <th>Latency</th>
+          <th>Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${testResults.map((result: any) => `
+          <tr>
+            <td>${result.test_name || result.testName || 'Unknown'}</td>
+            <td>${result.test_category || result.category || 'N/A'}</td>
+            <td><span class="badge ${result.passed ? 'badge-pass' : 'badge-fail'}">${result.passed ? 'PASS' : 'FAIL'}</span></td>
+            <td>${result.score || 0}</td>
+            <td>${result.latency || result.execution_time || 0}ms</td>
+            <td>$${(result.cost || 0).toFixed(4)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `test-results-${runId}-${Date.now()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <Card style={{ marginBottom: theme.spacing.xl }}>
         <Card.Header>
-          <Card.Title>Test Results</Card.Title>
-          <Card.Text>View detailed test execution results</Card.Text>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <Card.Title>Test Results</Card.Title>
+              <Card.Text>View detailed test execution results</Card.Text>
+            </div>
+            <div style={{ display: 'flex', gap: theme.spacing.sm }}>
+              <button
+                onClick={exportToJSON}
+                style={{
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  backgroundColor: theme.colors.primary,
+                  color: theme.colors.white,
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  cursor: 'pointer',
+                  fontSize: theme.typography.fontSize.sm,
+                  fontWeight: theme.typography.fontWeight.medium,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.xs
+                }}
+              >
+                📄 Export JSON
+              </button>
+              <button
+                onClick={exportToCSV}
+                style={{
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  backgroundColor: theme.colors.success,
+                  color: theme.colors.white,
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  cursor: 'pointer',
+                  fontSize: theme.typography.fontSize.sm,
+                  fontWeight: theme.typography.fontWeight.medium,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.xs
+                }}
+              >
+                📊 Export CSV
+              </button>
+              <button
+                onClick={exportToHTML}
+                style={{
+                  padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+                  backgroundColor: theme.colors.info,
+                  color: theme.colors.white,
+                  border: 'none',
+                  borderRadius: theme.borderRadius.md,
+                  cursor: 'pointer',
+                  fontSize: theme.typography.fontSize.sm,
+                  fontWeight: theme.typography.fontWeight.medium,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: theme.spacing.xs
+                }}
+              >
+                🌐 Export HTML
+              </button>
+            </div>
+          </div>
         </Card.Header>
         <Card.Body>
           <div style={{
@@ -286,12 +506,40 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
                   alignItems: 'start',
                   marginBottom: theme.spacing.sm
                 }}>
-                  <div style={{
-                    fontSize: theme.typography.fontSize.base,
-                    fontWeight: theme.typography.fontWeight.semibold,
-                    color: theme.colors.textPrimary
-                  }}>
-                    {result.passed ? '✓' : '✗'} {result.test_name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
+                    <div style={{
+                      fontSize: theme.typography.fontSize.base,
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      color: theme.colors.textPrimary
+                    }}>
+                      {result.passed ? '✓' : '✗'} {result.test_name}
+                    </div>
+                    
+                    {/* Knowledge Source Badge */}
+                    {result.knowledgeSource && (
+                      <span style={{
+                        padding: `${theme.spacing.xs} ${theme.spacing.sm}`,
+                        backgroundColor: 
+                          result.knowledgeSource === 'vector_db' ? '#e0f2fe' :
+                          result.knowledgeSource === 'mcp' ? '#fef3c7' :
+                          result.knowledgeSource === 'hybrid' ? '#ddd6fe' :
+                          '#f3f4f6',
+                        color:
+                          result.knowledgeSource === 'vector_db' ? '#0369a1' :
+                          result.knowledgeSource === 'mcp' ? '#92400e' :
+                          result.knowledgeSource === 'hybrid' ? '#5b21b6' :
+                          '#374151',
+                        borderRadius: theme.borderRadius.full,
+                        fontSize: theme.typography.fontSize.xs,
+                        fontWeight: theme.typography.fontWeight.semibold,
+                        textTransform: 'uppercase'
+                      }}>
+                        {result.knowledgeSource === 'vector_db' ? '📚 Vector DB' :
+                         result.knowledgeSource === 'mcp' ? '🔌 MCP' :
+                         result.knowledgeSource === 'hybrid' ? '🔄 Hybrid' :
+                         '🤖 LLM'}
+                      </span>
+                    )}
                   </div>
                   <div style={{
                     padding: `${theme.spacing.xs} ${theme.spacing.md}`,
@@ -312,6 +560,48 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
                     marginBottom: theme.spacing.sm
                   }}>
                     {result.explanation}
+                  </div>
+                )}
+
+                {/* Knowledge Source Metrics */}
+                {result.knowledgeSource && (result.retrievedDocuments > 0 || result.mcpToolsUsed?.length > 0 || result.ragLatency || result.mcpLatency || result.llmLatency) && (
+                  <div style={{
+                    marginTop: theme.spacing.md,
+                    padding: theme.spacing.md,
+                    backgroundColor: theme.colors.white,
+                    borderRadius: theme.borderRadius.sm,
+                    fontSize: theme.typography.fontSize.xs
+                  }}>
+                    <div style={{
+                      fontWeight: theme.typography.fontWeight.semibold,
+                      marginBottom: theme.spacing.sm,
+                      color: theme.colors.textPrimary
+                    }}>
+                      Knowledge Source Metrics:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.xs }}>
+                      {result.retrievedDocuments > 0 && (
+                        <div>📚 Retrieved {result.retrievedDocuments} document(s) from Vector DB</div>
+                      )}
+                      {result.mcpToolsUsed && result.mcpToolsUsed.length > 0 && (
+                        <div>🔌 Used MCP tools: {result.mcpToolsUsed.join(', ')}</div>
+                      )}
+                      {(result.ragLatency || result.mcpLatency || result.llmLatency) && (
+                        <div style={{ marginTop: theme.spacing.xs }}>
+                          <strong>Latency Breakdown:</strong>
+                          <div style={{ marginLeft: theme.spacing.md, marginTop: theme.spacing.xs }}>
+                            {result.ragLatency > 0 && <div>Vector DB: {result.ragLatency}ms</div>}
+                            {result.mcpLatency > 0 && <div>MCP: {result.mcpLatency}ms</div>}
+                            {result.llmLatency > 0 && <div>LLM: {result.llmLatency}ms</div>}
+                            {result.totalLatency && (
+                              <div style={{ marginTop: theme.spacing.xs, fontWeight: theme.typography.fontWeight.semibold }}>
+                                Total: {result.totalLatency}ms
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

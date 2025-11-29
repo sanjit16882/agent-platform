@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion, Tabs, Tab } from 'react-bootstrap';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAgentContext } from '../context/AgentContext';
 import { useProgress } from '../context/ProgressContext';
@@ -10,6 +10,7 @@ import IncrementalResults from './IncrementalResults';
 import CodeHighlighter from './CodeHighlighter';
 import ExportOptions from './ExportOptions';
 import GitHubIntegrationStatus from './GitHubIntegrationStatus';
+import AgentTestingPerformanceTab from './testing/AgentTestingPerformanceTab';
 import { useRealAnalytics } from '../hooks/useRealAnalytics';
 import { advancedAnalyticsService } from '../services/advancedAnalyticsService';
 
@@ -68,6 +69,9 @@ const AgentExecutor: React.FC = () => {
 
   const [currentExecutionId, setCurrentExecutionId] = useState<string | null>(null);
   
+  // Tab management
+  const [activeTab, setActiveTab] = useState<string>('execute');
+  
   // GitHub Integration
   const [githubIntegration, setGithubIntegration] = useState<any>(null);
   const [createdIssues, setCreatedIssues] = useState<any[]>([]);
@@ -82,6 +86,13 @@ const AgentExecutor: React.FC = () => {
   const currentExecution = currentExecutionId ? getExecution(currentExecutionId) : undefined;
 
   const API_BASE_URL = 'https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod';
+
+  // Check if we should open testing tab from navigation state
+  useEffect(() => {
+    if (location.state?.activeTab === 'testing') {
+      setActiveTab('testing');
+    }
+  }, [location.state]);
 
   // Check if this agent has GitHub integration configured
   useEffect(() => {
@@ -3992,12 +4003,19 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
         executionResults={result?.results}
       />
 
-      {!result && (
-        <Row>
-          <Col md={8}>
-            <Card>
-              <Card.Header>
-                <h5>📝 Agent Configuration</h5>
+      {/* Tabs */}
+      <Tabs
+        activeKey={activeTab}
+        onSelect={(k) => setActiveTab(k || 'execute')}
+        className="mb-3"
+      >
+        <Tab eventKey="execute" title="🚀 Execute Agent">
+          {!result && (
+            <Row>
+              <Col md={8}>
+                <Card>
+                  <Card.Header>
+                    <h5>📝 Agent Configuration</h5>
               </Card.Header>
               <Card.Body>
                 <Form>
@@ -5103,6 +5121,12 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
         </Row>
         );
       })()}
+        </Tab>
+
+        <Tab eventKey="testing" title="📊 Testing & Performance">
+          <AgentTestingPerformanceTab agentId={agentId || ''} />
+        </Tab>
+      </Tabs>
     </Container>
   );
 };

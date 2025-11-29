@@ -319,9 +319,6 @@ const Navbar: React.FC = () => {
                   <NavDropdown.Item as={Link} to="/analytics">
                     📊 Real Analytics
                   </NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/business-intelligence">
-                    💡 Business Intelligence
-                  </NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/intelligence">
                     🧠 Intelligence Layer
                     <Badge bg="success" className="ms-1">NEW</Badge>

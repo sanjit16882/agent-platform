@@ -18,11 +18,14 @@ interface ScoreBreakdownProps {
 }
 
 const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
-  overallScore,
+  overallScore: rawOverallScore,
   criteriaResults,
   categoryScores,
   showDetails = true
 }) => {
+  // Ensure overallScore is a number
+  const overallScore = typeof rawOverallScore === 'number' ? rawOverallScore : parseFloat(String(rawOverallScore)) || 0;
+  
   const getScoreColor = (score: number) => {
     if (score >= 90) return theme.colors.success;
     if (score >= 80) return '#10b981'; // green-500
@@ -142,52 +145,58 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
               Individual Criteria Scores
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-              {criteriaResults.map((criterion, index) => (
-                <div
-                  key={index}
-                  style={{
-                    padding: theme.spacing.lg,
-                    backgroundColor: criterion.passed ? theme.colors.successLight : theme.colors.warningLight,
-                    border: `1px solid ${criterion.passed ? theme.colors.success : theme.colors.warning}`,
-                    borderRadius: theme.borderRadius.md
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: theme.spacing.sm
-                  }}>
+              {criteriaResults.map((criterion, index) => {
+                // Ensure numeric values
+                const criterionScore = typeof criterion.score === 'number' ? criterion.score : parseFloat(String(criterion.score)) || 0;
+                const criterionWeight = typeof criterion.weight === 'number' ? criterion.weight : parseFloat(String(criterion.weight)) || 0;
+                
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      padding: theme.spacing.lg,
+                      backgroundColor: criterion.passed ? theme.colors.successLight : theme.colors.warningLight,
+                      border: `1px solid ${criterion.passed ? theme.colors.success : theme.colors.warning}`,
+                      borderRadius: theme.borderRadius.md
+                    }}
+                  >
                     <div style={{
-                      fontSize: theme.typography.fontSize.base,
-                      fontWeight: theme.typography.fontWeight.semibold,
-                      color: theme.colors.textPrimary
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: theme.spacing.sm
                     }}>
-                      {criterion.passed ? '✅' : '⚠️'} {criterion.criterion.charAt(0).toUpperCase() + criterion.criterion.slice(1)}
+                      <div style={{
+                        fontSize: theme.typography.fontSize.base,
+                        fontWeight: theme.typography.fontWeight.semibold,
+                        color: theme.colors.textPrimary
+                      }}>
+                        {criterion.passed ? '✅' : '⚠️'} {criterion.criterion.charAt(0).toUpperCase() + criterion.criterion.slice(1)}
+                      </div>
+                      <div style={{
+                        fontSize: theme.typography.fontSize.lg,
+                        fontWeight: theme.typography.fontWeight.bold,
+                        color: getScoreColor(criterionScore)
+                      }}>
+                        {criterion.earnedPoints}/{criterion.maxPoints}
+                      </div>
                     </div>
                     <div style={{
-                      fontSize: theme.typography.fontSize.lg,
-                      fontWeight: theme.typography.fontWeight.bold,
-                      color: getScoreColor(criterion.score)
+                      fontSize: theme.typography.fontSize.sm,
+                      color: theme.colors.textSecondary,
+                      marginBottom: theme.spacing.xs
                     }}>
-                      {criterion.earnedPoints}/{criterion.maxPoints}
+                      {criterion.feedback}
+                    </div>
+                    <div style={{
+                      fontSize: theme.typography.fontSize.xs,
+                      color: theme.colors.textMuted
+                    }}>
+                      Weight: {(criterionWeight * 100).toFixed(0)}% • Score: {criterionScore}/100
                     </div>
                   </div>
-                  <div style={{
-                    fontSize: theme.typography.fontSize.sm,
-                    color: theme.colors.textSecondary,
-                    marginBottom: theme.spacing.xs
-                  }}>
-                    {criterion.feedback}
-                  </div>
-                  <div style={{
-                    fontSize: theme.typography.fontSize.xs,
-                    color: theme.colors.textMuted
-                  }}>
-                    Weight: {(criterion.weight * 100).toFixed(0)}% • Score: {criterion.score}/100
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -204,42 +213,47 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
               Category Performance
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.md }}>
-              {Object.entries(categoryScores).map(([category, score]) => (
-                <div key={category}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: theme.spacing.xs,
-                    fontSize: theme.typography.fontSize.sm
-                  }}>
-                    <span style={{
-                      textTransform: 'capitalize',
-                      fontWeight: theme.typography.fontWeight.medium
-                    }}>
-                      {category.replace('_', ' ')}
-                    </span>
-                    <span style={{
-                      fontWeight: theme.typography.fontWeight.semibold,
-                      color: getScoreColor(score)
-                    }}>
-                      {score.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div style={{
-                    height: '8px',
-                    backgroundColor: theme.colors.gray200,
-                    borderRadius: theme.borderRadius.full,
-                    overflow: 'hidden'
-                  }}>
+              {Object.entries(categoryScores).map(([category, score]) => {
+                // Ensure score is a number
+                const numericScore = typeof score === 'number' ? score : parseFloat(String(score)) || 0;
+                
+                return (
+                  <div key={category}>
                     <div style={{
-                      height: '100%',
-                      width: `${score}%`,
-                      backgroundColor: getScoreColor(score),
-                      transition: 'width 0.3s ease'
-                    }} />
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: theme.spacing.xs,
+                      fontSize: theme.typography.fontSize.sm
+                    }}>
+                      <span style={{
+                        textTransform: 'capitalize',
+                        fontWeight: theme.typography.fontWeight.medium
+                      }}>
+                        {category.replace('_', ' ')}
+                      </span>
+                      <span style={{
+                        fontWeight: theme.typography.fontWeight.semibold,
+                        color: getScoreColor(numericScore)
+                      }}>
+                        {numericScore.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div style={{
+                      height: '8px',
+                      backgroundColor: theme.colors.gray200,
+                      borderRadius: theme.borderRadius.full,
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${numericScore}%`,
+                        backgroundColor: getScoreColor(numericScore),
+                        transition: 'width 0.3s ease'
+                      }} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

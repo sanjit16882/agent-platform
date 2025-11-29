@@ -431,14 +431,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               fontSize: theme.typography.fontSize.sm,
               color: theme.colors.textSecondary
             }}>
-              Total Tests
+              Total Test Executions
             </div>
             <div style={{
               fontSize: theme.typography.fontSize.xs,
               color: theme.colors.textMuted,
               marginTop: theme.spacing.xs
             }}>
-              {analytics.totalRuns} runs
+              across {analytics.totalRuns} run{analytics.totalRuns !== 1 ? 's' : ''}
             </div>
           </Card.Body>
         </Card>

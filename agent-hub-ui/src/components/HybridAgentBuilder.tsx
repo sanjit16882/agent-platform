@@ -927,6 +927,44 @@ const HybridAgentBuilder: React.FC = () => {
     return <Badge bg="primary">{type.toUpperCase()}</Badge>;
   };
 
+  // Calculate Bedrock cost based on selected model
+  const getBedrockCost = (): number => {
+    if (!selectedBedrockModel) return 0;
+    
+    if (selectedBedrockModel.includes('haiku')) return 0.25;
+    if (selectedBedrockModel.includes('sonnet-3-5')) return 3.00;
+    if (selectedBedrockModel.includes('sonnet')) return 15.00;
+    if (selectedBedrockModel.includes('opus')) return 75.00;
+    
+    return 1.00; // Default
+  };
+
+  // Calculate MCP cost based on selected servers
+  const getMCPCost = (): number => {
+    if (!mcpConfig.enabled || mcpConfig.selectedServers.length === 0) return 0;
+    return 0.05 * mcpConfig.selectedServers.length;
+  };
+
+  // Calculate total cost per 1000 queries
+  const calculateTotalCost = (): number => {
+    return getBedrockCost() + vectorDBCost + getMCPCost();
+  };
+
+  // Calculate total latency
+  const calculateTotalLatency = (): number => {
+    let total = 500; // Base Bedrock latency (ms)
+    
+    if (vectorDBConfig.enabled) {
+      total += vectorDBLatency;
+    }
+    
+    if (mcpConfig.enabled && mcpConfig.selectedServers.length > 0) {
+      total += 100 * mcpConfig.selectedServers.length;
+    }
+    
+    return total;
+  };
+
   return (
     <PermissionGuard permission={['agent.create']} requireAll={false}>
       <div className="aws-layout">
@@ -1086,6 +1124,97 @@ const HybridAgentBuilder: React.FC = () => {
               </Row>
             </div>
           </div>
+
+          {/* Cost & Performance Estimation Card */}
+          {(selectedBedrockModel || vectorDBConfig.enabled || mcpConfig.enabled) && (
+            <div className="aws-card mb-4" style={{ borderLeft: '4px solid #f59e0b' }}>
+              <div className="aws-card-header" style={{ backgroundColor: '#fffbeb' }}>
+                <strong>💰 Cost & Performance Estimation</strong>
+              </div>
+              <div className="aws-card-body">
+                <Row>
+                  <Col md={8}>
+                    <h6 className="mb-3">Cost Breakdown (per 1000 queries)</h6>
+                    
+                    {/* Bedrock Cost */}
+                    {selectedBedrockModel && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>
+                          Bedrock Model
+                          {selectedBedrockModelName && (
+                            <small className="text-muted"> ({selectedBedrockModelName})</small>
+                          )}:
+                        </span>
+                        <strong>${getBedrockCost().toFixed(3)}</strong>
+                      </div>
+                    )}
+                    
+                    {/* Vector DB Cost */}
+                    {vectorDBConfig.enabled && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>
+                          Vector DB (RAG)
+                          {vectorDBConfig.knowledgeBases.length > 0 && (
+                            <small className="text-muted"> ({vectorDBConfig.knowledgeBases.length} knowledge bases)</small>
+                          )}:
+                        </span>
+                        <strong className="text-warning">${vectorDBCost.toFixed(3)}</strong>
+                      </div>
+                    )}
+                    
+                    {/* MCP Cost */}
+                    {mcpConfig.enabled && mcpConfig.selectedServers.length > 0 && (
+                      <div className="d-flex justify-content-between mb-2">
+                        <span>
+                          MCP Tools
+                          <small className="text-muted"> ({mcpConfig.selectedServers.length} servers)</small>:
+                        </span>
+                        <strong className="text-info">${getMCPCost().toFixed(3)}</strong>
+                      </div>
+                    )}
+                    
+                    <hr />
+                    
+                    {/* Total Cost */}
+                    <div className="d-flex justify-content-between">
+                      <strong style={{ fontSize: '1.1em' }}>Total:</strong>
+                      <strong className="text-primary" style={{ fontSize: '1.3em' }}>
+                        ${calculateTotalCost().toFixed(2)}
+                      </strong>
+                    </div>
+                  </Col>
+                  
+                  <Col md={4}>
+                    <h6 className="mb-3">Performance</h6>
+                    <div className="text-center p-3" style={{ backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '2em', fontWeight: 'bold', color: '#0066cc' }}>
+                        {calculateTotalLatency()}ms
+                      </div>
+                      <small className="text-muted">Average Latency</small>
+                    </div>
+                  </Col>
+                </Row>
+                
+                <Alert variant="info" className="mt-3 mb-0" style={{ fontSize: '0.9em' }}>
+                  <strong>💡 Cost Optimization Tips:</strong>
+                  <ul className="mb-0 mt-2">
+                    {selectedBedrockModel && !selectedBedrockModel.includes('haiku') && (
+                      <li>Use Claude Haiku ($0.25) instead of Sonnet (${getBedrockCost()}) for simple tasks</li>
+                    )}
+                    {vectorDBConfig.enabled && (
+                      <li>Disable Vector DB if knowledge base search isn't needed for this agent</li>
+                    )}
+                    {mcpConfig.enabled && mcpConfig.selectedServers.length > 1 && (
+                      <li>Reduce MCP servers to only those required for your use case</li>
+                    )}
+                    {!vectorDBConfig.enabled && !mcpConfig.enabled && selectedBedrockModel && (
+                      <li>Your agent is optimized! Only using Bedrock with no additional overhead</li>
+                    )}
+                  </ul>
+                </Alert>
+              </div>
+            </div>
+          )}
 
           {/* Choose from Templates Section - Show when no components */}
           {components.length === 0 && (
@@ -1361,277 +1490,7 @@ const HybridAgentBuilder: React.FC = () => {
               </div>
             </Tab>
 
-            <Tab eventKey="validation" title="Test & Validate">
-              {/* Validation Section */}
-              <div className="aws-card mb-4">
-                <div className="aws-card-header">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>✅ Agent Validation</span>
-                    {!validationResults ? (
-                      <Button 
-                        variant="primary"
-                        onClick={validateAgent}
-                        disabled={components.length === 0}
-                      >
-                        {components.length === 0 ? 'Add Components First' : 'Run Validation'}
-                      </Button>
-                    ) : (
-                      <Button 
-                        variant="outline-secondary"
-                        onClick={validateAgent}
-                        size="sm"
-                      >
-                        Re-run Validation
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="aws-card-body">
-                  {validationResults ? (
-                    <>
-                      <Alert variant={validationResults.isValid ? 'success' : 'danger'}>
-                        <strong>
-                          {validationResults.isValid ? '✅ Validation Passed' : '❌ Validation Failed'}
-                        </strong>
-                      </Alert>
-                      
-                      {validationResults.errors.length > 0 && (
-                        <div className="mb-3">
-                          <h6>Errors:</h6>
-                          <ul className="text-danger">
-                            {validationResults.errors.map((error, index) => (
-                              <li key={index}>{error}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {validationResults.warnings.length > 0 && (
-                        <div className="mb-3">
-                          <h6>Warnings:</h6>
-                          <ul className="text-warning">
-                            {validationResults.warnings.map((warning, index) => (
-                              <li key={index}>{warning}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {validationResults.isValid && (
-                        <div>
-                          <h6>Agent Summary:</h6>
-                          <ul>
-                            <li>Components: {components.length}</li>
-                            <li>Connections: {connections.length}</li>
-                            <li>Estimated Runtime: {agentCompositionService.estimateExecutionTime(components.map(c => c.component))}s</li>
-                            <li>Resource Usage: {JSON.stringify(agentCompositionService.estimateResourceUsage(components.map(c => c.component)))}</li>
-                          </ul>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <Alert variant="info">
-                      {components.length === 0 
-                        ? 'Add components to your agent, then run validation to check the configuration.'
-                        : 'Click "Run Validation" to validate your hybrid agent configuration.'
-                      }
-                    </Alert>
-                  )}
-                </div>
-              </div>
-
-              {/* Testing Section */}
-              <div className="aws-card">
-                <div className="aws-card-header">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>🧪 Agent Testing</span>
-                    <div className="d-flex gap-2">
-                      {testingStatus === 'running' && (
-                        <div className="d-flex align-items-center me-3">
-                          <div className="spinner-border spinner-border-sm me-2" role="status"></div>
-                          <span>Testing... {testProgress}%</span>
-                        </div>
-                      )}
-                      <Button 
-                        variant="primary"
-                        onClick={runAllTests}
-                        disabled={!validationResults?.isValid || testingStatus === 'running' || components.length === 0}
-                      >
-                        {testingStatus === 'running' ? 'Testing...' : 
-                         !validationResults?.isValid ? 'Validate First' :
-                         components.length === 0 ? 'Add Components' : 
-                         'Run Tests'}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                <div className="aws-card-body">
-                  {testingStatus === 'idle' && (
-                    <Alert variant="info">
-                      {!validationResults?.isValid 
-                        ? 'Run validation first, then test your hybrid agent components and workflows.'
-                        : 'Click "Run Tests" to test individual components and end-to-end workflows.'
-                      }
-                    </Alert>
-                  )}
-
-                  {testingStatus === 'running' && (
-                    <div className="mb-3">
-                      <div className="d-flex justify-content-between mb-2">
-                        <span>Testing Progress</span>
-                        <span>{testProgress}%</span>
-                      </div>
-                      <div className="progress">
-                        <div 
-                          className="progress-bar progress-bar-striped progress-bar-animated" 
-                          style={{ width: `${testProgress}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Component Test Results */}
-                  {componentTestResults.length > 0 && (
-                    <div className="mb-4">
-                      <h6>Component Test Results</h6>
-                      {componentTestResults.map((result) => (
-                        <Card key={result.componentId} className="mb-2">
-                          <Card.Header className="py-2">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <span>
-                                <Badge bg={result.status === 'passed' ? 'success' : result.status === 'failed' ? 'danger' : result.status === 'running' ? 'warning' : 'secondary'} className="me-2">
-                                  {result.status === 'passed' ? 'Passed' : 
-                                   result.status === 'failed' ? 'Failed' : 
-                                   result.status === 'running' ? 'Running' : 'Pending'}
-                                </Badge>
-                                {result.componentName}
-                              </span>
-                              <small className="text-muted">
-                                {result.tests.filter(t => t.status === 'passed').length}/{result.tests.length} tests passed
-                                {result.duration > 0 && ` • ${result.duration}ms`}
-                              </small>
-                            </div>
-                          </Card.Header>
-                          <Card.Body className="py-2">
-                            {result.tests.map((test) => (
-                              <div key={test.id} className="d-flex justify-content-between align-items-center py-1">
-                                <div className="d-flex align-items-center">
-                                  <span className={`me-2 ${test.status === 'passed' ? 'text-success' : test.status === 'failed' ? 'text-danger' : 'text-muted'}`}>
-                                    {test.status === 'passed' ? 'Pass' : test.status === 'failed' ? 'Fail' : 'Pending'}
-                                  </span>
-                                  <span>{test.name}</span>
-                                  {test.message && (
-                                    <small className={`ms-2 ${test.status === 'passed' ? 'text-success' : test.status === 'failed' ? 'text-danger' : 'text-muted'}`}>
-                                      ({test.message})
-                                    </small>
-                                  )}
-                                </div>
-                                <small className="text-muted">{test.duration}ms</small>
-                              </div>
-                            ))}
-                          </Card.Body>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Workflow Test Results */}
-                  {workflowTestResults.length > 0 && (
-                    <div className="mb-4">
-                      <h6>Workflow Test Results</h6>
-                      {workflowTestResults.map((result) => (
-                        <Card key={result.id} className="mb-2">
-                          <Card.Header className="py-2">
-                            <div className="d-flex justify-content-between align-items-center">
-                              <span>
-                                <Badge bg={result.status === 'passed' ? 'success' : result.status === 'failed' ? 'danger' : result.status === 'running' ? 'warning' : 'secondary'} className="me-2">
-                                  {result.status === 'passed' ? 'Passed' : 
-                                   result.status === 'failed' ? 'Failed' : 
-                                   result.status === 'running' ? 'Running' : 'Pending'}
-                                </Badge>
-                                {result.name}
-                              </span>
-                              <small className="text-muted">
-                                {result.steps.filter(s => s.status === 'passed').length}/{result.steps.length} steps passed
-                                {result.duration > 0 && ` • ${result.duration}ms`}
-                              </small>
-                            </div>
-                          </Card.Header>
-                          <Card.Body className="py-2">
-                            {result.message && (
-                              <Alert variant={result.status === 'passed' ? 'success' : result.status === 'failed' ? 'danger' : 'info'} className="py-1 mb-2">
-                                <small>{result.message}</small>
-                              </Alert>
-                            )}
-                            <div className="workflow-steps">
-                              {result.steps.map((step, index) => {
-                                const component = components.find(c => c.id === step.componentId);
-                                return (
-                                  <div key={index} className="d-flex justify-content-between align-items-center py-1">
-                                    <div className="d-flex align-items-center">
-                                      <span className={`me-2 ${step.status === 'passed' ? 'text-success' : step.status === 'failed' ? 'text-danger' : 'text-muted'}`}>
-                                        {step.status === 'passed' ? 'Pass' : step.status === 'failed' ? 'Fail' : 'Pending'}
-                                      </span>
-                                      <span>{component?.component.name || step.componentId}</span>
-                                    </div>
-                                    {step.output && (
-                                      <small className="text-muted">{step.output}</small>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Test Summary */}
-                  {testingStatus === 'completed' && (
-                    <Alert variant="info">
-                      <strong>
-                        Testing Complete! 
-                      </strong>
-                      <div className="mt-2">
-                        <div>Component Tests: {componentTestResults.filter(r => r.status === 'passed').length}/{componentTestResults.length} passed</div>
-                        <div>Workflow Tests: {workflowTestResults.filter(r => r.status === 'passed').length}/{workflowTestResults.length} passed</div>
-                        {componentTestResults.every(r => r.status === 'passed') && 
-                         workflowTestResults.every(r => r.status === 'passed') && (
-                          <div className="mt-2">
-                            <strong>All tests passed! Your hybrid agent is ready for deployment.</strong>
-                          </div>
-                        )}
-                      </div>
-                    </Alert>
-                  )}
-
-                  {testingStatus === 'failed' && (
-                    <Alert variant="info">
-                      <strong>Testing Failed!</strong>
-                      <p>There was an error running the tests. Please check your agent configuration and try again.</p>
-                    </Alert>
-                  )}
-                </div>
-              </div>
-
-              {/* Comprehensive Data Flow Testing - Task 6.7 */}
-              <div className="mt-4">
-                <DataFlowTestingPanel
-                  workflowId={agentName || 'hybrid-agent'}
-                  components={components}
-                  onTestComplete={(result) => {
-                    console.log('Comprehensive test completed:', result);
-                    // Update testing status based on comprehensive test results
-                    if (result.status === 'passed') {
-                      setTestingStatus('completed');
-                    } else if (result.status === 'failed') {
-                      setTestingStatus('failed');
-                    }
-                  }}
-                />
-              </div>
-            </Tab>
+            {/* Test & Validate tab removed - use dedicated Agent Testing section instead */}
 
             <Tab eventKey="faq" title="FAQ & Tools">
               <div className="aws-card">

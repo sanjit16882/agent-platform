@@ -4,9 +4,11 @@ import Card from './Card';
 import Badge from './Badge';
 import Button from './Button';
 import AgentStatusIndicator from './AgentStatusIndicator';
+import TestingBadge from './TestingBadge';
 import { Agent } from '../../types/agent';
 import { MCPIndicatorBadge, extractMCPConfig } from '../mcp/MCPIndicatorBadge';
-import TestingStatusBadge from '../testing/TestingStatusBadge';
+import TestingSummaryBadge from '../testing/TestingSummaryBadge';
+import { theme } from '../../styles/theme';
 
 interface AgentCardProps {
   agent: Agent & {
@@ -26,6 +28,22 @@ interface AgentCardProps {
   onViewDetails?: (agent: Agent) => void;
   getCategoryColor: (category: string) => string;
 }
+
+// Helper function to format relative time
+const formatRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+};
 
 const AgentCard: React.FC<AgentCardProps> = ({
   agent,
@@ -142,10 +160,12 @@ const AgentCard: React.FC<AgentCardProps> = ({
               mcpConfig={extractMCPConfig(agent) || undefined} 
               size="sm"
             />
-            <TestingStatusBadge 
-              status={agent.testingStatus} 
-              size="sm"
-            />
+            {agent.testingStatus && agent.testingStatus.quality && (
+              <TestingBadge 
+                quality={agent.testingStatus.quality}
+                passRate={agent.testingStatus.passRate}
+              />
+            )}
           </div>
           <small 
             className="text-muted" 
@@ -242,18 +262,73 @@ const AgentCard: React.FC<AgentCardProps> = ({
               </Button>
             </div>
             
-            {/* Testing Actions */}
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => navigate(`/agent-testing?agent=${agent.agent_id}`)}
-              className="w-100"
-              title="Run tests for this agent"
-            >
-              🧪 Run Tests
-            </Button>
+            {/* Testing Status Section */}
+            {agent.testingStatus && agent.testingStatus.quality !== 'not-tested' && (
+              <div style={{
+                marginBottom: theme.spacing.sm,
+                padding: theme.spacing.sm,
+                backgroundColor: theme.colors.backgroundSecondary,
+                borderRadius: theme.borderRadius.sm,
+                border: `1px solid ${theme.colors.border}`
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: theme.spacing.xs
+                }}>
+                  <div style={{
+                    fontSize: theme.typography.fontSize.xs,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    color: theme.colors.textPrimary
+                  }}>
+                    📊 Test Results
+                  </div>
+                  {agent.testingStatus.quality && (
+                    <TestingBadge 
+                      quality={agent.testingStatus.quality}
+                      passRate={agent.testingStatus.passRate}
+                      compact
+                    />
+                  )}
+                </div>
+                
+                <div style={{
+                  fontSize: theme.typography.fontSize.xs,
+                  color: theme.colors.textSecondary,
+                  marginBottom: theme.spacing.xs
+                }}>
+                  Pass Rate: {agent.testingStatus.passRate}% 
+                  {agent.testingStatus.universalTests && (
+                    <>({agent.testingStatus.universalTests.passed}/{agent.testingStatus.universalTests.total})</>
+                  )}
+                </div>
+                
+                <div style={{
+                  fontSize: theme.typography.fontSize.xs,
+                  color: theme.colors.textMuted,
+                  marginBottom: theme.spacing.xs
+                }}>
+                  {agent.testingStatus.lastTestRun && (
+                    <>Last: {formatRelativeTime(agent.testingStatus.lastTestRun)}</>
+                  )}
+                </div>
+                
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => navigate(`/agent-testing?agentId=${agent.agent_id}`)}
+                  style={{ width: '100%', fontSize: theme.typography.fontSize.xs }}
+                >
+                  View History →
+                </Button>
+              </div>
+            )}
             
-            <div className="d-flex gap-1">
+            {/* Testing Summary Badge - NEW */}
+            <TestingSummaryBadge agentId={agent.agent_id} />
+            
+            <div className="d-flex gap-1" style={{ marginTop: theme.spacing.sm }}>
               <Button
                 variant="outline-secondary"
                 size="sm"

@@ -1,629 +1,347 @@
-// Unified Agent Testing Service
-// Provides consistent testing functionality across all agent creation workflows
+/**
+ * Agent Testing Summary Service
+ * Fetches testing summary data for agents to display in catalog and executor pages
+ * This is a focused service for displaying test results, not for running tests
+ */
 
-export interface UnifiedTestResult {
-  id: string;
-  name: string;
-  status: 'pending' | 'running' | 'passed' | 'failed' | 'skipped';
-  duration: number;
-  message?: string;
-  category: 'functionality' | 'security' | 'performance' | 'integration' | 'validation';
-  confidence?: number;
+import axios from 'axios';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+
+export interface AgentTestingSummary {
+  agentId: string;
+  bestModel: {
+    name: string;
+    modelId: string;
+    score: number;
+    passRate: number;
+  } | null;
+  lastTested: string | null;
+  totalTests: number;
+  modelComparison: Array<{
+    model: string;
+    modelId: string;
+    score: number;
+    passRate: number;
+  }>;
+  hasTestData: boolean;
 }
 
-export interface TestSuite {
-  id: string;
-  name: string;
-  description: string;
-  tests: UnifiedTestResult[];
-  status: 'pending' | 'running' | 'passed' | 'failed';
-  totalDuration: number;
-  passRate: number;
+export interface AgentTestingDetailed extends AgentTestingSummary {
+  models: Array<{
+    modelId: string;
+    modelName: string;
+    overallScore: number;
+    passRate: number;
+    totalCost: number;
+    avgSpeed: number;
+    categoryScores: {
+      hallucination?: number;
+      functional?: number;
+      safety?: number;
+      intent_detection?: number;
+      emotional?: number;
+      [key: string]: number | undefined;
+    };
+    testResults: Array<{
+      testName: string;
+      score: number;
+      passed: boolean;
+    }>;
+  }>;
 }
 
-export interface AgentTestingConfig {
-  agentType: 'upload' | 'hybrid' | 'natural-language';
-  agentData: any;
-  testCategories: string[];
-  customTests?: Partial<UnifiedTestResult>[];
-}
-
-export interface TestingProgress {
-  currentSuite: string;
-  currentTest: string;
-  overallProgress: number;
-  suiteProgress: number;
-  estimatedTimeRemaining: number;
-}
-
-class AgentTestingService {
-  private static instance: AgentTestingService;
-  
-  static getInstance(): AgentTestingService {
-    if (!AgentTestingService.instance) {
-      AgentTestingService.instance = new AgentTestingService();
-    }
-    return AgentTestingService.instance;
-  }
-
+class AgentTestingSummaryService {
   /**
-   * Generate comprehensive test suites for any agent type
+   * Get testing summary for an agent (for Agent Catalog)
    */
-  generateTestSuites(config: AgentTestingConfig): TestSuite[] {
-    const suites: TestSuite[] = [];
+  async getAgentTestingSummary(agentId: string): Promise<AgentTestingSummary> {
+    try {
+      // Fetch recent test runs for this agent
+      const response = await axios.get(`${API_BASE_URL}/api/testing/agents/${agentId}/runs`, {
+        params: { limit: 20 }
+      });
 
-    // Core validation suite (applies to all agent types)
-    suites.push(this.generateCoreValidationSuite(config));
-
-    // Security suite (applies to all agent types)
-    suites.push(this.generateSecuritySuite(config));
-
-    // Performance suite (applies to all agent types)
-    suites.push(this.generatePerformanceSuite(config));
-
-    // Agent-type specific suites
-    switch (config.agentType) {
-      case 'upload':
-        suites.push(this.generateUploadSpecificSuite(config));
-        break;
-      case 'hybrid':
-        suites.push(this.generateHybridSpecificSuite(config));
-        break;
-      case 'natural-language':
-        suites.push(this.generateNLSpecificSuite(config));
-        break;
-    }
-
-    // Integration suite (applies to all agent types)
-    suites.push(this.generateIntegrationSuite(config));
-
-    return suites;
-  }
-
-  /**
-   * Execute test suites with progress tracking
-   */
-  async executeTestSuites(
-    suites: TestSuite[],
-    onProgress?: (progress: TestingProgress) => void,
-    onSuiteComplete?: (suite: TestSuite) => void,
-    onTestComplete?: (test: UnifiedTestResult) => void
-  ): Promise<TestSuite[]> {
-    const results: TestSuite[] = [];
-    let overallTestCount = 0;
-    let completedTestCount = 0;
-
-    // Count total tests
-    suites.forEach(suite => {
-      overallTestCount += suite.tests.length;
-    });
-
-    for (let suiteIndex = 0; suiteIndex < suites.length; suiteIndex++) {
-      const suite = suites[suiteIndex];
-      const suiteStartTime = Date.now();
-      
-      suite.status = 'running';
-      const updatedSuite = { ...suite };
-      
-      for (let testIndex = 0; testIndex < suite.tests.length; testIndex++) {
-        const test = suite.tests[testIndex];
-        
-        // Update progress
-        const overallProgress = Math.round((completedTestCount / overallTestCount) * 100);
-        const suiteProgress = Math.round((testIndex / suite.tests.length) * 100);
-        const estimatedTimeRemaining = this.estimateRemainingTime(
-          completedTestCount, 
-          overallTestCount, 
-          Date.now() - suiteStartTime
-        );
-
-        onProgress?.({
-          currentSuite: suite.name,
-          currentTest: test.name,
-          overallProgress,
-          suiteProgress,
-          estimatedTimeRemaining
-        });
-
-        // Execute test
-        test.status = 'running';
-        onTestComplete?.(test);
-
-        const testResult = await this.executeTest(test, suite.id);
-        
-        updatedSuite.tests[testIndex] = testResult;
-        onTestComplete?.(testResult);
-        
-        completedTestCount++;
+      if (!response.data.success || !response.data.data || response.data.data.length === 0) {
+        return this.getEmptySummary(agentId);
       }
 
-      // Calculate suite results
-      updatedSuite.totalDuration = Date.now() - suiteStartTime;
-      updatedSuite.passRate = Math.round(
-        (updatedSuite.tests.filter(t => t.status === 'passed').length / updatedSuite.tests.length) * 100
-      );
-      updatedSuite.status = updatedSuite.tests.every(t => t.status === 'passed') ? 'passed' : 'failed';
+      const runs = response.data.data;
+      
+      // Group runs by model to calculate average scores
+      const modelStats = new Map<string, {
+        scores: number[];
+        passRates: number[];
+        totalTests: number;
+        passedTests: number;
+      }>();
 
-      results.push(updatedSuite);
-      onSuiteComplete?.(updatedSuite);
+      runs.forEach((run: any) => {
+        const modelId = run.model_id || run.modelId || 'unknown';
+        
+        if (!modelStats.has(modelId)) {
+          modelStats.set(modelId, {
+            scores: [],
+            passRates: [],
+            totalTests: 0,
+            passedTests: 0
+          });
+        }
+
+        const stats = modelStats.get(modelId)!;
+        stats.scores.push(run.overall_score || run.overallScore || 0);
+        stats.passRates.push(run.summary?.pass_rate || run.passRate || 0);
+        stats.totalTests += run.summary?.total || run.totalTests || 0;
+        stats.passedTests += run.summary?.passed || run.passedTests || 0;
+      });
+
+      // Calculate averages and create model comparison
+      const modelComparison = Array.from(modelStats.entries()).map(([modelId, stats]) => {
+        const avgScore = stats.scores.reduce((a, b) => a + b, 0) / stats.scores.length;
+        const avgPassRate = stats.passRates.reduce((a, b) => a + b, 0) / stats.passRates.length;
+        
+        return {
+          model: this.getModelDisplayName(modelId),
+          modelId,
+          score: Math.round(avgScore * 10) / 10,
+          passRate: Math.round(avgPassRate * 10) / 10
+        };
+      });
+
+      // Sort by score descending
+      modelComparison.sort((a, b) => b.score - a.score);
+
+      // Get top 3 models
+      const top3Models = modelComparison.slice(0, 3);
+
+      // Best model is the first one
+      const bestModel = modelComparison.length > 0 ? {
+        name: modelComparison[0].model,
+        modelId: modelComparison[0].modelId,
+        score: modelComparison[0].score,
+        passRate: modelComparison[0].passRate
+      } : null;
+
+      // Get most recent test date
+      const lastTested = runs[0]?.timestamp || runs[0]?.created_at || null;
+
+      // Count total unique tests
+      const totalTests = Math.max(...runs.map((r: any) => r.summary?.total || r.totalTests || 0));
+
+      return {
+        agentId,
+        bestModel,
+        lastTested,
+        totalTests,
+        modelComparison: top3Models,
+        hasTestData: true
+      };
+
+    } catch (error) {
+      console.error(`Error fetching testing summary for agent ${agentId}:`, error);
+      return this.getEmptySummary(agentId);
     }
-
-    return results;
   }
 
   /**
-   * Generate core validation test suite
+   * Get detailed testing data for an agent (for Agent Executor)
    */
-  private generateCoreValidationSuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'core-validation',
-      name: 'Core Validation',
-      description: 'Essential validation tests for agent functionality',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'core-1',
-          name: 'Agent Initialization',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        {
-          id: 'core-2',
-          name: 'Input Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        {
-          id: 'core-3',
-          name: 'Configuration Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'validation'
-        },
-        {
-          id: 'core-4',
-          name: 'Output Format Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'validation'
+  async getAgentTestingDetailed(agentId: string): Promise<AgentTestingDetailed> {
+    try {
+      const summary = await this.getAgentTestingSummary(agentId);
+      
+      // Fetch all test runs for detailed analysis
+      const response = await axios.get(`${API_BASE_URL}/api/testing/agents/${agentId}/runs`, {
+        params: { limit: 50 }
+      });
+
+      if (!response.data.success || !response.data.data || response.data.data.length === 0) {
+        return {
+          ...summary,
+          models: []
+        };
+      }
+
+      const runs = response.data.data;
+
+      // Group by model and aggregate detailed stats
+      const modelDetailsMap = new Map<string, any>();
+
+      runs.forEach((run: any) => {
+        const modelId = run.model_id || run.modelId || 'unknown';
+        
+        if (!modelDetailsMap.has(modelId)) {
+          modelDetailsMap.set(modelId, {
+            modelId,
+            modelName: this.getModelDisplayName(modelId),
+            scores: [],
+            passRates: [],
+            costs: [],
+            durations: [],
+            categoryScoresArray: [],
+            testResultsMap: new Map<string, { scores: number[]; passed: number; failed: number }>()
+          });
         }
-      ]
-    };
-  }
 
-  /**
-   * Generate security test suite
-   */
-  private generateSecuritySuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'security',
-      name: 'Security Assessment',
-      description: 'Security vulnerability and compliance testing',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'sec-1',
-          name: 'Input Sanitization',
-          status: 'pending',
-          duration: 0,
-          category: 'security'
-        },
-        {
-          id: 'sec-2',
-          name: 'Authentication Check',
-          status: 'pending',
-          duration: 0,
-          category: 'security'
-        },
-        {
-          id: 'sec-3',
-          name: 'Data Encryption Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'security'
-        },
-        {
-          id: 'sec-4',
-          name: 'Access Control Verification',
-          status: 'pending',
-          duration: 0,
-          category: 'security'
+        const details = modelDetailsMap.get(modelId)!;
+        details.scores.push(run.overall_score || run.overallScore || 0);
+        details.passRates.push(run.summary?.pass_rate || run.passRate || 0);
+        details.costs.push(run.cost || 0);
+        details.durations.push(run.duration || 0);
+
+        // Aggregate category scores
+        if (run.scores_by_category || run.scoresByCategory) {
+          details.categoryScoresArray.push(run.scores_by_category || run.scoresByCategory);
         }
-      ]
-    };
-  }
 
-  /**
-   * Generate performance test suite
-   */
-  private generatePerformanceSuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'performance',
-      name: 'Performance Testing',
-      description: 'Performance benchmarks and resource usage validation',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'perf-1',
-          name: 'Response Time Benchmark',
-          status: 'pending',
-          duration: 0,
-          category: 'performance'
-        },
-        {
-          id: 'perf-2',
-          name: 'Memory Usage Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'performance'
-        },
-        {
-          id: 'perf-3',
-          name: 'Concurrent Request Handling',
-          status: 'pending',
-          duration: 0,
-          category: 'performance'
-        },
-        {
-          id: 'perf-4',
-          name: 'Resource Cleanup Verification',
-          status: 'pending',
-          duration: 0,
-          category: 'performance'
+        // Aggregate test results
+        if (run.results && Array.isArray(run.results)) {
+          run.results.forEach((result: any) => {
+            const testName = result.test_name || result.testName || 'Unknown Test';
+            if (!details.testResultsMap.has(testName)) {
+              details.testResultsMap.set(testName, { scores: [], passed: 0, failed: 0 });
+            }
+            const testStats = details.testResultsMap.get(testName)!;
+            testStats.scores.push(result.score || 0);
+            if (result.passed) {
+              testStats.passed++;
+            } else {
+              testStats.failed++;
+            }
+          });
         }
-      ]
-    };
-  }
+      });
 
-  /**
-   * Generate upload-specific test suite
-   */
-  private generateUploadSpecificSuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'upload-specific',
-      name: 'Upload Agent Testing',
-      description: 'Tests specific to uploaded agent packages',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'upload-1',
-          name: 'Package Integrity Check',
-          status: 'pending',
-          duration: 0,
-          category: 'validation'
-        },
-        {
-          id: 'upload-2',
-          name: 'Dependency Resolution',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        {
-          id: 'upload-3',
-          name: 'Metadata Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'validation'
-        },
-        {
-          id: 'upload-4',
-          name: 'Execution Environment Setup',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
+      // Convert to final format
+      const models = Array.from(modelDetailsMap.values()).map(details => {
+        const avgScore = details.scores.reduce((a: number, b: number) => a + b, 0) / details.scores.length;
+        const avgPassRate = details.passRates.reduce((a: number, b: number) => a + b, 0) / details.passRates.length;
+        const totalCost = details.costs.reduce((a: number, b: number) => a + b, 0);
+        const avgSpeed = details.durations.reduce((a: number, b: number) => a + b, 0) / details.durations.length;
+
+        // Average category scores
+        const categoryScores: any = {};
+        if (details.categoryScoresArray.length > 0) {
+          const allCategories = new Set<string>();
+          details.categoryScoresArray.forEach((scores: any) => {
+            Object.keys(scores).forEach(cat => allCategories.add(cat));
+          });
+
+          allCategories.forEach(category => {
+            const categoryValues = details.categoryScoresArray
+              .map((scores: any) => scores[category]?.score || scores[category] || 0)
+              .filter((v: number) => v > 0);
+            
+            if (categoryValues.length > 0) {
+              categoryScores[category] = Math.round(
+                (categoryValues.reduce((a: number, b: number) => a + b, 0) / categoryValues.length) * 10
+              ) / 10;
+            }
+          });
         }
-      ]
-    };
-  }
 
-  /**
-   * Generate hybrid-specific test suite
-   */
-  private generateHybridSpecificSuite(config: AgentTestingConfig): TestSuite {
-    const componentCount = config.agentData?.components?.length || 0;
-    
-    return {
-      id: 'hybrid-specific',
-      name: 'Hybrid Agent Testing',
-      description: 'Tests for multi-component hybrid agent workflows',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'hybrid-1',
-          name: 'Component Integration',
-          status: 'pending',
-          duration: 0,
-          category: 'integration'
-        },
-        {
-          id: 'hybrid-2',
-          name: 'Data Flow Validation',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        {
-          id: 'hybrid-3',
-          name: 'Orchestration Logic',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        {
-          id: 'hybrid-4',
-          name: 'Error Propagation',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality'
-        },
-        ...(componentCount > 0 ? [{
-          id: 'hybrid-5',
-          name: `Component Compatibility (${componentCount} components)`,
-          status: 'pending' as const,
-          duration: 0,
-          category: 'integration' as const
-        }] : [])
-      ]
-    };
-  }
+        // Average test results
+        const testResults: Array<{ testName: string; score: number; passed: boolean }> = [];
+        details.testResultsMap.forEach((stats: any, testName: string) => {
+          const avgScore = stats.scores.reduce((a: number, b: number) => a + b, 0) / stats.scores.length;
+          const passed = stats.passed > stats.failed;
+          testResults.push({
+            testName,
+            score: Math.round(avgScore * 10) / 10,
+            passed
+          });
+        });
 
-  /**
-   * Generate natural language specific test suite
-   */
-  private generateNLSpecificSuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'nl-specific',
-      name: 'Natural Language Testing',
-      description: 'Tests for natural language understanding and generation',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'nl-1',
-          name: 'Intent Recognition',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality',
-          confidence: 0
-        },
-        {
-          id: 'nl-2',
-          name: 'Context Understanding',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality',
-          confidence: 0
-        },
-        {
-          id: 'nl-3',
-          name: 'Response Generation Quality',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality',
-          confidence: 0
-        },
-        {
-          id: 'nl-4',
-          name: 'Conversation Flow',
-          status: 'pending',
-          duration: 0,
-          category: 'functionality',
-          confidence: 0
-        }
-      ]
-    };
-  }
+        return {
+          modelId: details.modelId,
+          modelName: details.modelName,
+          overallScore: Math.round(avgScore * 10) / 10,
+          passRate: Math.round(avgPassRate * 10) / 10,
+          totalCost: Math.round(totalCost * 100) / 100,
+          avgSpeed: Math.round(avgSpeed * 10) / 10,
+          categoryScores,
+          testResults
+        };
+      });
 
-  /**
-   * Generate integration test suite
-   */
-  private generateIntegrationSuite(config: AgentTestingConfig): TestSuite {
-    return {
-      id: 'integration',
-      name: 'Integration Testing',
-      description: 'End-to-end integration and deployment readiness',
-      status: 'pending',
-      totalDuration: 0,
-      passRate: 0,
-      tests: [
-        {
-          id: 'int-1',
-          name: 'API Integration',
-          status: 'pending',
-          duration: 0,
-          category: 'integration'
-        },
-        {
-          id: 'int-2',
-          name: 'External Service Connectivity',
-          status: 'pending',
-          duration: 0,
-          category: 'integration'
-        },
-        {
-          id: 'int-3',
-          name: 'Deployment Readiness',
-          status: 'pending',
-          duration: 0,
-          category: 'validation'
-        },
-        {
-          id: 'int-4',
-          name: 'Monitoring Integration',
-          status: 'pending',
-          duration: 0,
-          category: 'integration'
-        }
-      ]
-    };
-  }
+      // Sort by overall score
+      models.sort((a, b) => b.overallScore - a.overallScore);
 
-  /**
-   * Execute individual test
-   */
-  private async executeTest(
-    test: UnifiedTestResult, 
-    suiteId: string
-  ): Promise<UnifiedTestResult> {
-    const startTime = Date.now();
-    
-    // Simulate test execution time based on category
-    const executionTime = this.getTestExecutionTime(test.category);
-    await new Promise(resolve => setTimeout(resolve, executionTime));
-    
-    // Simulate test results with realistic pass rates
-    const passRate = this.getTestPassRate(test.category, 'hybrid'); // Default to hybrid for now
-    const passed = Math.random() < passRate;
-    
-    const result: UnifiedTestResult = {
-      ...test,
-      status: passed ? 'passed' : 'failed',
-      duration: Date.now() - startTime,
-      message: passed ? undefined : this.getFailureMessage(test.name, test.category),
-      confidence: test.category === 'functionality' 
-        ? Math.round(70 + Math.random() * 30) 
-        : undefined
-    };
+      return {
+        ...summary,
+        models
+      };
 
-    return result;
-  }
-
-  /**
-   * Get test execution time based on category
-   */
-  private getTestExecutionTime(category: string): number {
-    const baseTimes = {
-      functionality: 400,
-      security: 800,
-      performance: 1200,
-      integration: 600,
-      validation: 300
-    };
-    
-    const baseTime = baseTimes[category as keyof typeof baseTimes] || 500;
-    return baseTime + Math.random() * 400;
-  }
-
-  /**
-   * Get test pass rate based on category and agent type
-   */
-  private getTestPassRate(category: string, agentType: string): number {
-    const baseRates = {
-      functionality: 0.90,
-      security: 0.85,
-      performance: 0.80,
-      integration: 0.85,
-      validation: 0.95
-    };
-    
-    let rate = baseRates[category as keyof typeof baseRates] || 0.85;
-    
-    // Adjust based on agent type
-    if (agentType === 'natural-language' && category === 'functionality') {
-      rate = 0.85; // NL agents have slightly lower functionality pass rate
+    } catch (error) {
+      console.error(`Error fetching detailed testing data for agent ${agentId}:`, error);
+      const summary = await this.getAgentTestingSummary(agentId);
+      return {
+        ...summary,
+        models: []
+      };
     }
-    
-    return rate;
   }
 
   /**
-   * Get failure message for test
+   * Get empty summary when no test data exists
    */
-  private getFailureMessage(testName: string, category: string): string {
-    const messages: { [key: string]: string } = {
-      'Agent Initialization': 'Agent failed to initialize properly',
-      'Input Validation': 'Input validation rules are not properly configured',
-      'Configuration Validation': 'Agent configuration contains errors',
-      'Output Format Validation': 'Output format does not match expected schema',
-      'Input Sanitization': 'Input sanitization is insufficient',
-      'Authentication Check': 'Authentication mechanism has vulnerabilities',
-      'Data Encryption Validation': 'Data encryption is not properly implemented',
-      'Access Control Verification': 'Access control rules are not enforced',
-      'Response Time Benchmark': 'Response time exceeds acceptable thresholds',
-      'Memory Usage Validation': 'Memory usage is higher than expected',
-      'Concurrent Request Handling': 'Agent fails under concurrent load',
-      'Resource Cleanup Verification': 'Resources are not properly cleaned up',
-      'Package Integrity Check': 'Uploaded package has integrity issues',
-      'Dependency Resolution': 'Dependencies cannot be resolved',
-      'Metadata Validation': 'Agent metadata is invalid or incomplete',
-      'Execution Environment Setup': 'Cannot set up proper execution environment',
-      'Component Integration': 'Components do not integrate properly',
-      'Data Flow Validation': 'Data flow between components is broken',
-      'Orchestration Logic': 'Orchestration logic contains errors',
-      'Error Propagation': 'Errors are not properly propagated',
-      'Intent Recognition': 'Agent fails to recognize user intent',
-      'Context Understanding': 'Agent does not maintain proper context',
-      'Response Generation Quality': 'Generated responses are of poor quality',
-      'Conversation Flow': 'Conversation flow is not natural',
-      'API Integration': 'API integration is not working properly',
-      'External Service Connectivity': 'Cannot connect to external services',
-      'Deployment Readiness': 'Agent is not ready for deployment',
-      'Monitoring Integration': 'Monitoring integration is not configured'
-    };
-    
-    return messages[testName] || `${testName} failed during ${category} testing`;
-  }
-
-  /**
-   * Estimate remaining time for testing
-   */
-  private estimateRemainingTime(completed: number, total: number, elapsed: number): number {
-    if (completed === 0) return 0;
-    
-    const avgTimePerTest = elapsed / completed;
-    const remaining = total - completed;
-    
-    return Math.round(avgTimePerTest * remaining);
-  }
-
-  /**
-   * Get overall test summary
-   */
-  getTestSummary(suites: TestSuite[]): {
-    totalTests: number;
-    passedTests: number;
-    failedTests: number;
-    overallPassRate: number;
-    totalDuration: number;
-    readyForDeployment: boolean;
-  } {
-    let totalTests = 0;
-    let passedTests = 0;
-    let totalDuration = 0;
-
-    suites.forEach(suite => {
-      totalTests += suite.tests.length;
-      passedTests += suite.tests.filter(t => t.status === 'passed').length;
-      totalDuration += suite.totalDuration;
-    });
-
-    const failedTests = totalTests - passedTests;
-    const overallPassRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
-    const readyForDeployment = overallPassRate >= 85; // 85% pass rate threshold
-
+  private getEmptySummary(agentId: string): AgentTestingSummary {
     return {
-      totalTests,
-      passedTests,
-      failedTests,
-      overallPassRate,
-      totalDuration,
-      readyForDeployment
+      agentId,
+      bestModel: null,
+      lastTested: null,
+      totalTests: 0,
+      modelComparison: [],
+      hasTestData: false
     };
+  }
+
+  /**
+   * Convert model ID to display name
+   */
+  private getModelDisplayName(modelId: string): string {
+    const modelNames: Record<string, string> = {
+      'anthropic.claude-3-5-sonnet-20240620-v1:0': 'Claude 3.5 Sonnet',
+      'anthropic.claude-3-sonnet-20240229-v1:0': 'Claude 3 Sonnet',
+      'anthropic.claude-3-haiku-20240307-v1:0': 'Claude 3 Haiku',
+      'anthropic.claude-v2:1': 'Claude 2.1',
+      'anthropic.claude-v2': 'Claude 2',
+      'amazon.titan-text-express-v1': 'Titan Text Express',
+      'amazon.titan-text-lite-v1': 'Titan Text Lite',
+      'meta.llama3-70b-instruct-v1:0': 'Llama 3 70B',
+      'meta.llama3-8b-instruct-v1:0': 'Llama 3 8B',
+      'mistral.mistral-7b-instruct-v0:2': 'Mistral 7B',
+      'mistral.mixtral-8x7b-instruct-v0:1': 'Mixtral 8x7B'
+    };
+
+    return modelNames[modelId] || modelId.split('.').pop()?.split('-').map(w => 
+      w.charAt(0).toUpperCase() + w.slice(1)
+    ).join(' ') || modelId;
+  }
+
+  /**
+   * Format relative time (e.g., "2 hours ago")
+   */
+  formatRelativeTime(timestamp: string | null): string {
+    if (!timestamp) return 'Never tested';
+
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return then.toLocaleDateString();
   }
 }
 
-export const agentTestingService = AgentTestingService.getInstance();
+export const agentTestingService = new AgentTestingSummaryService();
+
+// Export for backward compatibility
+export default agentTestingService;

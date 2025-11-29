@@ -1,16 +1,10 @@
-/**
- * VectorDBAdminPage
- * 
- * Admin page for Vector DB access request management
- */
-
 import React from 'react';
-import VectorDBAdminDashboard from '../components/VectorDBAdminDashboard';
 
 const VectorDBAdminPage: React.FC = () => {
   return (
-    <div className="vector-db-admin-page">
-      <VectorDBAdminDashboard />
+    <div style={{ padding: '2rem' }}>
+      <h1>Vector DB Admin</h1>
+      <p>Vector database administration page</p>
     </div>
   );
 };

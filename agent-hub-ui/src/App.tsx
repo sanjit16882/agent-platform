@@ -30,7 +30,6 @@ import RealCloudWatchMetrics from './components/RealCloudWatchMetrics';
 import RealAPIDocumentation from './components/RealAPIDocumentation';
 import APIKeyManagement from './components/APIKeyManagement';
 import RealAnalyticsDashboard from './components/RealAnalyticsDashboard';
-import BusinessIntelligenceDashboard from './components/BusinessIntelligenceDashboard';
 import AnalyticsComparison from './components/AnalyticsComparison';
 import ContinuousLearningDashboard from './components/ContinuousLearningDashboard';
 
@@ -108,7 +107,6 @@ function App() {
 
             <Route path="/metrics" element={<RealCloudWatchMetrics />} />
             <Route path="/analytics" element={<RealAnalyticsDashboard />} />
-            <Route path="/business-intelligence" element={<BusinessIntelligenceDashboard />} />
             <Route path="/analytics-comparison" element={<AnalyticsComparison />} />
             <Route path="/learning" element={<ContinuousLearningDashboard />} />
             <Route path="/api-docs" element={<RealAPIDocumentation />} />

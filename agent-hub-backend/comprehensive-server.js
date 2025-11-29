@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const cacheMiddleware = require('./middleware/cacheMiddleware');
 
 // Demo mode check - disable real AWS service in demo
 const isDemoMode = process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'demo';
@@ -14,6 +16,29 @@ const githubService = require('./services/githubService');
 const app = express();
 const PORT = 3002;
 
+// Rate limiting configuration
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Skip rate limiting for certain routes if needed
+  skip: (req) => {
+    // Don't rate limit health checks
+    return req.path === '/health' || req.path === '/api/health';
+  }
+});
+
+// Stricter rate limit for test execution endpoints
+const testExecutionLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 20, // Limit to 20 test executions per minute
+  message: 'Too many test execution requests, please slow down.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3003', 'http://agenthub.ai:3000', 'http://agenthub.ai', /\.ngrok\.io$/, /\.ngrok-free\.app$/],
@@ -21,6 +46,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-demo-password']
 }));
 app.use(express.json());
+
+// Apply general rate limiting to all requests
+app.use(limiter);
+
+// Cache GET requests for 30 seconds
+app.use(cacheMiddleware(30000));
+
+console.log('✅ Rate limiting enabled: 100 requests/minute per IP');
+console.log('✅ Response caching enabled: 30 seconds');
 
 // Demo mode protection
 if (process.env.DEMO_MODE === 'true') {

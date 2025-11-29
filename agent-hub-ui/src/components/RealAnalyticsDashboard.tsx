@@ -47,25 +47,30 @@ const RealAnalyticsDashboard: React.FC = () => {
       // Refresh execution history from backend first
       await advancedAnalyticsService.refreshExecutionHistory();
       
-      // Get real data from backend APIs
-      const [agents, businessMetrics, systemMetrics] = await Promise.all([
+      // Get real data from backend APIs - include both AgentConfig and S3 agents
+      const [agents, s3Agents, businessMetrics, systemMetrics] = await Promise.all([
         agentApiService.getAgents(),
+        s3AgentService.getAllAgents(),
         advancedAnalyticsService.getBusinessMetrics(),
         advancedAnalyticsService.getRealTimeSystemMetrics()
       ]);
 
-      // Calculate real metrics from actual data
-      // Use all agents from the API (AgentConfig doesn't have agent_type filtering)
-      const totalAgents = agents.length;
+      // Combine all agents from both sources
+      const allAgents = [...agents, ...s3Agents];
+      const totalAgents = allAgents.length;
       const agentInsights = await advancedAnalyticsService.getAgentInsights();
       
       const totalExecutions = agentInsights.reduce((sum, agent) => sum + agent.executionCount, 0);
       const totalCostSavings = agentInsights.reduce((sum, agent) => sum + agent.costSavings, 0);
-      const avgSuccessRate = agentInsights.length > 0 
-        ? agentInsights.reduce((sum, agent) => sum + agent.successRate, 0) / agentInsights.length 
+      
+      // Calculate weighted average success rate based on execution counts
+      const agentsWithExecutions = agentInsights.filter(agent => agent.executionCount > 0);
+      const avgSuccessRate = agentsWithExecutions.length > 0
+        ? agentsWithExecutions.reduce((sum, agent) => sum + (agent.successRate * agent.executionCount), 0) / totalExecutions
         : 0;
-      const avgResponseTime = agentInsights.length > 0
-        ? agentInsights.reduce((sum, agent) => sum + agent.averageLatency, 0) / agentInsights.length
+      
+      const avgResponseTime = agentsWithExecutions.length > 0
+        ? agentsWithExecutions.reduce((sum, agent) => sum + agent.averageLatency, 0) / agentsWithExecutions.length
         : 0;
 
       setRealMetrics({
@@ -79,18 +84,44 @@ const RealAnalyticsDashboard: React.FC = () => {
         errorRate: systemMetrics.errorRate
       });
 
-      // Prepare agent data for table (use agents from main catalog only, as it already includes S3 agents)
-      const agentTableData: AgentData[] = agents.map(agent => ({
-        id: agent.id,
-        name: agent.name,
-        category: agent.category,
-        executions: agentInsights.find(insight => insight.agentId === agent.id)?.executionCount || 0,
-        successRate: agentInsights.find(insight => insight.agentId === agent.id)?.successRate || 0,
-        lastUsed: new Date(), // Would be tracked in real implementation
-        status: 'active' // All agents in catalog are considered active
-      }));
+      // Prepare agent data for table - combine catalog agents with execution data
+      const agentTableData: AgentData[] = [];
+      
+      // Add all agents from catalog with their execution data
+      for (const agent of allAgents) {
+        const insight = agentInsights.find(i => i.agentId === agent.id);
+        agentTableData.push({
+          id: agent.id,
+          name: agent.name,
+          category: agent.category || 'Custom',
+          executions: insight?.executionCount || 0,
+          successRate: insight?.successRate || 0,
+          lastUsed: new Date(),
+          status: 'active'
+        });
+      }
+      
+      // Add any agents from execution history that aren't in the catalog
+      for (const insight of agentInsights) {
+        if (!allAgents.find(a => a.id === insight.agentId)) {
+          agentTableData.push({
+            id: insight.agentId,
+            name: insight.name || insight.agentId,
+            category: insight.category || 'Unknown',
+            executions: insight.executionCount,
+            successRate: insight.successRate,
+            lastUsed: new Date(),
+            status: 'archived' // Not in catalog anymore
+          });
+        }
+      }
 
-      console.log('📊 Real Analytics - Agent data prepared:', agentTableData.length, 'agents');
+      console.log('📊 Real Analytics - Data Summary:');
+      console.log(`  - Total agents in catalog: ${allAgents.length}`);
+      console.log(`  - Agents with executions: ${agentInsights.filter(i => i.executionCount > 0).length}`);
+      console.log(`  - Total executions: ${totalExecutions}`);
+      console.log(`  - Overall success rate: ${avgSuccessRate.toFixed(2)}%`);
+      console.log(`  - Agent table rows: ${agentTableData.length}`);
 
       setAgentData(agentTableData.sort((a, b) => b.executions - a.executions));
       setSystemHealth(systemMetrics);
@@ -326,9 +357,15 @@ const RealAnalyticsDashboard: React.FC = () => {
         <Col md={6}>
           <Card>
             <Card.Header>
-              <h5 style={{ margin: 0 }}>🔧 System Health (Live)</h5>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h5 style={{ margin: 0 }}>🔧 System Health (Live)</h5>
+                <Badge bg="warning" style={{ fontSize: '0.7rem' }}>Simulated Metrics</Badge>
+              </div>
             </Card.Header>
             <Card.Body>
+              <Alert variant="warning" style={{ padding: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                <small>⚠️ CPU, Memory, Disk metrics are simulated. Configure CloudWatch for real data.</small>
+              </Alert>
               <div className="mb-3">
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: theme.spacing.sm }}>
                   <span>System Uptime</span>

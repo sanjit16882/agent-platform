@@ -88,11 +88,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // API Key validation middleware
 const validateAPIKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // Skip API key validation for health check, API key management, security policy, bedrock, agents catalog, analytics, dashboard, testing, finops dashboard, and MCP endpoints
+  // Skip API key validation for health check, API key management, security policy, bedrock, agents catalog, analytics, dashboard, testing, finops dashboard, models, and MCP endpoints
   if (req.path === '/health' || 
       req.path.startsWith('/v1/auth/') || 
       req.path.startsWith('/v1/security/') || 
       req.path.startsWith('/v1/bedrock/') || 
+      req.path.startsWith('/v1/models') ||
       req.path.startsWith('/v1/agents') ||
       req.path.startsWith('/v1/analytics') ||
       req.path.startsWith('/v1/dashboard') ||
@@ -133,6 +134,9 @@ import devopsRoutes from './routes/devops';
 // Import Agent Testing routes
 import agentTestingRoutes from './routes/agentTesting';
 
+// Import Models routes
+import modelsRoutes from './routes/modelsRoutes';
+
 // Import MCP routes
 import mcpRoutes from './mcp/mcpRoutes';
 
@@ -156,6 +160,9 @@ app.use('/api/devops', devopsRoutes);
 
 // Agent Testing Features
 app.use('/api/testing', agentTestingRoutes);
+
+// Models API (for Agent Testing)
+app.use('/api/v1/models', modelsRoutes);
 
 // In-memory storage for created agents (in production, this would be a database)
 const createdAgents = new Map<string, any>();
@@ -582,15 +589,13 @@ app.get('/api/v1/agents/s3/stats', async (req, res): Promise<void> => {
 app.get('/api/v1/analytics/executions', async (req, res): Promise<void> => {
   try {
     console.log('📊 Analytics API: Fetching execution history...');
-    const { getExecutionHistory, addSampleModelUsage } = await import('./aws-cost-service');
+    const { getExecutionHistory } = await import('./aws-cost-service');
     
-    let history = getExecutionHistory();
+    const history = getExecutionHistory();
     
-    // If no history exists, add sample data
+    // Return real execution history only (no sample data)
     if (history.length === 0) {
-      console.log('📊 No execution history found, adding sample data...');
-      addSampleModelUsage();
-      history = getExecutionHistory();
+      console.log('📊 No execution history found - execute agents to generate real data');
     }
     
     // Convert to frontend format

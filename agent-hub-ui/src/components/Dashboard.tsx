@@ -21,6 +21,8 @@ const Dashboard: React.FC = () => {
     uptime: 99.98
   });
   const [loading, setLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [mostUsedAgents, setMostUsedAgents] = useState<any[]>([]);
 
   console.log('Dashboard - deployed agent count:', deployedAgentCount);
 
@@ -29,17 +31,69 @@ const Dashboard: React.FC = () => {
     const fetchDashboardStats = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/api/v1/dashboard/stats`);
         
-        if (response.data && response.data.success && response.data.data) {
+        // Fetch agents to calculate stats
+        const agentsResponse = await axios.get(`${API_BASE_URL}/api/v1/agents/s3`);
+        
+        if (agentsResponse.data && agentsResponse.data.success && agentsResponse.data.data) {
+          const agents = agentsResponse.data.data;
+          
+          // Calculate categories
+          const categories = new Set(agents.map((a: any) => a.category)).size;
+          
+          // Update stats with real data
           setStats({
-            totalAgents: response.data.data.totalAgents,
-            categories: response.data.data.categories,
-            frameworks: response.data.data.frameworks,
-            avgResponseTime: 1.1,
-            uptime: response.data.data.uptime
+            totalAgents: agents.length,
+            categories: categories,
+            frameworks: 8, // Static for now
+            avgResponseTime: 1.1, // Static for now
+            uptime: 99.98 // Static for now
           });
+
+          // Get most used agents (sort by usage_count)
+          const sortedByUsage = [...agents]
+            .sort((a: any, b: any) => (b.usage_count || 0) - (a.usage_count || 0))
+            .slice(0, 4)
+            .map((agent: any) => ({
+              name: agent.name,
+              uses: agent.usage_count || 0,
+              category: agent.category,
+              lastUsed: agent.updated_at ? formatRelativeTime(agent.updated_at) : 'Never',
+              id: agent.id
+            }));
+          
+          setMostUsedAgents(sortedByUsage);
+        } else {
+          // Fallback to context value
+          setStats(prev => ({
+            ...prev,
+            totalAgents: deployedAgentCount || prev.totalAgents
+          }));
         }
+
+        // Fetch recent test runs for activity
+        try {
+          const testRunsResponse = await axios.get(`${API_BASE_URL}/api/testing/runs`, {
+            params: { limit: 5 }
+          });
+          
+          if (testRunsResponse.data && Array.isArray(testRunsResponse.data)) {
+            const activities = testRunsResponse.data.map((run: any) => ({
+              id: run.id,
+              agent: run.agentName || run.agent_name || 'Unknown Agent',
+              action: 'Test Executed',
+              status: run.status === 'completed' ? 'completed' : run.status,
+              user: 'You',
+              timestamp: formatRelativeTime(run.startTime || run.created_at),
+              result: `${run.passedTests || 0}/${run.totalTests || 0} tests passed (${run.passRate?.toFixed(0) || 0}%)`
+            }));
+            setRecentActivity(activities);
+          }
+        } catch (error) {
+          console.error('Error fetching recent activity:', error);
+          // Keep empty array if fetch fails
+        }
+
       } catch (error) {
         console.error('❌ Dashboard: Error fetching stats:', error);
         // Fallback to context value
@@ -55,55 +109,24 @@ const Dashboard: React.FC = () => {
     fetchDashboardStats();
   }, [deployedAgentCount]);
 
+  // Helper function to format relative time
+  const formatRelativeTime = (timestamp: string): string => {
+    if (!timestamp) return 'Never';
+    
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-
-  const recentActivity = [
-    { 
-      id: 'exec-001', 
-      agent: 'Code Review Agent', 
-      action: 'Executed', 
-      status: 'completed',
-      user: 'You',
-      timestamp: '2 minutes ago',
-      result: 'JavaScript analysis completed - 3 issues found'
-    },
-    { 
-      id: 'exec-002', 
-      agent: 'Email Rephraser', 
-      action: 'Executed', 
-      status: 'completed',
-      user: 'You',
-      timestamp: '15 minutes ago',
-      result: 'Professional email generated successfully'
-    },
-    { 
-      id: 'pub-001', 
-      agent: 'Document Summarizer', 
-      action: 'Published to Marketplace', 
-      status: 'published',
-      user: 'You',
-      timestamp: '1 hour ago',
-      result: 'Published to Internal Marketplace'
-    },
-    { 
-      id: 'exec-003', 
-      agent: 'DevOps Monitor', 
-      action: 'Executed', 
-      status: 'completed',
-      user: 'System',
-      timestamp: '2 hours ago',
-      result: 'Infrastructure health: 85% - 3 recommendations'
-    },
-    { 
-      id: 'create-001', 
-      agent: 'Custom Analytics Agent', 
-      action: 'Created', 
-      status: 'created',
-      user: 'You',
-      timestamp: '3 hours ago',
-      result: 'New custom agent created successfully'
-    }
-  ];
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 30) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return then.toLocaleDateString();
+  };
 
   return (
     <div style={{ 
@@ -543,12 +566,16 @@ const Dashboard: React.FC = () => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
             gap: theme.spacing.lg
           }}>
-            {[
-              { name: 'Code Review Agent', uses: 12, category: 'Development', lastUsed: '2 min ago' },
-              { name: 'Email Rephraser', uses: 8, category: 'Communication', lastUsed: '15 min ago' },
-              { name: 'DevOps Monitor', uses: 6, category: 'Infrastructure', lastUsed: '2 hours ago' },
-              { name: 'Security Scanner', uses: 4, category: 'Security', lastUsed: '1 day ago' }
-            ].map((agent, index) => (
+            {mostUsedAgents.length === 0 ? (
+              <div style={{ 
+                gridColumn: '1 / -1',
+                textAlign: 'center',
+                padding: theme.spacing.xl,
+                color: theme.colors.textSecondary
+              }}>
+                No agent usage data available yet
+              </div>
+            ) : mostUsedAgents.map((agent, index) => (
               <div 
                 key={index}
                 style={{
@@ -621,7 +648,22 @@ const Dashboard: React.FC = () => {
           </h5>
         </Card.Header>
         <Card.Body style={{ padding: theme.spacing.xl }}>
-          {recentActivity.map((activity, index) => (
+          {recentActivity.length === 0 ? (
+            <div style={{ 
+              textAlign: 'center',
+              padding: theme.spacing.xl,
+              color: theme.colors.textSecondary
+            }}>
+              <p>No recent activity yet. Start by running some tests!</p>
+              <Button 
+                variant="primary" 
+                onClick={() => navigate('/agent-testing')}
+                style={{ marginTop: theme.spacing.md }}
+              >
+                Go to Agent Testing
+              </Button>
+            </div>
+          ) : recentActivity.map((activity, index) => (
             <div 
               key={index} 
               style={{

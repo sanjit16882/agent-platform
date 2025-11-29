@@ -45,13 +45,43 @@ class BedrockService {
   }
 
   async callBedrock(agentType, prompt, context = {}) {
-    const modelConfig = this.models[this.agentModelMap[agentType]] || this.models['haiku'];
+    // Allow custom model ID override for model comparison
+    let modelConfig;
+    if (context.model_id) {
+      // Custom model ID provided - validate it's supported
+      const modelId = context.model_id;
+      
+      // Only support Claude and Titan models for now
+      if (modelId.includes('anthropic') || modelId.includes('claude')) {
+        modelConfig = {
+          modelId: modelId,
+          maxTokens: 4000,
+          temperature: 0.1,
+          costPer1MTokens: { input: 3.00, output: 15.00 }
+        };
+      } else if (modelId.includes('titan')) {
+        modelConfig = {
+          modelId: modelId,
+          maxTokens: 3000,
+          temperature: 0.1,
+          costPer1MTokens: { input: 0.80, output: 0.80 }
+        };
+      } else {
+        // Unsupported model - fall back to Claude Haiku
+        console.warn(`Unsupported model ${modelId}, falling back to Claude Haiku`);
+        modelConfig = this.models['haiku'];
+      }
+    } else {
+      // Use default model mapping
+      modelConfig = this.models[this.agentModelMap[agentType]] || this.models['haiku'];
+    }
     
     try {
       let requestBody;
+      const promptText = this.buildPrompt(agentType, prompt, context);
       
-      if (modelConfig.modelId.includes('anthropic')) {
-        // Claude models
+      if (modelConfig.modelId.includes('anthropic') || modelConfig.modelId.includes('claude')) {
+        // Claude models (Anthropic)
         requestBody = {
           anthropic_version: "bedrock-2023-05-31",
           max_tokens: modelConfig.maxTokens,
@@ -59,44 +89,60 @@ class BedrockService {
           messages: [
             {
               role: "user",
-              content: this.buildPrompt(agentType, prompt, context)
+              content: promptText
             }
           ]
         };
       } else if (modelConfig.modelId.includes('titan')) {
-        // Titan models
+        // Titan models (Amazon)
         requestBody = {
-          inputText: this.buildPrompt(agentType, prompt, context),
+          inputText: promptText,
           textGenerationConfig: {
             maxTokenCount: modelConfig.maxTokens,
             temperature: modelConfig.temperature,
             topP: 0.9
           }
         };
+      } else {
+        // Should not reach here due to fallback above, but just in case
+        console.error(`Unsupported model reached request building: ${modelConfig.modelId}`);
+        throw new Error(`Model ${modelConfig.modelId} is not supported. Please use Claude or Titan models.`);
       }
 
       const response = await this.bedrock.invokeModel({
         modelId: modelConfig.modelId,
         contentType: 'application/json',
         accept: 'application/json',
-        body: JSON.stringify(requestBody)
+        body: Buffer.from(JSON.stringify(requestBody))
       }).promise();
 
       const responseBody = JSON.parse(response.body.toString());
       
       let content;
-      if (modelConfig.modelId.includes('anthropic')) {
+      let usage = { input_tokens: 0, output_tokens: 0 };
+      
+      if (modelConfig.modelId.includes('anthropic') || modelConfig.modelId.includes('claude')) {
+        // Claude models
         content = responseBody.content[0].text;
+        usage = responseBody.usage || usage;
       } else if (modelConfig.modelId.includes('titan')) {
+        // Titan models
         content = responseBody.results[0].outputText;
+        usage = { 
+          input_tokens: responseBody.inputTextTokenCount || 0, 
+          output_tokens: responseBody.results[0].tokenCount || 0 
+        };
+      } else {
+        // Should not reach here
+        content = JSON.stringify(responseBody);
       }
 
       return {
         success: true,
         content: content,
-        usage: responseBody.usage || { input_tokens: 0, output_tokens: 0 },
+        usage: usage,
         model: modelConfig.modelId,
-        cost: this.calculateCost(responseBody.usage || { input_tokens: 100, output_tokens: 200 }, modelConfig)
+        cost: this.calculateCost(usage, modelConfig)
       };
 
     } catch (error) {
@@ -110,7 +156,123 @@ class BedrockService {
   }
 
   buildPrompt(agentType, userPrompt, context) {
+    // Check for intent-specific prompts first
+    const intent = context.intent || 'general';
+    
+    console.log(`📝 Building prompt - Agent Type: "${agentType}", Intent: "${intent}"`);
+    
+    // Intent-specific prompts for code-related agents
+    if (agentType === 'code-quality' || agentType === 'general-qa') {
+      if (intent === 'code_generation') {
+        console.log(`✨ Using CODE GENERATION intent-aware prompt`);
+        return `You are a code generation assistant. Your ONLY job is to write code.
+
+Request:
+${userPrompt}
+
+CRITICAL RULES:
+1. Write ONLY executable code - NO explanations, NO descriptions, NO analysis
+2. Do NOT explain what the code does
+3. Do NOT add text before or after the code
+4. Do NOT use markdown code blocks (no \`\`\`)
+5. Start directly with the code
+6. Include only minimal inline comments if absolutely necessary
+7. The first line of your response MUST be code
+
+Example of CORRECT response:
+function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+Example of WRONG response:
+"To calculate factorial, we can use recursion. Here's the code:
+function factorial(n) { ... }
+This function works by..."
+
+NOW GENERATE THE CODE:`;
+      }
+      
+      if (intent === 'code_explanation') {
+        return `You are a code explanation assistant. Explain the code clearly and educationally.
+
+Code to explain:
+${userPrompt}
+
+Instructions:
+1. Break down the logic step-by-step
+2. Explain complex concepts in simple terms
+3. Highlight key patterns and techniques
+4. Provide context about why certain approaches are used
+5. Be clear and educational
+
+Explain the code:`;
+      }
+      
+      if (intent === 'bug_fixing') {
+        return `You are a debugging assistant. Identify and fix bugs in the code.
+
+Code with issue:
+${userPrompt}
+
+Instructions:
+1. Identify the bug or error
+2. Explain what's wrong and why
+3. Provide the corrected code
+4. Explain the fix
+
+Debug and fix:`;
+      }
+      
+      if (intent === 'optimization') {
+        return `You are a code optimization assistant. Improve the performance and quality of the code.
+
+Code to optimize:
+${userPrompt}
+
+Instructions:
+1. Identify performance bottlenecks
+2. Suggest optimizations
+3. Provide optimized code
+4. Explain the improvements
+
+Optimize the code:`;
+      }
+    }
+    
+    // Default prompts by agent type
     const prompts = {
+      'monitoring': `You are a performance monitoring and observability expert. Analyze system metrics and provide actionable insights.
+
+Question:
+${userPrompt}
+
+Context: ${JSON.stringify(context)}
+
+Your expertise includes:
+- Interpreting CPU, memory, disk, and network metrics
+- Identifying performance bottlenecks and anomalies
+- Assessing system health and stability
+- Recommending optimization strategies
+- Detecting trends and patterns in metrics
+
+Instructions:
+1. ANALYZE the metrics, don't just repeat them
+2. Provide CONTEXT for what the numbers mean (e.g., "75% CPU is approaching high utilization")
+3. Identify CONCERNS or ISSUES if metrics are problematic
+4. Compare metrics when relevant (e.g., "CPU is more concerning than memory")
+5. Suggest ACTIONS if issues are detected
+6. Use industry-standard thresholds (CPU >80% = high, >90% = critical)
+7. Be concise but insightful (2-4 sentences)
+8. Do NOT just quote the input back
+
+Think like a monitoring expert:
+- What do these metrics indicate?
+- Are there any concerns?
+- What should be done?
+
+Answer:`,
+
       'test-generator': `You are an expert test generation assistant. Generate comprehensive unit tests for the provided code.
 
 Code to test:
@@ -258,7 +420,34 @@ Extract and return a JSON object with this exact structure:
     }
   ],
   "businessValue": "Clear business value statement"
-}`
+}`,
+
+      'general-qa': `You are an intelligent AI assistant with analytical capabilities. Provide thoughtful, reasoned answers based on the provided context.
+
+Question:
+${userPrompt}
+
+Context: ${JSON.stringify(context)}
+
+Instructions:
+1. ANALYZE the data, don't just quote it back
+2. Provide INSIGHTS and INTERPRETATION, not just facts
+3. If asked about metrics, explain what they mean (e.g., "75% CPU is moderately high")
+4. If asked to compare, provide analysis (e.g., "X is more concerning than Y because...")
+5. If asked about health/status, give an assessment with reasoning
+6. Use your knowledge to interpret the data meaningfully
+7. Keep answers concise but insightful (2-4 sentences)
+8. Do NOT just rearrange the input text
+9. Do NOT return JSON unless specifically asked
+10. If information is missing, say so clearly
+
+Think step by step:
+- What is being asked?
+- What does the data tell us?
+- What insights can I provide?
+- What's the meaningful answer?
+
+Answer:`
     };
 
     return prompts[agentType] || `Analyze this: ${userPrompt}`;

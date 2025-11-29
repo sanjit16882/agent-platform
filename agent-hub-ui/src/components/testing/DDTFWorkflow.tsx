@@ -4,6 +4,7 @@ import Button from '../common/Button';
 import { theme } from '../../styles/theme';
 import StepSelectAgent from './StepSelectAgent';
 import StepSelectModels from './StepSelectModels';
+import StepConfigureKnowledge from './StepConfigureKnowledge';
 import StepSelectTest from './StepSelectTest';
 import StepCreateCustomTests from './StepCreateCustomTests';
 import StepProvideInput from './StepProvideInput';
@@ -11,40 +12,12 @@ import StepReview from './StepReview';
 import StepExecute from './StepExecute';
 import StepResults from './StepResults';
 import StepInsights from './StepInsights';
-
-interface WorkflowState {
-  // Step 1: Agent Selection
-  selectedAgent: any | null;
-  
-  // Step 2: Model Selection
-  selectedModels: string[];
-  
-  // Step 3: Test Selection
-  selectedTests: any[];
-  samplePrompts: string[];
-  
-  // Step 4: Custom Tests (Optional)
-  customTests: any[];
-  
-  // Step 5: Input Configuration
-  testInputs: Record<string, { content: string; format: string }>;
-  
-  // Step 6: Review (no additional state)
-  
-  // Step 7: Execution
-  executionStatus: 'idle' | 'running' | 'completed' | 'failed';
-  runId: string | null;
-  
-  // Step 8: Results
-  testResults: any | null;
-  
-  // Step 9: Insights
-  insights: any | null;
-}
+import { WorkflowState, KnowledgeConfig, getExecutionMode } from '../../types/testing';
 
 const STEPS = [
   { id: 1, name: 'Select Agent', description: 'Choose the agent to test' },
   { id: 2, name: 'Select Models', description: 'Choose AI models to test' },
+  { id: 2.5, name: 'Knowledge Sources', description: 'Configure Vector DB & MCP (optional)' },
   { id: 3, name: 'Select Tests', description: 'Choose tests to run' },
   { id: 4, name: 'Custom Tests', description: 'Create custom tests (optional)' },
   { id: 5, name: 'Provide Input', description: 'Configure test inputs' },
@@ -59,6 +32,21 @@ const DDTFWorkflow: React.FC = () => {
   const [workflowState, setWorkflowState] = useState<WorkflowState>({
     selectedAgent: null,
     selectedModels: [],
+    knowledgeConfig: {
+      vectorDB: {
+        enabled: false,
+        provider: '',
+        knowledgeBases: [],
+        retrievalConfig: {
+          topK: 5,
+          minSimilarity: 0.7
+        }
+      },
+      mcp: {
+        enabled: false,
+        selectedServers: []
+      }
+    },
     selectedTests: [],
     samplePrompts: [],
     customTests: [],
@@ -79,20 +67,22 @@ const DDTFWorkflow: React.FC = () => {
         return workflowState.selectedAgent !== null;
       case 1: // Select Models
         return workflowState.selectedModels.length > 0;
-      case 2: // Select Tests
-        return workflowState.selectedTests.length > 0;
-      case 3: // Custom Tests (Optional - always can proceed)
+      case 2: // Configure Knowledge (Optional - always can proceed)
         return true;
-      case 4: // Provide Input
+      case 3: // Select Tests
+        return workflowState.selectedTests.length > 0;
+      case 4: // Custom Tests (Optional - always can proceed)
+        return true;
+      case 5: // Provide Input
         const allTests = [...workflowState.selectedTests, ...workflowState.customTests];
         return Object.keys(workflowState.testInputs).length === allTests.length;
-      case 5: // Review
+      case 6: // Review
         return true;
-      case 6: // Execute
+      case 7: // Execute
         return workflowState.executionStatus === 'completed';
-      case 7: // Results
+      case 8: // Results
         return workflowState.testResults !== null;
-      case 8: // Insights
+      case 9: // Insights
         return true;
       default:
         return false;
@@ -116,6 +106,21 @@ const DDTFWorkflow: React.FC = () => {
     setWorkflowState({
       selectedAgent: null,
       selectedModels: [],
+      knowledgeConfig: {
+        vectorDB: {
+          enabled: false,
+          provider: '',
+          knowledgeBases: [],
+          retrievalConfig: {
+            topK: 5,
+            minSimilarity: 0.7
+          }
+        },
+        mcp: {
+          enabled: false,
+          selectedServers: []
+        }
+      },
       selectedTests: [],
       samplePrompts: [],
       customTests: [],
@@ -145,6 +150,17 @@ const DDTFWorkflow: React.FC = () => {
         );
       case 2:
         return (
+          <StepConfigureKnowledge
+            agentConfig={workflowState.selectedAgent}
+            knowledgeConfig={workflowState.knowledgeConfig}
+            onUpdateConfig={(config) => updateWorkflowState({ knowledgeConfig: config })}
+            onNext={handleNext}
+            onBack={handlePrevious}
+            onSkip={handleNext}
+          />
+        );
+      case 3:
+        return (
           <StepSelectTest
             selectedAgent={workflowState.selectedAgent}
             selectedTests={workflowState.selectedTests}
@@ -152,7 +168,7 @@ const DDTFWorkflow: React.FC = () => {
             onSamplePromptsLoaded={(prompts) => updateWorkflowState({ samplePrompts: prompts })}
           />
         );
-      case 3:
+      case 4:
         return (
           <StepCreateCustomTests
             customTests={workflowState.customTests}
@@ -160,7 +176,7 @@ const DDTFWorkflow: React.FC = () => {
             onCustomTestsChange={(tests) => updateWorkflowState({ customTests: tests })}
           />
         );
-      case 4:
+      case 5:
         const allTests = [...workflowState.selectedTests, ...workflowState.customTests];
         return (
           <StepProvideInput
@@ -170,7 +186,7 @@ const DDTFWorkflow: React.FC = () => {
             onUpdateInputs={(inputs) => updateWorkflowState({ testInputs: inputs })}
           />
         );
-      case 5:
+      case 6:
         const allTestsForReview = [...workflowState.selectedTests, ...workflowState.customTests];
         return (
           <StepReview
@@ -180,7 +196,7 @@ const DDTFWorkflow: React.FC = () => {
             inputs={workflowState.testInputs}
           />
         );
-      case 6:
+      case 7:
         const allTestsForExecution = [...workflowState.selectedTests, ...workflowState.customTests];
         return (
           <StepExecute
@@ -188,19 +204,24 @@ const DDTFWorkflow: React.FC = () => {
             models={workflowState.selectedModels}
             tests={allTestsForExecution}
             inputs={workflowState.testInputs}
+            knowledgeConfig={workflowState.knowledgeConfig}
             onExecutionComplete={(runId, status) => 
-              updateWorkflowState({ runId, executionStatus: status })
+              updateWorkflowState({ 
+                runId, 
+                executionStatus: status,
+                executionMode: getExecutionMode(workflowState.knowledgeConfig)
+              })
             }
           />
         );
-      case 7:
+      case 8:
         return (
           <StepResults
             runId={workflowState.runId}
             onResultsLoaded={(results) => updateWorkflowState({ testResults: results })}
           />
         );
-      case 8:
+      case 9:
         return (
           <StepInsights
             runId={workflowState.runId}

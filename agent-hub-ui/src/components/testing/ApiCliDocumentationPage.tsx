@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Nav, Tab, Button, Badge } from 'react-bootstrap';
-import { theme } from '../styles/theme';
+import { theme } from '../../styles/theme';
 
 const ApiCliDocumentationPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');

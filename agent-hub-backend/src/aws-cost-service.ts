@@ -201,12 +201,7 @@ export async function getRealAWSCosts(): Promise<AWSCostData> {
     // Get active CloudWatch alarms
     const activeAlerts = await getActiveAlerts();
 
-    // Add sample data if no real usage exists (for demonstration)
-    if (modelUsageHistory.length === 0) {
-      addSampleModelUsage();
-    }
-
-    // Calculate model-specific breakdown
+    // Calculate model-specific breakdown from real data only
     const modelBreakdown = calculateModelBreakdown();
 
     return {
@@ -414,56 +409,5 @@ export async function trackAgentExecution(agentId: string, executionData: {
   }
 }
 
-// Add some sample data for demonstration (remove in production)
-export function addSampleModelUsage() {
-  const sampleData = [
-    {
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      agentId: 'test-generator',
-      agentName: 'QE Test Generator',
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-      inputTokens: 1500,
-      outputTokens: 800,
-      cost: 0.0023
-    },
-    {
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      agentId: 'security-scanner',
-      agentName: 'Security Scanner',
-      modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-      inputTokens: 2000,
-      outputTokens: 1200,
-      cost: 0.0240
-    },
-    {
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
-      agentId: 'documentation-generator',
-      agentName: 'Documentation Generator',
-      modelId: 'amazon.titan-text-express-v1',
-      inputTokens: 1000,
-      outputTokens: 1500,
-      cost: 0.0020
-    },
-    {
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-      agentId: 'test-generator',
-      agentName: 'QE Test Generator',
-      modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
-      inputTokens: 1800,
-      outputTokens: 900,
-      cost: 0.0027
-    },
-    {
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      agentId: 'failure-analyzer',
-      agentName: 'Failure Analyzer',
-      modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-      inputTokens: 2500,
-      outputTokens: 1800,
-      cost: 0.0345
-    }
-  ];
-
-  modelUsageHistory.push(...sampleData);
-  console.log('📊 Added sample model usage data for demonstration');
-}
+// REMOVED: Sample data function - now using real data only
+// To populate real data, agents must be executed with proper cost tracking

@@ -7,6 +7,211 @@ import { Router, Request, Response } from 'express';
 const router = Router();
 
 // ============================================================================
+// S3 Agent Storage Endpoints
+// ============================================================================
+
+/**
+ * GET /api/v1/agents/s3
+ * Returns all agents stored in S3
+ */
+router.get('/agents/s3', async (req: Request, res: Response) => {
+  try {
+    console.log('📦 S3: Fetching agents from S3...');
+    
+    // Mock S3 agents - 14 active agents + 3 template agents
+    // In production, this would query from S3
+    const agents = [
+      // Active Production Agents (14)
+      {
+        id: 'code-reviewer',
+        name: 'Code Review Agent',
+        description: 'Reviews code for quality, security, and best practices',
+        category: 'Development',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'api-tester',
+        name: 'API Testing Agent',
+        description: 'Tests REST APIs and validates responses',
+        category: 'Testing',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'deployment-manager',
+        name: 'Deployment Manager',
+        description: 'Manages application deployments and CI/CD',
+        category: 'DevOps',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'security-scanner',
+        name: 'Security Scanner Agent',
+        description: 'Scans code and infrastructure for security vulnerabilities',
+        category: 'Security',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'database-optimizer',
+        name: 'Database Optimizer',
+        description: 'Optimizes database queries and performance',
+        category: 'Database',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'log-analyzer',
+        name: 'Log Analysis Agent',
+        description: 'Analyzes application logs for errors and patterns',
+        category: 'Monitoring',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'performance-monitor',
+        name: 'Performance Monitor',
+        description: 'Monitors application performance and resource usage',
+        category: 'Monitoring',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'data-validator',
+        name: 'Data Validation Agent',
+        description: 'Validates data integrity and quality',
+        category: 'Data',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'backup-manager',
+        name: 'Backup Management Agent',
+        description: 'Manages automated backups and recovery',
+        category: 'Infrastructure',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'notification-service',
+        name: 'Notification Service Agent',
+        description: 'Handles email, SMS, and push notifications',
+        category: 'Communication',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'report-generator',
+        name: 'Report Generator',
+        description: 'Generates automated reports and analytics',
+        category: 'Analytics',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'user-manager',
+        name: 'User Management Agent',
+        description: 'Manages user accounts and permissions',
+        category: 'Security',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'content-moderator',
+        name: 'Content Moderation Agent',
+        description: 'Moderates user-generated content for compliance',
+        category: 'Content',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'integration-hub',
+        name: 'Integration Hub Agent',
+        description: 'Manages third-party API integrations',
+        category: 'Integration',
+        type: 'production',
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      
+      // Template Agents (3)
+      {
+        id: 'template-web-scraper',
+        name: 'Web Scraper Template',
+        description: 'Template for creating web scraping agents',
+        category: 'Templates',
+        type: 'template',
+        status: 'available',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'template-chatbot',
+        name: 'Chatbot Template',
+        description: 'Template for creating conversational AI agents',
+        category: 'Templates',
+        type: 'template',
+        status: 'available',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'template-workflow',
+        name: 'Workflow Automation Template',
+        description: 'Template for creating workflow automation agents',
+        category: 'Templates',
+        type: 'template',
+        status: 'available',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: agents,
+      count: agents.length
+    });
+  } catch (error) {
+    console.error('❌ S3 agents error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch agents from S3',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// ============================================================================
 // Analytics Endpoints
 // ============================================================================
 

@@ -81,12 +81,12 @@ const validateAPIKey = (req: express.Request, res: express.Response, next: expre
 
 // Import DevOps routes
 import devopsRoutes from './routes/devops';
-import testingRoutes from './routes/testing';
 import agentTestingRoutes from './routes/agentTesting';
 import realMCPRoutes from './routes/realMCPRoutes';
 import dockerMCPRoutes from './routes/dockerMCPRoutes';
 import finopsRoutes from './routes/finops';
 import bedrockRoutes from './routes/bedrockRoutes';
+import modelsRoutes from './routes/modelsRoutes';
 import missingEndpoints from './routes/missingEndpoints';
 import analyticsRoutes from './routes/analyticsRoutes';
 import vectorDBProviderRoutes from './routes/vectorDBProviderRoutes';
@@ -124,13 +124,16 @@ app.use('/api/devops', devopsRoutes);
 
 // Real Testing Framework API
 app.use('/api/testing', agentTestingRoutes);
-app.use('/api/component-testing', testingRoutes);
+// app.use('/api/component-testing', testingRoutes); // Commented out - file doesn't exist
 
 // FinOps & Cost Management
 app.use('/api/v1/finops', finopsRoutes);
 
 // Bedrock Model Management
 app.use('/api/v1/bedrock', bedrockRoutes);
+
+// Models API (for Agent Testing)
+app.use('/api/v1/models', modelsRoutes);
 
 // MCP Integration Routes
 app.use('/api/mcp/real', realMCPRoutes);
@@ -1379,3 +1382,4 @@ app.listen(PORT, () => {
 });
 
 export { app };
+

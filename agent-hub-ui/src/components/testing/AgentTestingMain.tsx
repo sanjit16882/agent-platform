@@ -9,6 +9,7 @@ import VersionComparison from './VersionComparison';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import MultimodalTestingPanel from './MultimodalTestingPanel';
 import ApiCliDocumentationPage from './ApiCliDocumentationPage';
+import BatchTestExecution from './BatchTestExecution';
 
 /**
  * AgentTestingMain Component
@@ -32,6 +33,7 @@ const AgentTestingMain: React.FC = () => {
         <Route path="/analytics" element={<AnalyticsDashboard />} />
         <Route path="/multimodal" element={<MultimodalTestingPanel agentId="" testId="" />} />
         <Route path="/api-cli-docs" element={<ApiCliDocumentationPage />} />
+        <Route path="/batch" element={<BatchTestExecution />} />
       </Routes>
     );
   }
@@ -185,6 +187,31 @@ const AgentTestingMain: React.FC = () => {
               style={{ width: '100%' }}
             >
               View Documentation →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* Batch Test Execution */}
+        <Card>
+          <Card.Header>
+            <Card.Title>⚡ Batch Execution</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Run tests across multiple agents simultaneously for efficient testing.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Multi-agent testing</li>
+              <li>Parallel execution</li>
+              <li>Progress tracking</li>
+              <li>Bulk result analysis</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/batch')}
+              style={{ width: '100%' }}
+            >
+              Start Batch Testing →
             </Button>
           </Card.Body>
         </Card>

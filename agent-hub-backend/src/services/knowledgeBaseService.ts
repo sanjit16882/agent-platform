@@ -45,6 +45,7 @@ export interface KnowledgeBaseStats {
   name: string;
   documentCount: number;
   sizeBytes: number;
+  averageDocumentLength: number;
   createdAt: string;
   lastUpdated?: string;
 }
@@ -224,10 +225,19 @@ export class KnowledgeBaseService {
       kb.sizeBytes = stats.sizeBytes;
       kb.updatedAt = new Date().toISOString();
       
+      // Calculate average document length
+      const docs = Array.from(this.documents.values()).filter(
+        doc => doc.knowledgeBaseId === id
+      );
+      const averageDocumentLength = docs.length > 0
+        ? Math.round(docs.reduce((sum, doc) => sum + doc.content.length, 0) / docs.length)
+        : 0;
+      
       return {
         name: kb.name,
         documentCount: kb.documentCount,
         sizeBytes: kb.sizeBytes,
+        averageDocumentLength,
         createdAt: kb.createdAt,
         lastUpdated: kb.updatedAt
       };
