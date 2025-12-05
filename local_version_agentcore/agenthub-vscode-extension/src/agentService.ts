@@ -22,7 +22,7 @@ export class AgentService {
   private loadConfig(): AgentHubConfig {
     const config = vscode.workspace.getConfiguration('agenthub');
     return {
-      apiUrl: config.get('apiUrl', 'http://localhost:3002'),
+      apiUrl: config.get('apiUrl', 'http://localhost:4002'),
       apiKey: config.get('apiKey', ''),
       defaultAgent: config.get('defaultAgent', ''),
       autoGenerateTests: config.get('autoGenerateTests', false),

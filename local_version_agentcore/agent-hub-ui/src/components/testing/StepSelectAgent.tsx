@@ -24,8 +24,8 @@ const StepSelectAgent: React.FC<StepSelectAgentProps> = ({
   const loadAgents = async () => {
     try {
       setLoading(true);
-      // Use the correct API base URL (backend runs on port 3002)
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      // Use the correct API base URL (backend runs on port 4002)
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/v1/agents/s3`);
       
       if (!response.ok) {

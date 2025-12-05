@@ -265,7 +265,7 @@ export class LLMComponentTester extends ComponentTester {
       }
       
       // Test connection to Bedrock or other LLM service
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/bedrock/test-connection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -323,7 +323,7 @@ export class LLMComponentTester extends ComponentTester {
         };
       }
       
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/bedrock/models`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' }
@@ -432,7 +432,7 @@ export class LLMComponentTester extends ComponentTester {
       }
       
       // Real inference test would go here
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/llm/inference`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -714,7 +714,7 @@ export class FileProcessorTester extends ComponentTester {
         return Math.random() > 0.03; // 97% success rate for demo
       }
       
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/file-processor/test-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
@@ -767,7 +767,7 @@ export class FileProcessorTester extends ComponentTester {
         };
       }
       
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/file-processor/test-fs-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
@@ -871,7 +871,7 @@ export class FileProcessorTester extends ComponentTester {
         };
       }
       
-      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/file-processor/process-sample`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

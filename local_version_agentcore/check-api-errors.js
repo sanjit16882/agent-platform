@@ -5,7 +5,7 @@
 
 const axios = require('axios');
 
-const API_BASE_URL = 'http://localhost:3002';
+const API_BASE_URL = 'http://localhost:4002';
 
 // Color codes for console output
 const colors = {

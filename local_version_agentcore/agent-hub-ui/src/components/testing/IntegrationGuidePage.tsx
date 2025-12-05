@@ -30,7 +30,7 @@ const IntegrationGuidePage: React.FC = () => {
 Library    RequestsLibrary
 
 *** Variables ***
-\${DDTF_API}    http://localhost:3002/api/testing
+\${DDTF_API}    http://localhost:4002/api/testing
 
 *** Test Cases ***
 Test AI Agent Quality
@@ -64,7 +64,7 @@ Test AI Agent Quality
 HttpClient client = HttpClient.newHttpClient();
 String payload = "{\\"agentId\\":\\"chatbot\\",\\"testIds\\":[\\"quality_check\\"]}";
 HttpRequest request = HttpRequest.newBuilder()
-    .uri(URI.create("http://localhost:3002/api/testing/execute"))
+    .uri(URI.create("http://localhost:4002/api/testing/execute"))
     .POST(HttpRequest.BodyPublishers.ofString(payload))
     .build();
 HttpResponse<String> response = client.send(request, 
@@ -81,7 +81,7 @@ driver.get("https://myapp.com/chatbot")
 response_text = driver.find_element(By.CLASS_NAME, "bot-message").text
 
 # Validate with DDTF
-result = requests.post('http://localhost:3002/api/testing/execute',
+result = requests.post('http://localhost:4002/api/testing/execute',
     json={'agentId': 'chatbot', 'customInput': response_text})
 assert result.json()['passRate'] >= 80`
           }
@@ -101,7 +101,7 @@ assert result.json()['passRate'] >= 80`
 Cypress.Commands.add('validateAI', (agentId, testIds) => {
   return cy.request({
     method: 'POST',
-    url: 'http://localhost:3002/api/testing/execute',
+    url: 'http://localhost:4002/api/testing/execute',
     body: { agentId, testIds }
   }).then((response) => {
     expect(response.body.success).to.be.true;
@@ -146,7 +146,7 @@ Cypress.Commands.add('validateAI', (agentId, testIds) => {
             title: 'Test Example',
             code: `@Test
 public void testAIQuality() throws Exception {
-    DDTFClient client = new DDTFClient("http://localhost:3002");
+    DDTFClient client = new DDTFClient("http://localhost:4002");
     TestRun result = client.executeTest(
         TestRequest.builder()
             .agentId("chatbot")
@@ -177,7 +177,7 @@ def ddtf_client():
     class DDTFClient:
         def execute_test(self, agent_id, test_ids):
             response = requests.post(
-                'http://localhost:3002/api/testing/execute',
+                'http://localhost:4002/api/testing/execute',
                 json={'agentId': agent_id, 'testIds': test_ids}
             )
             return response.json()

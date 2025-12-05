@@ -16,10 +16,10 @@ const AgentTestingDashboard: React.FC = () => {
   const loadData = async () => {
     try {
       const [suitesRes, executionsRes, analyticsRes, trendsRes] = await Promise.all([
-        fetch('http://localhost:3003/api/v1/testing/suites').then(r => r.json()),
-        fetch('http://localhost:3003/api/v1/testing/executions').then(r => r.json()),
-        fetch('http://localhost:3003/api/v1/testing/analytics/summary').then(r => r.json()),
-        fetch('http://localhost:3003/api/v1/testing/analytics/trends').then(r => r.json())
+        fetch('http://localhost:4003/api/v1/testing/suites').then(r => r.json()),
+        fetch('http://localhost:4003/api/v1/testing/executions').then(r => r.json()),
+        fetch('http://localhost:4003/api/v1/testing/analytics/summary').then(r => r.json()),
+        fetch('http://localhost:4003/api/v1/testing/analytics/trends').then(r => r.json())
       ]);
 
       setTestSuites(suitesRes.data);
@@ -35,7 +35,7 @@ const AgentTestingDashboard: React.FC = () => {
 
   const runTest = async (suiteId: string) => {
     try {
-      const response = await fetch(`http://localhost:3003/api/v1/testing/suites/${suiteId}/run`, {
+      const response = await fetch(`http://localhost:4003/api/v1/testing/suites/${suiteId}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ triggeredBy: 'manual', environment: 'dev' })

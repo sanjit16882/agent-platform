@@ -73,7 +73,7 @@ class AgentManagementService {
       console.log('🔍 AgentManagementService: Fetching all agents...');
       
       // Get all agents from the main catalog endpoint (includes S3, hybrid, built-in, marketplace)
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/agents`);
       const catalogData = await response.json();
       
       if (!catalogData.success) {
@@ -616,7 +616,7 @@ class AgentManagementService {
       
       // Update agent through S3 API endpoint
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/s3/${updatedAgent.id}`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/agents/s3/${updatedAgent.id}`,
         {
           method: 'PUT',
           headers: {

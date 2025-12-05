@@ -1,7 +1,7 @@
 import { MCPServer, MCPIntegrationConfig, AgentMCPConfig } from '../types/mcp';
 
 class MCPService {
-  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
   async getFeaturedServers(): Promise<MCPServer[]> {
     try {

@@ -184,7 +184,7 @@ npm install pg
 
 ## API Endpoints
 
-All at: `http://localhost:3002/api/v1/vector-db/`
+All at: `http://localhost:4002/api/v1/vector-db/`
 
 ### Document Management
 - `POST /documents/upload` - Upload files

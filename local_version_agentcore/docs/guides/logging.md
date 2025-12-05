@@ -20,7 +20,7 @@ I've added comprehensive logging to both Dashboard and AgentCatalog to help diag
 ═══════════════════════════════════════════════════════
 🏠 DASHBOARD - DETAILED API RESPONSE DEBUG
 ═══════════════════════════════════════════════════════
-1. API URL: http://localhost:3002/api/v1/agents/s3
+1. API URL: http://localhost:4002/api/v1/agents/s3
 2. Response Status: 200
 3. Response Data: {success: true, data: Array(15)}
 4. Response.data.success: true
@@ -44,7 +44,7 @@ I've added comprehensive logging to both Dashboard and AgentCatalog to help diag
 ═══════════════════════════════════════════════════════
 🔍 AGENT CATALOG - DETAILED API RESPONSE DEBUG
 ═══════════════════════════════════════════════════════
-1. API URL: http://localhost:3002/api/v1/agents/s3
+1. API URL: http://localhost:4002/api/v1/agents/s3
 2. Response Status: 200
 ...
 10. Array Length: 15
@@ -161,7 +161,7 @@ I've added comprehensive logging to both Dashboard and AgentCatalog to help diag
 ### Check 1: Are both using same API URL?
 Both should show:
 ```
-API URL: http://localhost:3002/api/v1/agents/s3
+API URL: http://localhost:4002/api/v1/agents/s3
 ```
 
 ### Check 2: Are both getting 200 status?

@@ -93,7 +93,7 @@ Check model costs in the dropdown - they vary significantly!
 ## 🔧 Troubleshooting
 
 ### Problem: Models not loading
-**Solution:** Check backend is running on localhost:3002
+**Solution:** Check backend is running on localhost:4002
 
 ### Problem: Can't select model
 **Solution:** Make sure you're in the "Add MCP Server" modal
@@ -117,7 +117,7 @@ Check model costs in the dropdown - they vary significantly!
 ## ✅ Checklist
 
 Before you start:
-- [ ] Backend running on localhost:3002
+- [ ] Backend running on localhost:4002
 - [ ] Frontend running on localhost:3000
 - [ ] Browser open to http://localhost:3000
 

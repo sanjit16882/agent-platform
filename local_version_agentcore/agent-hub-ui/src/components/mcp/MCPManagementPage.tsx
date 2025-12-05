@@ -91,7 +91,7 @@ export const MCPManagementPage: React.FC = () => {
   const loadBedrockModels = async () => {
     try {
       setLoadingModels(true);
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/bedrock/models`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/bedrock/models`);
       const data = await response.json();
       
       if (data.success && data.models) {

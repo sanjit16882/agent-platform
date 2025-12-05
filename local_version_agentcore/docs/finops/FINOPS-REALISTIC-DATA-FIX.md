@@ -97,7 +97,7 @@ Instead of static mock data, the endpoint now generates dynamic, realistic AWS c
 ## 🧪 **TESTING:**
 The endpoint now returns proper JSON with realistic values:
 ```bash
-curl http://localhost:3002/api/v1/finops/dashboard
+curl http://localhost:4002/api/v1/finops/dashboard
 ```
 
 ## ✅ **RESULT:**

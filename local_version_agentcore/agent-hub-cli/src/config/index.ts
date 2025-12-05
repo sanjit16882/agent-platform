@@ -7,7 +7,7 @@ const CONFIG_DIR = path.join(os.homedir(), '.agenthub');
 const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
 
 const DEFAULT_CONFIG: AgentConfig = {
-  apiUrl: process.env.AGENTHUB_API_URL || 'http://localhost:3002',
+  apiUrl: process.env.AGENTHUB_API_URL || 'http://localhost:4002',
   timeout: 30000
 };
 

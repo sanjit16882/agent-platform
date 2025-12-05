@@ -5,10 +5,10 @@
   "scripts": {
     "start:local": "cross-env NODE_ENV=local npm run start:backend:local",
     "start:prod": "cross-env NODE_ENV=production npm run start:backend:prod",
-    "start:backend:local": "cd agent-hub-backend && cross-env PORT=3002 npm run dev",
+    "start:backend:local": "cd agent-hub-backend && cross-env PORT=4002 npm run dev",
     "start:backend:prod": "cd agent-hub-backend && npm run build:prod && npm run start:prod",
     "start:backend:prod:bedrock": "cd agent-hub-backend && cross-env NODE_ENV=production BEDROCK_ENABLED=true npm run start:prod",
-    "start:ui:local": "cd agent-hub-ui && cross-env PORT=3001 npm start",
+    "start:ui:local": "cd agent-hub-ui && cross-env PORT=4001 npm start",
     "start:ui:prod": "cd agent-hub-ui && npm run build && serve -s build -l 80",
     "start:production": "npm run start:backend:prod:bedrock",
     "docker:local": "docker-compose -f docker-compose.local.yml up --build",

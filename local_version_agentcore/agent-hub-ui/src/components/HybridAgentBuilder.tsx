@@ -23,7 +23,7 @@ import VectorDBConfigSection from './VectorDBConfigSection';
 import AgentConfigurationGuide from './AgentConfigurationGuide';
 import TestRecommendationSection from './TestRecommendationSection';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 
 
@@ -868,7 +868,7 @@ const HybridAgentBuilder: React.FC = () => {
       };
 
       console.log('Saving hybrid agent:', request);
-      console.log('API URL:', `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3002'}/api/v1/agents/hybrid/create`);
+      console.log('API URL:', `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:4002'}/api/v1/agents/hybrid/create`);
       const hybridAgent = await agentCompositionService.createHybridAgent(request);
       
       console.log('✅ Hybrid agent created - MCP integration available at runtime');
@@ -906,7 +906,7 @@ const HybridAgentBuilder: React.FC = () => {
       
       if (error instanceof Error) {
         if (error.message.includes('ERR_CONNECTION_REFUSED')) {
-          errorMessage = 'Cannot connect to server. Please ensure the backend is running on localhost:3002';
+          errorMessage = 'Cannot connect to server. Please ensure the backend is running on localhost:4002';
         } else {
           errorMessage = error.message;
         }

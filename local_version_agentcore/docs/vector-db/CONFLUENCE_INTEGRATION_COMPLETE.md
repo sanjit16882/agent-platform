@@ -90,7 +90,7 @@ I've created a complete, working Confluence integration with a modular architect
 
 ## API Endpoints
 
-All at: `http://localhost:3002/api/v1/vector-db/`
+All at: `http://localhost:4002/api/v1/vector-db/`
 
 ### Integration Management
 - `POST /integrations` - Create integration

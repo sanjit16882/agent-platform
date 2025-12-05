@@ -184,7 +184,7 @@ const NLPAgentBuilder: React.FC = () => {
         console.log('🔍 Calling Dynamic Intelligence for auto-detection...');
         
         // Call the dynamic intelligence service
-        const response = await fetch('http://localhost:3002/api/intelligence/analyze-query-dynamic', {
+        const response = await fetch('http://localhost:4002/api/intelligence/analyze-query-dynamic', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -438,7 +438,7 @@ const NLPAgentBuilder: React.FC = () => {
         } : undefined
       };
 
-      const response = await fetch('http://localhost:3002/api/v1/agents/create', {
+      const response = await fetch('http://localhost:4002/api/v1/agents/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

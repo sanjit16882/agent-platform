@@ -73,7 +73,7 @@ local_version/agent-hub-backend/
 
 ### Save a Configuration
 ```bash
-curl -X POST http://localhost:3002/api/v1/vector-db/configs \
+curl -X POST http://localhost:4002/api/v1/vector-db/configs \
   -H "x-demo-password: agenthub2024" \
   -H "Content-Type: application/json" \
   -d '{
@@ -89,7 +89,7 @@ curl -X POST http://localhost:3002/api/v1/vector-db/configs \
 ### Get All Configurations
 ```bash
 curl -H "x-demo-password: agenthub2024" \
-  http://localhost:3002/api/v1/vector-db/configs
+  http://localhost:4002/api/v1/vector-db/configs
 ```
 
 ### Verify Persistence

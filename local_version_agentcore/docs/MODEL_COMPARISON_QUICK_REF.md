@@ -12,7 +12,7 @@ cd local_version/agent-hub-ui
 npm start
 
 # 3. Navigate to
-http://localhost:3001/agent-testing/model-comparison
+http://localhost:4001/agent-testing/model-comparison
 ```
 
 ## API Quick Reference
@@ -20,7 +20,7 @@ http://localhost:3001/agent-testing/model-comparison
 ### Execute Tests with Custom Model
 
 ```javascript
-POST http://localhost:3002/api/testing/execute
+POST http://localhost:4002/api/testing/execute
 
 {
   "agentId": "your-agent-id",
@@ -145,7 +145,7 @@ const exportResults = () => {
 **Check:**
 ```bash
 # Backend running?
-curl http://localhost:3002/health
+curl http://localhost:4002/health
 
 # AWS credentials configured?
 aws sts get-caller-identity
@@ -185,7 +185,7 @@ const compareModels = async (agentId, testIds, modelIds) => {
   const results = [];
   
   for (const modelId of modelIds) {
-    const response = await fetch('http://localhost:3002/api/testing/execute', {
+    const response = await fetch('http://localhost:4002/api/testing/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -279,8 +279,8 @@ Documentation:
 
 ## Testing Checklist
 
-- [ ] Backend running on port 3002
-- [ ] Frontend running on port 3001
+- [ ] Backend running on port 4002
+- [ ] Frontend running on port 4001
 - [ ] Can navigate to model comparison page
 - [ ] Can select agent
 - [ ] Can select multiple models

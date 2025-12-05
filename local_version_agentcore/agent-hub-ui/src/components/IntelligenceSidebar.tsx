@@ -45,7 +45,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3002/api/intelligence/analyze-query', {
+      const response = await fetch('http://localhost:4002/api/intelligence/analyze-query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export const IntelligenceSidebar: React.FC<IntelligenceSidebarProps> = ({
     
     // Submit feedback to backend
     try {
-      await fetch('http://localhost:3002/api/intelligence/submit-feedback', {
+      await fetch('http://localhost:4002/api/intelligence/submit-feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

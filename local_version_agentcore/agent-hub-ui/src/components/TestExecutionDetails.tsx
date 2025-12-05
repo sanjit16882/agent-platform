@@ -17,7 +17,7 @@ const TestExecutionDetails: React.FC<TestExecutionDetailsProps> = ({ executionId
 
   const loadExecutionDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:3003/api/v1/testing/executions/${executionId}/results`);
+      const response = await fetch(`http://localhost:4003/api/v1/testing/executions/${executionId}/results`);
       const data = await response.json();
       setExecution(data.data.execution);
       setResults(data.data.results);

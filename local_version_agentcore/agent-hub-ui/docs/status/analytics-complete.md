@@ -167,7 +167,7 @@ Users can now:
 - Loading and error states
 
 ### API Integration:
-- Base URL: `http://localhost:3002`
+- Base URL: `http://localhost:4002`
 - RESTful endpoints
 - JSON responses
 - Error handling

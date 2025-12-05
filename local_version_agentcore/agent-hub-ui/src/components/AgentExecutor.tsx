@@ -3924,7 +3924,7 @@ module.exports = ${appName.charAt(0).toUpperCase() + appName.slice(1)}Handler;`;
       if (!confirmed) return;
 
       // Call the marketplace API
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/marketplace/publish`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/marketplace/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

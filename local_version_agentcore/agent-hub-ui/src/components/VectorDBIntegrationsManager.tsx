@@ -93,7 +93,7 @@ const VectorDBIntegrationsManager: React.FC = () => {
         return;
       }
       
-      const response = await fetch('http://localhost:3002/api/v1/vector-db/integrations', {
+      const response = await fetch('http://localhost:4002/api/v1/vector-db/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +136,7 @@ const VectorDBIntegrationsManager: React.FC = () => {
     try {
       setSyncing(id);
       
-      const response = await fetch(`http://localhost:3002/api/v1/vector-db/integrations/${id}/sync`, {
+      const response = await fetch(`http://localhost:4002/api/v1/vector-db/integrations/${id}/sync`, {
         method: 'POST'
       });
       
@@ -159,7 +159,7 @@ const VectorDBIntegrationsManager: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this integration?')) return;
     
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/vector-db/integrations/${id}`, {
+      const response = await fetch(`http://localhost:4002/api/v1/vector-db/integrations/${id}`, {
         method: 'DELETE'
       });
       

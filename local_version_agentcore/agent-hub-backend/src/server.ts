@@ -8,7 +8,7 @@ const APIKeyService = require('./services/apiKeyService');
 dotenv.config();
 
 const app = express();
-const PORT = process.env['PORT'] || 3002;
+const PORT = process.env['PORT'] || 4002;
 
 // Basic middleware
 app.use(cors({
@@ -27,8 +27,8 @@ app.use(cors({
     // Allow specific production origins
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:3001',  // Frontend UI
-      'http://localhost:3002'   // Backend API
+      'http://localhost:4001',  // Frontend UI
+      'http://localhost:4002'   // Backend API
     ];
     
     if (allowedOrigins.includes(origin)) {

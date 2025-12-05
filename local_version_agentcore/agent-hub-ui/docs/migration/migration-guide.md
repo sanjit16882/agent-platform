@@ -43,7 +43,7 @@ import api from '../utils/apiClient';
 
 **Before:**
 ```typescript
-const response = await fetch('http://localhost:3002/api/v1/agents', {
+const response = await fetch('http://localhost:4002/api/v1/agents', {
   headers: {
     'Content-Type': 'application/json',
     'x-demo-password': 'agenthub2024'
@@ -59,7 +59,7 @@ const response = await api.get('/api/v1/agents');
 **For POST requests:**
 ```typescript
 // Before
-const response = await fetch('http://localhost:3002/api/v1/agents', {
+const response = await fetch('http://localhost:4002/api/v1/agents', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(data)
@@ -82,6 +82,6 @@ After restarting your server, the Vector DB pages should now work without 401 er
 Add to your `.env` file (optional, has defaults):
 
 ```env
-REACT_APP_API_BASE_URL=http://localhost:3002
+REACT_APP_API_BASE_URL=http://localhost:4002
 REACT_APP_DEMO_PASSWORD=agenthub2024
 ```

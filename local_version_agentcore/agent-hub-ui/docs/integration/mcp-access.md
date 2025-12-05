@@ -6,19 +6,19 @@ I've added the MCP test page to your UI. Here's how to access it:
 
 ### **Method 1: Navigation Menu (Recommended)**
 1. **Start your UI**: `npm start` (if not already running)
-2. **Navigate to your app**: http://localhost:3001 (your configured UI port)
+2. **Navigate to your app**: http://localhost:4001 (your configured UI port)
 3. **Click "Developer Tools"** in the top navigation menu
 4. **Select "🖥️ MCP Test & Integration"** from the dropdown
-5. **You'll be taken to**: http://localhost:3001/mcp-test
+5. **You'll be taken to**: http://localhost:4001/mcp-test
 
 ### **Method 2: Dashboard Button**
-1. **Go to your main Dashboard**: http://localhost:3001
+1. **Go to your main Dashboard**: http://localhost:4001
 2. **Scroll down to "MCP Server Testing" section**
 3. **Click the green "🖥️ MCP Test & Integration" button**
 4. **You'll be taken to the MCP test page**
 
 ### **Method 3: Direct URL**
-- **Navigate directly to**: http://localhost:3001/mcp-test
+- **Navigate directly to**: http://localhost:4001/mcp-test
 
 ## 🧪 **What You Can Test on the MCP Page**
 
@@ -48,9 +48,9 @@ I've added the MCP test page to your UI. Here's how to access it:
 
 ### **1. Check MCP Status**
 ```
-http://localhost:3001 → Dashboard → MCP Server Testing → "🖥️ MCP Test & Integration"
+http://localhost:4001 → Dashboard → MCP Server Testing → "🖥️ MCP Test & Integration"
 OR
-http://localhost:3001 → Developer Tools → "🖥️ MCP Test & Integration"
+http://localhost:4001 → Developer Tools → "🖥️ MCP Test & Integration"
 ```
 
 ### **2. Test API Endpoints**
@@ -98,13 +98,13 @@ Check that agent was created with MCP configuration:
 ## 🔧 **Troubleshooting**
 
 ### **If MCP Test Page Doesn't Load:**
-1. Check that backend server is running on port 3002
+1. Check that backend server is running on port 4002
 2. Verify no TypeScript compilation errors in UI
 3. Check browser console for JavaScript errors
 4. Ensure all MCP components are properly imported
 
 ### **If API Tests Fail:**
-1. Verify backend server is running: http://localhost:3002/health
+1. Verify backend server is running: http://localhost:4002/health
 2. Check API key is working: `sk-agenthub-system-internal-frontend-key`
 3. Test MCP endpoints directly with curl
 4. Check server logs for MCP initialization errors

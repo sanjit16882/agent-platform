@@ -135,10 +135,10 @@ Test that mocks are working:
 
 ```bash
 # Check mock registry stats
-curl http://localhost:3002/api/testing/mocks/stats
+curl http://localhost:4002/api/testing/mocks/stats
 
 # List all loaded mocks
-curl http://localhost:3002/api/testing/mocks/list
+curl http://localhost:4002/api/testing/mocks/list
 ```
 
 ## Best Practices

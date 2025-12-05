@@ -43,10 +43,10 @@ private dockerServers = {
 **After:**
 ```typescript
 private dockerServers = {
-  filesystem: 'http://localhost:3002/mcp-health/filesystem',
-  database: 'http://localhost:3002/mcp-health/database', 
-  git: 'http://localhost:3002/mcp-health/git',
-  office365: 'http://localhost:3002/mcp-health/office365'
+  filesystem: 'http://localhost:4002/mcp-health/filesystem',
+  database: 'http://localhost:4002/mcp-health/database', 
+  git: 'http://localhost:4002/mcp-health/git',
+  office365: 'http://localhost:4002/mcp-health/office365'
 };
 ```
 
@@ -102,10 +102,10 @@ If you want to use real Docker MCP servers later, you can:
 
 You can test the mock endpoints directly:
 ```bash
-curl http://localhost:3002/mcp-health/office365
-curl http://localhost:3002/mcp-health/filesystem
-curl http://localhost:3002/mcp-health/database
-curl http://localhost:3002/mcp-health/git
+curl http://localhost:4002/mcp-health/office365
+curl http://localhost:4002/mcp-health/filesystem
+curl http://localhost:4002/mcp-health/database
+curl http://localhost:4002/mcp-health/git
 ```
 
 ## 🎉 **SUCCESS:**

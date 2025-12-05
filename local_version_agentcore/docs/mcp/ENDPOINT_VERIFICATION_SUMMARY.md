@@ -13,11 +13,11 @@ All MCP servers have been verified with correct endpoint configurations:
 - ✅ **GitHub Server** → `https://api.github.com`
 
 ### Mock Endpoints (Demonstration)
-- ✅ **File System Server** → `http://localhost:3002/mcp-health/filesystem`
-- ✅ **Database Server** → `http://localhost:3002/mcp-health/database`
-- ✅ **Git Server** → `http://localhost:3002/mcp-health/git`
-- ✅ **Office365 Server** → `http://localhost:3002/mcp-health/office365`
-- ✅ **Jira Server** → `http://localhost:3002/mcp-health/jira`
+- ✅ **File System Server** → `http://localhost:4002/mcp-health/filesystem`
+- ✅ **Database Server** → `http://localhost:4002/mcp-health/database`
+- ✅ **Git Server** → `http://localhost:4002/mcp-health/git`
+- ✅ **Office365 Server** → `http://localhost:4002/mcp-health/office365`
+- ✅ **Jira Server** → `http://localhost:4002/mcp-health/jira`
 
 ## Consistency Check
 
@@ -25,13 +25,13 @@ All MCP servers have been verified with correct endpoint configurations:
 - Component: `MCPAgentCreationStep`
 - Service: `realMCPService.getRealDockerServers()`
 - GitHub Endpoint: ✅ `https://api.github.com` (REAL)
-- Other Endpoints: ✅ Mock (localhost:3002)
+- Other Endpoints: ✅ Mock (localhost:4002)
 
 ### Hybrid Agent Builder Page
 - Component: `MCPAgentCreationStep`
 - Service: `realMCPService.getRealDockerServers()`
 - GitHub Endpoint: ✅ `https://api.github.com` (REAL)
-- Other Endpoints: ✅ Mock (localhost:3002)
+- Other Endpoints: ✅ Mock (localhost:4002)
 
 ### Result
 ✅ **100% Consistent** - Both pages use identical configurations
@@ -56,12 +56,12 @@ All MCP servers have been verified with correct endpoint configurations:
 
 // After: GitHub server added
 private dockerServers = {
-  filesystem: 'http://localhost:3002/mcp-health/filesystem',
-  database: 'http://localhost:3002/mcp-health/database', 
-  git: 'http://localhost:3002/mcp-health/git',
+  filesystem: 'http://localhost:4002/mcp-health/filesystem',
+  database: 'http://localhost:4002/mcp-health/database', 
+  git: 'http://localhost:4002/mcp-health/git',
   github: 'https://api.github.com', // REAL GitHub API endpoint
-  office365: 'http://localhost:3002/mcp-health/office365',
-  jira: 'http://localhost:3002/mcp-health/jira'
+  office365: 'http://localhost:4002/mcp-health/office365',
+  jira: 'http://localhost:4002/mcp-health/jira'
 };
 ```
 
@@ -70,7 +70,7 @@ private dockerServers = {
 | Requirement | Status | Details |
 |-------------|--------|---------|
 | GitHub uses real endpoint | ✅ PASS | `https://api.github.com` |
-| Other servers use mock endpoints | ✅ PASS | All point to `localhost:3002` |
+| Other servers use mock endpoints | ✅ PASS | All point to `localhost:4002` |
 | Consistent across Agent Builder | ✅ PASS | Same service, same config |
 | Consistent across Hybrid Builder | ✅ PASS | Same service, same config |
 | Proper server metadata | ✅ PASS | All fields configured |

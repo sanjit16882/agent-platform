@@ -18,12 +18,12 @@ npm start
 cd local_version/agent-hub-ui
 npm start
 
-# Access: http://localhost:3001
+# Access: http://localhost:4001
 ```
 
 ### **2. Test MCP-Aware Agent Creation**
 ```bash
-# Navigate to: http://localhost:3001/agent-builder
+# Navigate to: http://localhost:4001/agent-builder
 
 # Test Auto-Detection:
 1. Type: "Create a file processing agent that reads code files and analyzes them"
@@ -41,7 +41,7 @@ npm start
 
 ### **3. Test MCP Indicators in Agent Catalog**
 ```bash
-# Navigate to: http://localhost:3001/agents
+# Navigate to: http://localhost:4001/agents
 
 # Look for:
 1. 🔌 MCP badges on agent cards
@@ -56,7 +56,7 @@ npm start
 cd local_version
 ./docker-mcp-servers/start-mcp-servers.bat
 
-# Navigate to: http://localhost:3001/real-mcp-dashboard
+# Navigate to: http://localhost:4001/real-mcp-dashboard
 # Test:
 1. Server status shows running/offline
 2. Can execute real MCP tools

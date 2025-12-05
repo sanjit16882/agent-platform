@@ -28,7 +28,7 @@ code --install-extension agenthub-1.0.0.vsix
 ```
 Ctrl+Shift+P → "AgentHub: Configure AgentHub"
 ```
-- Enter API URL: `http://localhost:3003` (or your AgentHub server)
+- Enter API URL: `http://localhost:4003` (or your AgentHub server)
 - Enter API Key: (optional)
 - Should show "AgentHub configured successfully!" if connection works
 
@@ -129,10 +129,10 @@ If you don't have AgentHub server running, use the mock server:
 # Start mock server from CLI project
 cd ../agent-hub-cli/test-server
 npm start
-# Runs on http://localhost:3003
+# Runs on http://localhost:4003
 ```
 
-Then configure extension to use `http://localhost:3003`.
+Then configure extension to use `http://localhost:4003`.
 
 ## Development Testing
 

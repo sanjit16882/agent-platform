@@ -8,14 +8,14 @@ Run this checklist before starting any MCP implementation to ensure we have a st
 #### 1. Backend Health Check
 ```bash
 # Verify backend is running
-curl http://localhost:3002/health
+curl http://localhost:4002/health
 
 # Verify agents endpoint returns all 17 agents
-curl http://localhost:3002/api/v1/agents | jq '.data | length'
+curl http://localhost:4002/api/v1/agents | jq '.data | length'
 # Expected: 17 (6 hybrid + 8 custom + 3 template)
 
 # Verify S3 agents are accessible
-curl http://localhost:3002/api/v1/agents/s3 | jq '.data | length'
+curl http://localhost:4002/api/v1/agents/s3 | jq '.data | length'
 # Expected: 14 (6 hybrid + 8 custom)
 ```
 
@@ -113,12 +113,12 @@ Create baseline tests to run after each MCP addition:
 #### 1. Agent Functionality Test
 ```bash
 # Test agent creation
-curl -X POST http://localhost:3002/api/v1/agents/create \
+curl -X POST http://localhost:4002/api/v1/agents/create \
   -H "Content-Type: application/json" \
   -d '{"templateId":"custom","name":"Test Agent","description":"Test"}'
 
 # Test agent execution
-curl -X POST http://localhost:3002/api/v1/agents/test-agent/execute \
+curl -X POST http://localhost:4002/api/v1/agents/test-agent/execute \
   -H "Content-Type: application/json" \
   -d '{"inputs":{"input":"test"}}'
 ```
@@ -126,10 +126,10 @@ curl -X POST http://localhost:3002/api/v1/agents/test-agent/execute \
 #### 2. S3 Storage Test
 ```bash
 # Test S3 agent listing
-curl http://localhost:3002/api/v1/agents/s3
+curl http://localhost:4002/api/v1/agents/s3
 
 # Test S3 agent retrieval
-curl http://localhost:3002/api/v1/agents/s3/hybrid_1761960595718_q22p1r94a
+curl http://localhost:4002/api/v1/agents/s3/hybrid_1761960595718_q22p1r94a
 ```
 
 ### **SUCCESS CRITERIA FOR BASELINE**

@@ -14,7 +14,7 @@ Create a separate Bedrock Agents app that:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Agent Hub (Main App)                         │
-│                    Port: 3000 (UI) / 3002 (API)                 │
+│                    Port: 3000 (UI) / 4002 (API)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  Navigation Tabs:                                               │
@@ -38,9 +38,9 @@ Create a separate Bedrock Agents app that:
 │  └─────────────────────────────────────────────────────────┘  │
 │                                                                 │
 │  Shared Services (API Calls):                                  │
-│  • Testing Framework → Agent Hub API (Port 3002)               │
-│  • Analytics → Agent Hub API (Port 3002)                       │
-│  • Cost Management → Agent Hub API (Port 3002)                 │
+│  • Testing Framework → Agent Hub API (Port 4002)               │
+│  • Analytics → Agent Hub API (Port 4002)                       │
+│  • Cost Management → Agent Hub API (Port 4002)                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -56,9 +56,9 @@ Create a separate Bedrock Agents app that:
 │  • AWS SDK Integration                                          │
 │                                                                 │
 │  Calls Agent Hub for:                                           │
-│  • Testing (POST to localhost:3002/api/testing/run)            │
-│  • Analytics (GET from localhost:3002/api/analytics)           │
-│  • Cost Tracking (POST to localhost:3002/api/costs)            │
+│  • Testing (POST to localhost:4002/api/testing/run)            │
+│  • Analytics (GET from localhost:4002/api/analytics)           │
+│  • Cost Tracking (POST to localhost:4002/api/costs)            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -81,7 +81,7 @@ D:/Agent Factory/
 │   │   │   └── App.tsx                    # 🆕 MODIFY - Add new route
 │   │   └── package.json
 │   │
-│   └── agent-hub-backend/            # Port 3002
+│   └── agent-hub-backend/            # Port 4002
 │       ├── src/
 │       │   ├── routes/
 │       │   │   ├── testing.js        # Existing - Reuse
@@ -220,7 +220,7 @@ function App() {
 ```typescript
 // Bedrock App: src/services/agentHubIntegration.ts
 export class AgentHubIntegration {
-  private agentHubBaseUrl = 'http://localhost:3002';
+  private agentHubBaseUrl = 'http://localhost:4002';
 
   // Call Agent Hub's testing API
   async testBedrockAgent(agentId: string, testIds: string[]) {
@@ -280,7 +280,7 @@ export class AgentHubIntegration {
 import axios from 'axios';
 
 export class AgentHubClient {
-  private baseUrl = 'http://localhost:3002';
+  private baseUrl = 'http://localhost:4002';
 
   // Run tests using Agent Hub's testing framework
   async runTests(agentId: string, agentType: 'bedrock', testIds: string[]) {
@@ -524,15 +524,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:3002
+      - REACT_APP_API_URL=http://localhost:4002
       - REACT_APP_BEDROCK_APP_URL=http://localhost:3004
 
   agent-hub-backend:
     build: ./local_version/agent-hub-backend
     ports:
-      - "3002:3002"
+      - "4002:4002"
     environment:
-      - PORT=3002
+      - PORT=4002
       - BEDROCK_APP_URL=http://localhost:3005
 
   # New Bedrock Agents App
@@ -542,7 +542,7 @@ services:
       - "3004:3004"
     environment:
       - REACT_APP_API_URL=http://localhost:3005
-      - REACT_APP_AGENT_HUB_API=http://localhost:3002
+      - REACT_APP_AGENT_HUB_API=http://localhost:4002
 
   bedrock-backend:
     build: ./bedrock-agents-app/bedrock-backend
@@ -550,7 +550,7 @@ services:
       - "3005:3005"
     environment:
       - PORT=3005
-      - AGENT_HUB_API_URL=http://localhost:3002
+      - AGENT_HUB_API_URL=http://localhost:4002
       - AWS_REGION=us-east-1
 ```
 
@@ -569,7 +569,7 @@ server {
 
   # Agent Hub API
   location /api/ {
-    proxy_pass http://localhost:3002;
+    proxy_pass http://localhost:4002;
   }
 
   # Bedrock Agents UI (embedded)

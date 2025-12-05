@@ -99,7 +99,7 @@ const AgentAnalytics: React.FC<AgentAnalyticsProps> = ({ agentId, agentName }) =
 
     try {
       // Fetch execution history
-      const execResponse = await fetch(`http://localhost:3002/api/v1/agents/${agentId}/executions?limit=10`);
+      const execResponse = await fetch(`http://localhost:4002/api/v1/agents/${agentId}/executions?limit=10`);
       const execData = await execResponse.json();
       
       if (execData.success) {
@@ -107,7 +107,7 @@ const AgentAnalytics: React.FC<AgentAnalyticsProps> = ({ agentId, agentName }) =
       }
 
       // Fetch analytics
-      const analyticsResponse = await fetch(`http://localhost:3002/api/v1/agents/${agentId}/analytics?days=${days}`);
+      const analyticsResponse = await fetch(`http://localhost:4002/api/v1/agents/${agentId}/analytics?days=${days}`);
       const analyticsData = await analyticsResponse.json();
       
       if (analyticsData.success) {
@@ -115,7 +115,7 @@ const AgentAnalytics: React.FC<AgentAnalyticsProps> = ({ agentId, agentName }) =
       }
 
       // Fetch recommendations
-      const recResponse = await fetch(`http://localhost:3002/api/v1/analytics/cost-optimization?days=${days}`);
+      const recResponse = await fetch(`http://localhost:4002/api/v1/analytics/cost-optimization?days=${days}`);
       const recData = await recResponse.json();
       
       if (recData.success) {

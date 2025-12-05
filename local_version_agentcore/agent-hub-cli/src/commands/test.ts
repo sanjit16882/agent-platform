@@ -69,7 +69,7 @@ export function createTestCommand(): Command {
  */
 async function runTests(options: any) {
   const config = configManager.getConfig();
-  const apiUrl = config.apiUrl || 'http://localhost:3002';
+  const apiUrl = config.apiUrl || 'http://localhost:4002';
 
   console.log(chalk.blue('🧪 Running Agent Tests\n'));
   console.log(chalk.gray(`Agent: ${options.agent}`));
@@ -345,7 +345,7 @@ function escapeXml(str: string): string {
  */
 async function handleListCommand(options: any) {
   const config = configManager.getConfig();
-  const apiUrl = config.apiUrl || 'http://localhost:3002';
+  const apiUrl = config.apiUrl || 'http://localhost:4002';
 
   console.log(chalk.blue('📋 Available Agents and Test Suites\n'));
 
@@ -450,7 +450,7 @@ async function handleListCommand(options: any) {
  */
 async function handleReportCommand(options: any) {
   const config = configManager.getConfig();
-  const apiUrl = config.apiUrl || 'http://localhost:3002';
+  const apiUrl = config.apiUrl || 'http://localhost:4002';
 
   console.log(chalk.blue('📊 Generating Test Report\n'));
 

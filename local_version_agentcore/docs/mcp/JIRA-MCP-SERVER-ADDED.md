@@ -76,7 +76,7 @@
 
 Test the Jira server endpoint:
 ```bash
-curl http://localhost:3002/mcp-health/jira
+curl http://localhost:4002/mcp-health/jira
 ```
 
 Expected response:

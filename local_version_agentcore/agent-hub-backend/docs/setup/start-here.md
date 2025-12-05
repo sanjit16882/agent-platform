@@ -8,7 +8,7 @@
 ```
 
 This script will:
-- Kill any existing Node processes on port 3002
+- Kill any existing Node processes on port 4002
 - Start the server fresh
 - Show you the server URL
 
@@ -19,9 +19,9 @@ node comprehensive-server.js
 
 ## Server Information
 
-- **Port**: 3002
-- **Health Check**: http://localhost:3002/health
-- **API Base**: http://localhost:3002/api/v1
+- **Port**: 4002
+- **Health Check**: http://localhost:4002/health
+- **API Base**: http://localhost:4002/api/v1
 
 ## Authentication
 
@@ -33,7 +33,7 @@ x-demo-password: agenthub2024
 ## Common Issues
 
 ### Port Already in Use (EADDRINUSE)
-If you see this error, another process is using port 3002.
+If you see this error, another process is using port 4002.
 
 **Solution**: Use the `start-server.ps1` script which automatically kills existing processes.
 
@@ -81,20 +81,20 @@ tsc
 
 ### Using curl
 ```bash
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/providers
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/providers
 ```
 
 ### Using PowerShell
 ```powershell
 $headers = @{ "x-demo-password" = "agenthub2024" }
-Invoke-RestMethod -Uri "http://localhost:3002/api/v1/vector-db/providers" -Headers $headers
+Invoke-RestMethod -Uri "http://localhost:4002/api/v1/vector-db/providers" -Headers $headers
 ```
 
 ## Environment Variables
 
 Create a `.env` file if you need custom configuration:
 ```env
-PORT=3002
+PORT=4002
 DEMO_PASSWORD=agenthub2024
 DEMO_MODE=true
 AWS_REGION=us-east-1

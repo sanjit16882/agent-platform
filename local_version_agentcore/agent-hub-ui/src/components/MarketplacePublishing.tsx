@@ -106,7 +106,7 @@ const MarketplacePublishing: React.FC<MarketplacePublishingProps> = ({
     if (!selectedMarketplace) return;
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/marketplace/publish`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/marketplace/publish`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

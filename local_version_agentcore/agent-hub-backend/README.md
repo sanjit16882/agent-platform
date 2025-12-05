@@ -58,9 +58,9 @@ start-dev.bat
 ```
 
 The API will be available at:
-- **API Base**: http://localhost:3001/api/v1
-- **Documentation**: http://localhost:3001/api/docs
-- **Health Check**: http://localhost:3001/health
+- **API Base**: http://localhost:4001/api/v1
+- **Documentation**: http://localhost:4001/api/docs
+- **Health Check**: http://localhost:4001/health
 
 ## 📖 API Documentation
 
@@ -68,7 +68,7 @@ The API will be available at:
 
 1. **Generate API Key** (requires initial setup):
 ```bash
-curl -X POST http://localhost:3001/api/v1/auth/keys \
+curl -X POST http://localhost:4001/api/v1/auth/keys \
   -H "Content-Type: application/json" \
   -d '{"name": "My API Key"}'
 ```
@@ -76,24 +76,24 @@ curl -X POST http://localhost:3001/api/v1/auth/keys \
 2. **Use API Key** in requests:
 ```bash
 curl -H "X-API-Key: ak_your_key_here" \
-  http://localhost:3001/api/v1/agents
+  http://localhost:4001/api/v1/agents
 ```
 
 ### 🤖 Agent Execution
 
 1. **List Available Agents**:
 ```bash
-curl http://localhost:3001/api/v1/agents
+curl http://localhost:4001/api/v1/agents
 ```
 
 2. **Get Agent Details**:
 ```bash
-curl http://localhost:3001/api/v1/agents/qe-test-generator-v2
+curl http://localhost:4001/api/v1/agents/qe-test-generator-v2
 ```
 
 3. **Execute Agent (Async)**:
 ```bash
-curl -X POST http://localhost:3001/api/v1/agents/qe-test-generator-v2/execute \
+curl -X POST http://localhost:4001/api/v1/agents/qe-test-generator-v2/execute \
   -H "X-API-Key: ak_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -107,7 +107,7 @@ curl -X POST http://localhost:3001/api/v1/agents/qe-test-generator-v2/execute \
 
 4. **Execute Agent (Sync)**:
 ```bash
-curl -X POST http://localhost:3001/api/v1/agents/qe-test-generator-v2/execute \
+curl -X POST http://localhost:4001/api/v1/agents/qe-test-generator-v2/execute \
   -H "X-API-Key: ak_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{
@@ -123,13 +123,13 @@ curl -X POST http://localhost:3001/api/v1/agents/qe-test-generator-v2/execute \
 5. **Check Execution Status**:
 ```bash
 curl -H "X-API-Key: ak_your_key_here" \
-  http://localhost:3001/api/v1/executions/exec_123456789
+  http://localhost:4001/api/v1/executions/exec_123456789
 ```
 
 6. **Get Execution Results**:
 ```bash
 curl -H "X-API-Key: ak_your_key_here" \
-  http://localhost:3001/api/v1/executions/exec_123456789/results
+  http://localhost:4001/api/v1/executions/exec_123456789/results
 ```
 
 ## 🎯 Available Agents
@@ -273,7 +273,7 @@ Key configuration options in `.env`:
 
 ```bash
 # Server
-PORT=3001
+PORT=4001
 NODE_ENV=development
 
 # Database

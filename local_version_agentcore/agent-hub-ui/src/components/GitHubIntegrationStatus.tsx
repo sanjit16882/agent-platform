@@ -133,7 +133,7 @@ const GitHubIntegrationStatus: React.FC<GitHubIntegrationStatusProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3002/api/v1/github/create-issues-from-results', {
+      const response = await fetch('http://localhost:4002/api/v1/github/create-issues-from-results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

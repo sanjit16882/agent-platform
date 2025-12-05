@@ -64,7 +64,7 @@ const VectorDBConfigModal: React.FC<VectorDBConfigModalProps> = ({
     // Server-side validation
     try {
       const response = await fetch(
-        `http://localhost:3002/api/v1/vector-db/providers/${provider.id}/validate`,
+        `http://localhost:4002/api/v1/vector-db/providers/${provider.id}/validate`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

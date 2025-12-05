@@ -54,7 +54,7 @@ const RoleManagement: React.FC = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/roles`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/roles`);
       const data = await response.json();
       if (data.success) {
         setRoles(data.data);
@@ -69,7 +69,7 @@ const RoleManagement: React.FC = () => {
 
   const fetchPermissions = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/permissions`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/permissions`);
       const data = await response.json();
       if (data.success) {
         setPermissions(data.data);
@@ -87,7 +87,7 @@ const RoleManagement: React.FC = () => {
   const handleCreateRole = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/roles`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/roles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ const RoleManagement: React.FC = () => {
     if (!selectedRole) return;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/roles/${selectedRole.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/roles/${selectedRole.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ const RoleManagement: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this role?')) return;
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/roles/${roleId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/roles/${roleId}`, {
         method: 'DELETE',
       });
       const data = await response.json();

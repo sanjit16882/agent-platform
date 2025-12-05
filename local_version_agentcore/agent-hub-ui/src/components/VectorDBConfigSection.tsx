@@ -74,7 +74,7 @@ const VectorDBConfigSection: React.FC<VectorDBConfigSectionProps> = ({
   
   const loadProviders = async () => {
     try {
-      const response = await fetch('http://localhost:3002/api/v1/vector-db/providers');
+      const response = await fetch('http://localhost:4002/api/v1/vector-db/providers');
       const data = await response.json();
       
       if (data.success) {

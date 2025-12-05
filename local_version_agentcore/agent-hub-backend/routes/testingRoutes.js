@@ -421,7 +421,7 @@ router.get('/runs', async (req, res) => {
     const agentNames = {};
     try {
       const axios = require('axios');
-      const agentsResponse = await axios.get('http://localhost:3002/api/v1/agents/s3');
+      const agentsResponse = await axios.get('http://localhost:4002/api/v1/agents/s3');
       if (agentsResponse.data && agentsResponse.data.data) {
         agentsResponse.data.data.forEach(agent => {
           // Map both agent_id and id to name for compatibility

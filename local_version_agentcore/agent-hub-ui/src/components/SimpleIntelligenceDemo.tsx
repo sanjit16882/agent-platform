@@ -17,7 +17,7 @@ export const SimpleIntelligenceDemo: React.FC = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3002/api/intelligence/analyze-query', {
+      const response = await fetch('http://localhost:4002/api/intelligence/analyze-query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export const SimpleIntelligenceDemo: React.FC = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:3002/api/intelligence/execute-agent', {
+      const response = await fetch('http://localhost:4002/api/intelligence/execute-agent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

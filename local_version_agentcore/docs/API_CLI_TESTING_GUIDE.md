@@ -25,7 +25,7 @@ This guide covers the API endpoints and CLI tools for programmatic agent testing
 
 ### Base URL
 ```
-http://localhost:3002/api/v1/testing
+http://localhost:4002/api/v1/testing
 ```
 
 ### Authentication
@@ -281,7 +281,7 @@ Create a config file at `~/.agent-hub/config.json`:
 
 ```json
 {
-  "apiUrl": "http://localhost:3002",
+  "apiUrl": "http://localhost:4002",
   "apiKey": "your-api-key-here",
   "defaultAgent": "agent_123"
 }
@@ -289,7 +289,7 @@ Create a config file at `~/.agent-hub/config.json`:
 
 Or set environment variables:
 ```bash
-export AGENT_HUB_API_URL=http://localhost:3002
+export AGENT_HUB_API_URL=http://localhost:4002
 export AGENT_HUB_API_KEY=your-api-key-here
 ```
 
@@ -481,7 +481,7 @@ const { AgentTestingClient } = require('@agent-hub/testing-sdk');
 
 // Initialize client
 const client = new AgentTestingClient({
-  apiUrl: 'http://localhost:3002',
+  apiUrl: 'http://localhost:4002',
   apiKey: 'your-api-key-here'
 });
 
@@ -533,7 +533,7 @@ const analytics = await client.analytics.get({
 import { AgentTestingClient, TestRun, TestResult } from '@agent-hub/testing-sdk';
 
 const client = new AgentTestingClient({
-  apiUrl: 'http://localhost:3002',
+  apiUrl: 'http://localhost:4002',
   apiKey: process.env.AGENT_HUB_API_KEY!
 });
 
@@ -718,7 +718,7 @@ const { AgentTestingClient } = require('@agent-hub/testing-sdk');
 
 async function runTestSuite() {
   const client = new AgentTestingClient({
-    apiUrl: 'http://localhost:3002',
+    apiUrl: 'http://localhost:4002',
     apiKey: process.env.AGENT_HUB_API_KEY
   });
 

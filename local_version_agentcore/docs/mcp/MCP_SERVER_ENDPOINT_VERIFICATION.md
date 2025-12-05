@@ -15,12 +15,12 @@ This document verifies that all MCP servers are configured with correct endpoint
 
 | Server ID | Server Name | Endpoint Type | Endpoint URL | Status |
 |-----------|-------------|---------------|--------------|--------|
-| filesystem | File System Server | Mock | `http://localhost:3002/mcp-health/filesystem` | ✅ Mock |
-| database | Database Server | Mock | `http://localhost:3002/mcp-health/database` | ✅ Mock |
-| git | Git Server | Mock | `http://localhost:3002/mcp-health/git` | ✅ Mock |
+| filesystem | File System Server | Mock | `http://localhost:4002/mcp-health/filesystem` | ✅ Mock |
+| database | Database Server | Mock | `http://localhost:4002/mcp-health/database` | ✅ Mock |
+| git | Git Server | Mock | `http://localhost:4002/mcp-health/git` | ✅ Mock |
 | **github** | **GitHub Server** | **REAL** | **`https://api.github.com`** | ✅ **REAL** |
-| office365 | Office365 Server | Mock | `http://localhost:3002/mcp-health/office365` | ✅ Mock |
-| jira | Jira Server | Mock | `http://localhost:3002/mcp-health/jira` | ✅ Mock |
+| office365 | Office365 Server | Mock | `http://localhost:4002/mcp-health/office365` | ✅ Mock |
+| jira | Jira Server | Mock | `http://localhost:4002/mcp-health/jira` | ✅ Mock |
 
 ## GitHub Server Configuration
 
@@ -108,27 +108,27 @@ github: 'https://api.github.com' // REAL GitHub API endpoint
 These endpoints point to backend mock services for demonstration purposes:
 
 1. **File System Server**
-   - Endpoint: `http://localhost:3002/mcp-health/filesystem`
+   - Endpoint: `http://localhost:4002/mcp-health/filesystem`
    - Purpose: Demonstrate file operations without actual file system access
    - Status: Mock/Demo
 
 2. **Database Server**
-   - Endpoint: `http://localhost:3002/mcp-health/database`
+   - Endpoint: `http://localhost:4002/mcp-health/database`
    - Purpose: Demonstrate database operations with mock data
    - Status: Mock/Demo
 
 3. **Git Server**
-   - Endpoint: `http://localhost:3002/mcp-health/git`
+   - Endpoint: `http://localhost:4002/mcp-health/git`
    - Purpose: Demonstrate git operations with mock repository
    - Status: Mock/Demo
 
 4. **Office365 Server**
-   - Endpoint: `http://localhost:3002/mcp-health/office365`
+   - Endpoint: `http://localhost:4002/mcp-health/office365`
    - Purpose: Placeholder for future Office365 integration
    - Status: Mock/Inactive
 
 5. **Jira Server**
-   - Endpoint: `http://localhost:3002/mcp-health/jira`
+   - Endpoint: `http://localhost:4002/mcp-health/jira`
    - Purpose: Placeholder for future Jira integration
    - Status: Mock/Inactive
 
@@ -179,7 +179,7 @@ To use the GitHub server, users must configure:
 ## Health Check Behavior
 
 ### Mock Servers
-- Health check: `GET http://localhost:3002/mcp-health/{server-id}`
+- Health check: `GET http://localhost:4002/mcp-health/{server-id}`
 - Expected response: 200 OK if backend is running
 - Timeout: 2 seconds
 - Status: Shows as "active" if backend responds, "inactive" otherwise
@@ -212,7 +212,7 @@ To use the GitHub server, users must configure:
 - ✅ Same server configurations returned
 - ✅ Same endpoint URLs for all servers
 - ✅ GitHub is the only real endpoint
-- ✅ All mock endpoints point to localhost:3002
+- ✅ All mock endpoints point to localhost:4002
 
 ## Testing Recommendations
 
@@ -237,9 +237,9 @@ To use the GitHub server, users must configure:
 ### Mock Server Testing
 1. **Backend Health Check**
    ```bash
-   curl http://localhost:3002/mcp-health/filesystem
-   curl http://localhost:3002/mcp-health/database
-   curl http://localhost:3002/mcp-health/git
+   curl http://localhost:4002/mcp-health/filesystem
+   curl http://localhost:4002/mcp-health/database
+   curl http://localhost:4002/mcp-health/git
    ```
    Expected: 200 OK if backend is running
 
@@ -270,7 +270,7 @@ To use the GitHub server, users must configure:
 All requirements have been met:
 
 1. ✅ **GitHub configured with real endpoint** (`https://api.github.com`)
-2. ✅ **All other servers use mock endpoints** (localhost:3002)
+2. ✅ **All other servers use mock endpoints** (localhost:4002)
 3. ✅ **Consistent configuration** across Agent and Hybrid Builder pages
 4. ✅ **Proper server metadata** (name, description, tools, capabilities)
 5. ✅ **Security considerations** addressed (sensitive fields marked)

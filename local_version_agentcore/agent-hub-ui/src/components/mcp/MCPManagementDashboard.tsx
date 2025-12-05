@@ -73,7 +73,7 @@ export const MCPManagementDashboard: React.FC = () => {
       name: 'AgentHub Custom Server',
       description: 'Custom MCP server for AgentHub platform',
       category: 'custom',
-      endpoint: 'http://localhost:3002/mcp/custom',
+      endpoint: 'http://localhost:4002/mcp/custom',
       tools: [],
       capabilities: []
     });

@@ -1,10 +1,10 @@
 {
   "environment": "local",
   "server": {
-    "port": 3002,
+    "port": 4002,
     "host": "localhost",
     "cors": {
-      "origin": ["http://localhost:3001"],
+      "origin": ["http://localhost:4001"],
       "credentials": true
     }
   },
@@ -53,9 +53,9 @@
     "simulateProcessingTime": true
   },
   "endpoints": {
-    "api": "http://localhost:3002",
-    "frontend": "http://localhost:3001",
-    "health": "http://localhost:3002/health"
+    "api": "http://localhost:4002",
+    "frontend": "http://localhost:4001",
+    "health": "http://localhost:4002/health"
   },
   "ai": {
     "provider": "mock",
@@ -64,8 +64,8 @@
     "simulateProcessingTime": true
   },
   "endpoints": {
-    "api": "http://localhost:3002",
-    "frontend": "http://localhost:3001",
-    "health": "http://localhost:3002/health"
+    "api": "http://localhost:4002",
+    "frontend": "http://localhost:4001",
+    "health": "http://localhost:4002/health"
   }
 }

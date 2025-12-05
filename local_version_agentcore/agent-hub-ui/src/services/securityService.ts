@@ -1,5 +1,5 @@
 // Security Service for MFA, Session Management, and Compliance
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002/api/v1';
 
 export interface SecurityEvent {
   id: string;

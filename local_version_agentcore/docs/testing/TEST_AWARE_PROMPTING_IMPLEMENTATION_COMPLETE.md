@@ -178,7 +178,7 @@ node test-aware-prompting-demo.js
 npm start
 
 # In another terminal, run tests via API
-curl -X POST http://localhost:3002/api/testing/execute \
+curl -X POST http://localhost:4002/api/testing/execute \
   -H "Content-Type: application/json" \
   -d '{
     "agentId": "code-quality",

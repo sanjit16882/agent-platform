@@ -26,7 +26,7 @@
 
 1. **Update API Base URL** in `.env`:
    ```
-   REACT_APP_API_URL=http://localhost:3001
+   REACT_APP_API_URL=http://localhost:4001
    ```
 
 2. **Start Backend Server**:
@@ -53,7 +53,7 @@
 - [ ] Error handling & loading states
 
 ### Next Steps:
-1. Ensure backend is running on port 3001
+1. Ensure backend is running on port 4001
 2. Update remaining components to use testingApi service
 3. Add proper error handling
 4. Test end-to-end flow

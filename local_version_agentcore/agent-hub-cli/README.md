@@ -22,7 +22,7 @@ npm link
 Create `~/.agent-hub/config.json`:
 ```json
 {
-  "apiUrl": "http://localhost:3002",
+  "apiUrl": "http://localhost:4002",
   "apiKey": "your-api-key-here",
   "defaultAgent": "agent_123"
 }
@@ -30,7 +30,7 @@ Create `~/.agent-hub/config.json`:
 
 Or use environment variables:
 ```bash
-export AGENT_HUB_API_URL=http://localhost:3002
+export AGENT_HUB_API_URL=http://localhost:4002
 export AGENT_HUB_API_KEY=your-api-key-here
 ```
 

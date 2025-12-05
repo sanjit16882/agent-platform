@@ -369,14 +369,14 @@ interface BedrockModelSelectorProps {
 ## 🚀 DEPLOYMENT NOTES
 
 ### Prerequisites
-1. Backend server running on `localhost:3002`
+1. Backend server running on `localhost:4002`
 2. AWS Bedrock API endpoint accessible
 3. MCP servers configured (optional for testing)
 
 ### Environment Variables
 ```bash
-REACT_APP_API_URL=http://localhost:3002
-REACT_APP_API_BASE_URL=http://localhost:3002
+REACT_APP_API_URL=http://localhost:4002
+REACT_APP_API_BASE_URL=http://localhost:4002
 ```
 
 ### Startup Sequence

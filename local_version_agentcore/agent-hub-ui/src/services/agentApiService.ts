@@ -45,7 +45,7 @@ class AgentApiService {
 
   constructor() {
     // Use environment variable or fallback to our backend server
-    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4002';
   }
 
   async getAgents(): Promise<AgentConfig[]> {

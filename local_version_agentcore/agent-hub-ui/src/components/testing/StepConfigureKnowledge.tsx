@@ -65,7 +65,7 @@ const StepConfigureKnowledge: React.FC<StepConfigureKnowledgeProps> = ({
   const loadAvailableResources = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
       // Load knowledge bases
       const kbResponse = await fetch(`${API_BASE_URL}/api/knowledge-bases`);

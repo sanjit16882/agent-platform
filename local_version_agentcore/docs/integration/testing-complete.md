@@ -30,17 +30,17 @@
 cd local_version/agent-hub-backend
 node testing-server.js
 ```
-Server will run on: http://localhost:3002
+Server will run on: http://localhost:4002
 
 ### 2. Start Frontend
 ```bash
 cd local_version/agent-hub-ui
 npm start
 ```
-Frontend will run on: http://localhost:3001
+Frontend will run on: http://localhost:4001
 
 ### 3. Access Testing Dashboard
-Navigate to: http://localhost:3001/agent-testing
+Navigate to: http://localhost:4001/agent-testing
 
 ## API Endpoints Available
 
@@ -89,7 +89,7 @@ Navigate to: http://localhost:3001/agent-testing
 
 ### 1. Create a Test Suite
 ```bash
-curl -X POST http://localhost:3002/api/test-suites \
+curl -X POST http://localhost:4002/api/test-suites \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Sample Suite",
@@ -108,7 +108,7 @@ curl -X POST http://localhost:3002/api/test-suites \
 ```
 
 ### 2. Run Tests from UI
-1. Go to http://localhost:3001/agent-testing
+1. Go to http://localhost:4001/agent-testing
 2. Click "▶️ Run Tests" button
 3. Select a test suite
 4. Click "Run Tests"
@@ -167,12 +167,12 @@ All components include:
 ## Troubleshooting
 
 ### Backend Not Starting
-- Check if port 3002 is available
+- Check if port 4002 is available
 - Verify all dependencies: `npm install`
 - Check console for errors
 
 ### Frontend Not Connecting
-- Verify backend is running on port 3002
+- Verify backend is running on port 4002
 - Check browser console for CORS errors
 - Ensure `.env` has correct API URL
 

@@ -21,7 +21,7 @@ npm start
 ```
 
 ### Access Dashboard
-Open: `http://localhost:3001/learning`
+Open: `http://localhost:4001/learning`
 
 ### Generate Sample Data
 ```bash
@@ -243,11 +243,11 @@ node seed-learning-data.js
 
 ### Verify Backend
 ```bash
-curl http://localhost:3002/api/intelligence/learning-analytics
+curl http://localhost:4002/api/intelligence/learning-analytics
 ```
 
 ### Verify Frontend
-1. Open `http://localhost:3001/learning`
+1. Open `http://localhost:4001/learning`
 2. Should see real data (not "0" everywhere)
 3. User profile should show recommendations
 

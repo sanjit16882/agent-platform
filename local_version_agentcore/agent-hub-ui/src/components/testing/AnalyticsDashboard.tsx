@@ -65,7 +65,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   const fetchAvailableAgents = async () => {
     try {
       // Fetch unique agents from test runs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/runs`);
       
       // Handle 404 gracefully - API endpoint not implemented yet
@@ -107,7 +107,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       startDate.setDate(startDate.getDate() - parseInt(selectedDays));
 
       // Fetch test runs
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const url = selectedAgent === 'all'
         ? `${API_BASE_URL}/api/testing/runs`
         : `${API_BASE_URL}/api/testing/runs?agentId=${selectedAgent}`;

@@ -176,7 +176,7 @@ async function processPayment(amount: number): Promise<PaymentResult> {
   }, 1000);
 });
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 4003;
 
 // Enhanced logging for production-like behavior
 app.use((req, res, next) => {

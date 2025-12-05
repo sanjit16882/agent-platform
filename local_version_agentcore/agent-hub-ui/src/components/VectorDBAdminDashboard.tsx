@@ -82,7 +82,7 @@ const VectorDBAdminDashboard: React.FC = () => {
     try {
       setProcessing(true);
       const response = await fetch(
-        `http://localhost:3002/api/v1/vector-db/access-requests/${selectedRequest.id}/approve`,
+        `http://localhost:4002/api/v1/vector-db/access-requests/${selectedRequest.id}/approve`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -113,7 +113,7 @@ const VectorDBAdminDashboard: React.FC = () => {
     try {
       setProcessing(true);
       const response = await fetch(
-        `http://localhost:3002/api/v1/vector-db/access-requests/${selectedRequest.id}/reject`,
+        `http://localhost:4002/api/v1/vector-db/access-requests/${selectedRequest.id}/reject`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

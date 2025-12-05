@@ -24,7 +24,7 @@ const S3MigrationHelper: React.FC = () => {
   const checkTotalAgents = async () => {
     try {
       // Get all agents from unified catalog
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/api/v1/agents`);
       const data = await response.json();
       
       if (data.success) {

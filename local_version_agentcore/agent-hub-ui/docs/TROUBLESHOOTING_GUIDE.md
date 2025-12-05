@@ -194,7 +194,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 ```javascript
 // Backend should have CORS enabled
 app.use(cors({
-  origin: 'http://localhost:3001', // Frontend URL
+  origin: 'http://localhost:4001', // Frontend URL
   credentials: true
 }));
 ```
@@ -211,7 +211,7 @@ app.use(cors({
 **Error Message:**
 ```
 Access to fetch at 'http://localhost:3000/api/v1/knowledge-bases' 
-from origin 'http://localhost:3001' has been blocked by CORS policy
+from origin 'http://localhost:4001' has been blocked by CORS policy
 ```
 
 **Solutions:**
@@ -222,7 +222,7 @@ from origin 'http://localhost:3001' has been blocked by CORS policy
 const cors = require('cors');
 
 app.use(cors({
-  origin: ['http://localhost:3001', 'https://your-domain.com'],
+  origin: ['http://localhost:4001', 'https://your-domain.com'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -241,7 +241,7 @@ app.use(cors({
 ```bash
 # Test OPTIONS request
 curl -X OPTIONS \
-  -H "Origin: http://localhost:3001" \
+  -H "Origin: http://localhost:4001" \
   -H "Access-Control-Request-Method: POST" \
   http://localhost:3000/api/v1/knowledge-bases
 ```

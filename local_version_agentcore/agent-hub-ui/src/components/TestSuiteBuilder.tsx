@@ -97,7 +97,7 @@ const TestSuiteBuilder: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      const response = await fetch('http://localhost:3003/api/v1/testing/suites', {
+      const response = await fetch('http://localhost:4003/api/v1/testing/suites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(suite)

@@ -39,7 +39,7 @@ const GitHubIntegrationTab: React.FC = () => {
     const fetchAgents = async () => {
       try {
         console.log('🔍 Fetching agents from API...');
-        const response = await fetch('http://localhost:3002/api/v1/agents');
+        const response = await fetch('http://localhost:4002/api/v1/agents');
         const data = await response.json();
         
         console.log('📦 Received agents data:', data);
@@ -92,7 +92,7 @@ const GitHubIntegrationTab: React.FC = () => {
     setConnectionStatus(null);
 
     try {
-      const response = await fetch('http://localhost:3002/api/v1/github/test-connection', {
+      const response = await fetch('http://localhost:4002/api/v1/github/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: githubToken, owner: repoOwner, repo: repoName })
@@ -123,7 +123,7 @@ const GitHubIntegrationTab: React.FC = () => {
     setSaveStatus(null);
 
     try {
-      const response = await fetch('http://localhost:3002/api/v1/github/save-integration', {
+      const response = await fetch('http://localhost:4002/api/v1/github/save-integration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: githubToken, owner: repoOwner, repo: repoName, agents: selectedAgents })

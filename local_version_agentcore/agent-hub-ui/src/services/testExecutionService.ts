@@ -7,7 +7,7 @@
 
 import { KnowledgeConfig, TestResult, KnowledgeSource, ExecutionStep } from '../types/testing';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 // ============================================
 // Interfaces

@@ -199,7 +199,7 @@ const AgentDetail = ({ agentId }) => {
 ```bash
 cd agent-hub-backend
 npm start
-# Server should be running on http://localhost:3002
+# Server should be running on http://localhost:4002
 ```
 
 ### **2. Test MCP API Endpoints**
@@ -207,11 +207,11 @@ npm start
 ```bash
 # Check MCP status
 curl -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
-  http://localhost:3002/api/v1/mcp/status
+  http://localhost:4002/api/v1/mcp/status
 
 # List available MCP servers
 curl -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
-  http://localhost:3002/api/v1/mcp/servers/available
+  http://localhost:4002/api/v1/mcp/servers/available
 ```
 
 ### **3. Create an Agent with MCP**
@@ -228,7 +228,7 @@ curl -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
 ```bash
 # Check agent's MCP configuration
 curl -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
-  http://localhost:3002/api/v1/mcp/agents/{agentId}/config
+  http://localhost:4002/api/v1/mcp/agents/{agentId}/config
 ```
 
 ### **4. Test Agent Execution with MCP**
@@ -238,7 +238,7 @@ curl -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
 curl -X POST -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
   -H "Content-Type: application/json" \
   -d '{"input": {"query": "Test MCP functionality"}}' \
-  http://localhost:3002/api/v1/mcp/agents/{agentId}/execute
+  http://localhost:4002/api/v1/mcp/agents/{agentId}/execute
 ```
 
 ## 📋 **Integration Checklist**
@@ -252,7 +252,7 @@ curl -X POST -H "X-API-Key: sk-agenthub-system-internal-frontend-key" \
 - [ ] Add MCP management to agent detail pages
 
 ### **Testing**
-- [ ] Backend server running on port 3002
+- [ ] Backend server running on port 4002
 - [ ] MCP API endpoints responding
 - [ ] Can create agent with MCP configuration
 - [ ] MCP config is saved in S3 with agent data

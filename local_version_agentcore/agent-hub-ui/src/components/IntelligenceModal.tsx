@@ -45,14 +45,14 @@ export const IntelligenceModal: React.FC<IntelligenceModalProps> = ({
     // Test backend connectivity first
     try {
       console.log('🔗 Testing backend connectivity...');
-      const healthCheck = await fetch('http://localhost:3002/health');
+      const healthCheck = await fetch('http://localhost:4002/health');
       console.log('🔗 Backend health check:', healthCheck.ok ? 'OK' : 'FAILED');
     } catch (healthError) {
       console.error('🔗 Backend connectivity test failed:', healthError);
     }
     
     try {
-      const response = await fetch('http://localhost:3002/api/intelligence/analyze-query-dynamic', {
+      const response = await fetch('http://localhost:4002/api/intelligence/analyze-query-dynamic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ export const IntelligenceModal: React.FC<IntelligenceModalProps> = ({
     setFeedback(prev => ({ ...prev, [suggestionId]: type }));
     
     try {
-      await fetch('http://localhost:3002/api/intelligence/submit-feedback-dynamic', {
+      await fetch('http://localhost:4002/api/intelligence/submit-feedback-dynamic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ export const IntelligenceModal: React.FC<IntelligenceModalProps> = ({
   const handleAcceptSuggestion = async (suggestion: IntelligenceSuggestion) => {
     // Record suggestion acceptance for learning
     try {
-      await fetch('http://localhost:3002/api/intelligence/record-acceptance', {
+      await fetch('http://localhost:4002/api/intelligence/record-acceptance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

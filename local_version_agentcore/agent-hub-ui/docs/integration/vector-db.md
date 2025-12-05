@@ -8,16 +8,16 @@ The Vector DB (RAG) functionality is **already integrated** into the existing **
 
 ### Option 1: Navigation Bar
 1. Start your application:
-   - Backend: `cd local_version/agent-hub-backend && npm start` (port 3002)
-   - Frontend: `cd local_version/agent-hub-ui && npm start` (port 3001)
+   - Backend: `cd local_version/agent-hub-backend && npm start` (port 4002)
+   - Frontend: `cd local_version/agent-hub-ui && npm start` (port 4001)
 
-2. Open browser: `http://localhost:3001`
+2. Open browser: `http://localhost:4001`
 
 3. Click **"Agent Builder"** in the navigation bar
 
 ### Option 2: Direct URL
 ```
-http://localhost:3001/agent-builder
+http://localhost:4001/agent-builder
 ```
 
 ## 📋 What You'll See

@@ -524,7 +524,7 @@ const AgentMetricsTab: React.FC<{ agent: Agent & {
   React.useEffect(() => {
     const fetchModelNames = async () => {
       try {
-        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
         const response = await fetch(`${API_BASE_URL}/api/v1/bedrock/models`);
         const data = await response.json();
         
@@ -552,7 +552,7 @@ const AgentMetricsTab: React.FC<{ agent: Agent & {
 
       setLoadingMetrics(true);
       try {
-        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
         const response = await fetch(`${API_BASE_URL}/api/testing/runs`);
         const responseData = await response.json();
         

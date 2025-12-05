@@ -18,7 +18,7 @@
 
 - [x] Verify server is running
   ```bash
-  curl http://localhost:3002/health
+  curl http://localhost:4002/health
   ```
   Should return: `{"status":"healthy","timestamp":"..."}`
 
@@ -39,19 +39,19 @@
   npm start
   ```
 
-- [ ] Open browser to http://localhost:3001
+- [ ] Open browser to http://localhost:4001
 
 ## Verification Steps
 
 ### 1. Check Backend Health
 ```bash
-curl http://localhost:3002/health
+curl http://localhost:4002/health
 ```
 ✅ Should return JSON with status "healthy"
 
 ### 2. Test Vector DB API (with auth)
 ```bash
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/providers
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/providers
 ```
 ✅ Should return providers list
 
@@ -70,7 +70,7 @@ Click "Vector DB" in the navigation
 ## Common Issues & Fixes
 
 ### ❌ Backend won't start - "EADDRINUSE"
-**Problem**: Port 3002 is already in use
+**Problem**: Port 4002 is already in use
 
 **Fix**:
 ```powershell
@@ -85,7 +85,7 @@ Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 **Problem**: Backend not running or authentication missing
 
 **Fix**:
-1. Verify backend is running: `curl http://localhost:3002/health`
+1. Verify backend is running: `curl http://localhost:4002/health`
 2. Check component is using `api` client from `utils/apiClient.ts`
 3. Restart backend to ensure CORS headers are loaded
 
@@ -115,7 +115,7 @@ npm install
 
 ### Backend `.env`
 ```env
-PORT=3002
+PORT=4002
 DEMO_PASSWORD=agenthub2024
 DEMO_MODE=true
 AWS_REGION=us-east-1
@@ -123,7 +123,7 @@ AWS_REGION=us-east-1
 
 ### Frontend `.env`
 ```env
-REACT_APP_API_BASE_URL=http://localhost:3002
+REACT_APP_API_BASE_URL=http://localhost:4002
 REACT_APP_DEMO_PASSWORD=agenthub2024
 ```
 
@@ -136,14 +136,14 @@ When everything is working correctly, you should see:
 🔧 Server Mode: DEVELOPMENT
 📊 AWS Data: REAL
 ✅ VectorDBProviderService initialized with 6 providers
-🚀 Comprehensive Agent Hub Server running on port 3002
+🚀 Comprehensive Agent Hub Server running on port 4002
 ✅ Connected to SQLite database
 ✅ S3 bucket agenthub-agents-storage exists
 ```
 
 ### Frontend Console
 ```
-AgentCatalog API_BASE_URL: http://localhost:3002
+AgentCatalog API_BASE_URL: http://localhost:4002
 ✅ S3 API response status: 200
 ✅ Loaded 15 agents from S3
 ```
@@ -174,7 +174,7 @@ Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 
 ### Test API
 ```bash
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/providers
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/providers
 ```
 
 ### Check Server Logs

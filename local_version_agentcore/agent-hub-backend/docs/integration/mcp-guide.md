@@ -303,13 +303,13 @@ File: `.kiro/settings/mcp.json`
 
 ```bash
 # Check MCP system status
-curl http://localhost:3002/api/v1/mcp/status
+curl http://localhost:4002/api/v1/mcp/status
 
 # Test specific server
-curl -X POST http://localhost:3002/api/v1/mcp/servers/database/test
+curl -X POST http://localhost:4002/api/v1/mcp/servers/database/test
 
 # Get agent MCP config
-curl http://localhost:3002/api/v1/mcp/agents/{agentId}/config
+curl http://localhost:4002/api/v1/mcp/agents/{agentId}/config
 ```
 
 ## Security Considerations

@@ -176,7 +176,7 @@ Pre-configured examples that auto-select the appropriate server:
 ### 1. Access the Page
 Navigate to: **Developer Tools → Integration & Testing → MCP Test & Integration**
 
-Or directly: `http://localhost:3001/mcp-test`
+Or directly: `http://localhost:4001/mcp-test`
 
 ### 2. Select a Server (Optional)
 - Choose from dropdown or leave as "Auto-detect"

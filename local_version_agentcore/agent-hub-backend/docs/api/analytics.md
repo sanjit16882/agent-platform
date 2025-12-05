@@ -371,27 +371,27 @@ All endpoints return consistent error responses:
 
 ### Get Last 7 Days of Executions
 ```bash
-curl "http://localhost:3002/api/v1/agents/code-reviewer/executions?days=7&limit=100"
+curl "http://localhost:4002/api/v1/agents/code-reviewer/executions?days=7&limit=100"
 ```
 
 ### Get Analytics for Specific Period
 ```bash
-curl "http://localhost:3002/api/v1/agents/code-reviewer/analytics?days=14"
+curl "http://localhost:4002/api/v1/agents/code-reviewer/analytics?days=14"
 ```
 
 ### Get Cost Optimization for Last 90 Days
 ```bash
-curl "http://localhost:3002/api/v1/analytics/cost-optimization?days=90"
+curl "http://localhost:4002/api/v1/analytics/cost-optimization?days=90"
 ```
 
 ### Filter by Execution Mode
 ```bash
-curl "http://localhost:3002/api/v1/agents/code-reviewer/executions?execution_mode=rag"
+curl "http://localhost:4002/api/v1/agents/code-reviewer/executions?execution_mode=rag"
 ```
 
 ### Filter by Status
 ```bash
-curl "http://localhost:3002/api/v1/agents/code-reviewer/executions?status=error"
+curl "http://localhost:4002/api/v1/agents/code-reviewer/executions?status=error"
 ```
 
 ---

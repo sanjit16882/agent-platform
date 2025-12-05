@@ -317,7 +317,7 @@
    - Check for validation failures
 
 2. **Verify Backend:**
-   - Ensure backend is running on localhost:3002
+   - Ensure backend is running on localhost:4002
    - Check backend logs
    - Verify S3 storage
 

@@ -46,7 +46,7 @@ class BedrockService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4002';
   }
 
   async getAvailableModels(): Promise<BedrockStatus> {

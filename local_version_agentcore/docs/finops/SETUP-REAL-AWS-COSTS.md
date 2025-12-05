@@ -90,7 +90,7 @@ Look for these messages when starting the server:
 
 ### **2. Test API Endpoint:**
 ```bash
-curl http://localhost:3002/api/v1/aws/status
+curl http://localhost:4002/api/v1/aws/status
 ```
 
 **Expected Response (Configured):**

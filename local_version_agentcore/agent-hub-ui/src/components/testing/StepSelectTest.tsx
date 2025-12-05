@@ -86,7 +86,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
   // Load CORE tests from API based on agent category and sub-type
   const loadCoreTestsFromAPI = async (category: string, agentSubType: string): Promise<any[]> => {
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       console.log(`🎯 Loading CORE tests from API for ${category} - ${agentSubType}`);
       
       const response = await fetch(
@@ -132,7 +132,7 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
   const loadTests = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       
       // If agent is selected, get relevant tests based on category
       if (selectedAgent) {

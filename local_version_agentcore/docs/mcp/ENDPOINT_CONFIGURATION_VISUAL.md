@@ -8,15 +8,15 @@
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  📁 File System Server                                          │
-│     └─ http://localhost:3002/mcp-health/filesystem              │
+│     └─ http://localhost:4002/mcp-health/filesystem              │
 │        [MOCK ENDPOINT - Demo Only]                              │
 │                                                                  │
 │  🗄️  Database Server                                            │
-│     └─ http://localhost:3002/mcp-health/database                │
+│     └─ http://localhost:4002/mcp-health/database                │
 │        [MOCK ENDPOINT - Demo Only]                              │
 │                                                                  │
 │  🌿 Git Server                                                   │
-│     └─ http://localhost:3002/mcp-health/git                     │
+│     └─ http://localhost:4002/mcp-health/git                     │
 │        [MOCK ENDPOINT - Demo Only]                              │
 │                                                                  │
 │  🐙 GitHub Server                                               │
@@ -24,11 +24,11 @@
 │        [✅ REAL ENDPOINT - Production API]                      │
 │                                                                  │
 │  📧 Office365 Server                                            │
-│     └─ http://localhost:3002/mcp-health/office365               │
+│     └─ http://localhost:4002/mcp-health/office365               │
 │        [MOCK ENDPOINT - Placeholder]                            │
 │                                                                  │
 │  📋 Jira Server                                                  │
-│     └─ http://localhost:3002/mcp-health/jira                    │
+│     └─ http://localhost:4002/mcp-health/jira                    │
 │        [MOCK ENDPOINT - Placeholder]                            │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -60,7 +60,7 @@
 ┌──────────────────────────────────────────────────┐
 │  📁 File System | 🗄️ Database | 🌿 Git          │
 ├──────────────────────────────────────────────────┤
-│  Endpoint: http://localhost:3002/mcp-health/*   │
+│  Endpoint: http://localhost:4002/mcp-health/*   │
 │  Type: MOCK/DEMO                                 │
 │  Status: For Demonstration                       │
 │  Auth: Not Required                              │
@@ -77,7 +77,7 @@
 ┌──────────────────────────────────────────────────┐
 │  📧 Office365 | 📋 Jira                          │
 ├──────────────────────────────────────────────────┤
-│  Endpoint: http://localhost:3002/mcp-health/*   │
+│  Endpoint: http://localhost:4002/mcp-health/*   │
 │  Type: PLACEHOLDER                               │
 │  Status: Inactive                                │
 │  Auth: Will be required when activated           │
@@ -117,12 +117,12 @@
 ┌─────────────────────────────────────────────────┐
 │  Server Configurations                          │
 ├─────────────────────────────────────────────────┤
-│  📁 filesystem → localhost:3002 (mock)          │
-│  🗄️  database  → localhost:3002 (mock)          │
-│  🌿 git        → localhost:3002 (mock)          │
+│  📁 filesystem → localhost:4002 (mock)          │
+│  🗄️  database  → localhost:4002 (mock)          │
+│  🌿 git        → localhost:4002 (mock)          │
 │  🐙 github     → api.github.com (REAL) ✅       │
-│  📧 office365  → localhost:3002 (mock)          │
-│  📋 jira       → localhost:3002 (mock)          │
+│  📧 office365  → localhost:4002 (mock)          │
+│  📋 jira       → localhost:4002 (mock)          │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -183,7 +183,7 @@ Agent/Hybrid Builder
 │  realMCPService      │
 └──────────┬───────────┘
            │
-           │ GET localhost:3002/mcp-health/*
+           │ GET localhost:4002/mcp-health/*
            ▼
 ┌──────────────────────┐
 │  Backend Mock        │
@@ -235,7 +235,7 @@ Agent/Hybrid Builder
 │     • No sensitive data                 │
 │                                         │
 │  📍 Local Endpoint                      │
-│     • localhost:3002                    │
+│     • localhost:4002                    │
 │     • Not exposed externally            │
 │                                         │
 └─────────────────────────────────────────┘
@@ -269,7 +269,7 @@ Agent/Hybrid Builder
 │  │  Mock file operations (demo)                 │ │
 │  │                                               │ │
 │  │  Status: 🔵 Mock/Demo                        │ │
-│  │  Endpoint: localhost:3002                    │ │
+│  │  Endpoint: localhost:4002                    │ │
 │  └──────────────────────────────────────────────┘ │
 │                                                    │
 └────────────────────────────────────────────────────┘
@@ -280,7 +280,7 @@ Agent/Hybrid Builder
 ```
 ✅ GitHub server added to configuration
 ✅ GitHub endpoint set to https://api.github.com
-✅ All other servers use localhost:3002
+✅ All other servers use localhost:4002
 ✅ Server metadata complete (name, description, tools)
 ✅ Security fields marked as sensitive
 ✅ Health check implemented for all servers
@@ -303,8 +303,8 @@ Agent/Hybrid Builder
 ║  • GitHub → https://api.github.com                    ║
 ║                                                       ║
 ║  Mock Endpoints:                                      ║
-║  • File System, Database, Git → localhost:3002        ║
-║  • Office365, Jira → localhost:3002 (inactive)        ║
+║  • File System, Database, Git → localhost:4002        ║
+║  • Office365, Jira → localhost:4002 (inactive)        ║
 ║                                                       ║
 ║  Consistency:                                         ║
 ║  • Agent Builder ✅                                   ║

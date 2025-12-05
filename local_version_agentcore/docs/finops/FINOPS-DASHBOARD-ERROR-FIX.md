@@ -3,7 +3,7 @@
 ## 🚨 **PROBLEM IDENTIFIED:**
 The FinOps dashboard was showing 404 errors because it was trying to fetch from missing backend endpoints:
 ```
-GET http://localhost:3002/api/v1/finops/dashboard 404 (Not Found)
+GET http://localhost:4002/api/v1/finops/dashboard 404 (Not Found)
 POST /api/v1/security/audit-log 404 (Not Found)
 ```
 
@@ -107,10 +107,10 @@ app.post('/api/v1/security/audit-log', (req, res) => {
 Test the endpoints:
 ```bash
 # FinOps Dashboard Data
-curl http://localhost:3002/api/v1/finops/dashboard
+curl http://localhost:4002/api/v1/finops/dashboard
 
 # Security Audit Log
-curl -X POST http://localhost:3002/api/v1/security/audit-log \
+curl -X POST http://localhost:4002/api/v1/security/audit-log \
   -H "Content-Type: application/json" \
   -d '{"action":"dashboard_access","userId":"test-user"}'
 ```

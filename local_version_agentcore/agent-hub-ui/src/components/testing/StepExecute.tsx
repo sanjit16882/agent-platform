@@ -34,7 +34,7 @@ const StepExecute: React.FC<StepExecuteProps> = ({
       setError(null);
 
       // Send full test objects (supports both library and custom tests)
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
       // If multiple models selected, execute for each model
       if (models.length > 1) {

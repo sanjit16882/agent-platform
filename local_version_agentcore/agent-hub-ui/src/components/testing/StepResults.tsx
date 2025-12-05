@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../common/Card';
 import { theme } from '../../styles/theme';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 interface StepResultsProps {
   runId: string | null;
@@ -23,7 +23,7 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
   const loadResults = async () => {
     try {
       setLoading(true);
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       const response = await fetch(`${API_BASE_URL}/api/testing/runs/${runId}`);
       if (!response.ok) throw new Error('Failed to load results');
       

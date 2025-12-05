@@ -237,7 +237,7 @@ To test the feature:
 
 1. Start backend: `cd local_version/agent-hub-backend && npm start`
 2. Start frontend: `cd local_version/agent-hub-ui && npm start`
-3. Navigate to: `http://localhost:3001/agent-testing`
+3. Navigate to: `http://localhost:4001/agent-testing`
 4. Click "🔬 Model Comparison" card
 5. Follow the 4-step workflow
 

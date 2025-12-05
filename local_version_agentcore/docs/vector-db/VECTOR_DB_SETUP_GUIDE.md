@@ -129,7 +129,7 @@ You can use this to test the document ingestion feature.
 
 ## API Endpoints Available
 
-All endpoints are at: `http://localhost:3002/api/v1/vector-db/`
+All endpoints are at: `http://localhost:4002/api/v1/vector-db/`
 
 - `POST /documents/upload` - Upload files
 - `GET /documents` - List documents

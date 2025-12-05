@@ -57,6 +57,16 @@ AWS AgentCore is Amazon's managed service for building, deploying, and managing 
 - Enterprise SLAs
 - 24/7 AWS support
 
+## Port Configuration
+
+**Important:** This AgentCore version uses different ports to avoid conflicts with the local version:
+
+- **Frontend UI:** http://localhost:4001 (local version uses 3001)
+- **Backend API:** http://localhost:4002 (local version uses 3002)
+- **Testing API:** http://localhost:4003 (local version uses 3003)
+
+This allows you to run both versions simultaneously for comparison and testing.
+
 ## Getting Started
 
 ### Prerequisites

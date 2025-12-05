@@ -379,7 +379,7 @@ export class RealAnalyticsService {
 
     try {
       // Check backend health
-      const healthResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/health`);
+      const healthResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4002'}/health`);
       const healthData = await healthResponse.json();
       
       const recentExecutions = this.executionHistory.filter(e => 

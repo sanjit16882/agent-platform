@@ -82,7 +82,7 @@ node comprehensive-server.js
 ```
 
 ## Step 5: Verify Connection
-1. Open the FinOps Dashboard at http://localhost:3001
+1. Open the FinOps Dashboard at http://localhost:4001
 2. Go to **Integration** → **Deployment** tab
 3. You should see real AWS costs instead of mock data
 4. The "AWS Not Configured" message should disappear

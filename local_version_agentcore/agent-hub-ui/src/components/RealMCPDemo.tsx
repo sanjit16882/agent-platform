@@ -39,7 +39,7 @@ export const RealMCPDemo: React.FC = () => {
 
   const checkMCPStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3002/api/mcp/real/status', {
+      const response = await fetch('http://localhost:4002/api/mcp/real/status', {
         headers: {
           'Authorization': 'sk-agenthub-system-internal-frontend-key',
           'Content-Type': 'application/json'
@@ -58,7 +58,7 @@ export const RealMCPDemo: React.FC = () => {
   const initializeMCP = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3002/api/mcp/real/initialize', {
+      const response = await fetch('http://localhost:4002/api/mcp/real/initialize', {
         method: 'POST',
         headers: {
           'Authorization': 'sk-agenthub-system-internal-frontend-key',
@@ -90,7 +90,7 @@ export const RealMCPDemo: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3002/api/mcp/real/demo', {
+      const response = await fetch('http://localhost:4002/api/mcp/real/demo', {
         method: 'POST',
         headers: {
           'Authorization': 'sk-agenthub-system-internal-frontend-key',
@@ -123,7 +123,7 @@ export const RealMCPDemo: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3002/api/mcp/real/execute', {
+      const response = await fetch('http://localhost:4002/api/mcp/real/execute', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

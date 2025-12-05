@@ -7,8 +7,8 @@ Agent templates are now fully integrated into the Agent Builder!
 ## 🎯 How to Use Templates
 
 ### Access the Agent Builder
-1. Start your application (frontend on port 3001)
-2. Navigate to: `http://localhost:3001/agent-builder`
+1. Start your application (frontend on port 4001)
+2. Navigate to: `http://localhost:4001/agent-builder`
 3. You'll see the **template selector** at the top
 
 ### Choose a Template

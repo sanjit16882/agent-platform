@@ -239,7 +239,7 @@ AI Model
 ## 🚀 Deployment Checklist
 
 ### Prerequisites
-- [x] Backend server running on localhost:3002
+- [x] Backend server running on localhost:4002
 - [x] Frontend server running on localhost:3000
 - [x] AWS Bedrock API accessible
 - [x] No TypeScript errors

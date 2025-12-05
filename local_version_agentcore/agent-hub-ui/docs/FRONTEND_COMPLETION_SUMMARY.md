@@ -483,7 +483,7 @@ REACT_APP_LOG_LEVEL=debug
 ✅ **Development Build**
 ```bash
 npm start
-# Runs on http://localhost:3001
+# Runs on http://localhost:4001
 ```
 
 ✅ **Production Build**

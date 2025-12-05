@@ -8,7 +8,7 @@ The application was experiencing 401 Unauthorized errors when accessing Vector D
 1. **Missing Authentication Headers**: Frontend fetch requests weren't including the required `x-demo-password` header
 2. **CORS Configuration**: Backend wasn't allowing the custom `x-demo-password` header in CORS policy
 3. **Module Import Issue**: TypeScript compiled module wasn't being imported correctly (needed `.default`)
-4. **Port Conflicts**: Server couldn't start due to existing Node processes on port 3002
+4. **Port Conflicts**: Server couldn't start due to existing Node processes on port 4002
 
 ## Solutions Implemented
 
@@ -75,7 +75,7 @@ Created PowerShell script that:
 
 ### Backend API Test
 ```bash
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/providers
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/providers
 ```
 
 **Expected Response**:
@@ -126,13 +126,13 @@ Add to `.env` files for customization:
 
 **Frontend** (`.env`):
 ```env
-REACT_APP_API_BASE_URL=http://localhost:3002
+REACT_APP_API_BASE_URL=http://localhost:4002
 REACT_APP_DEMO_PASSWORD=agenthub2024
 ```
 
 **Backend** (`.env`):
 ```env
-PORT=3002
+PORT=4002
 DEMO_PASSWORD=agenthub2024
 DEMO_MODE=true
 ```
@@ -154,7 +154,7 @@ npm start
 ## Troubleshooting
 
 ### Still Getting 401 Errors?
-1. Check backend is running: `curl http://localhost:3002/health`
+1. Check backend is running: `curl http://localhost:4002/health`
 2. Verify CORS headers are set (check browser Network tab)
 3. Ensure component is using `api` client, not raw `fetch()`
 
@@ -166,7 +166,7 @@ Make sure backend has been restarted after the CORS fix.
 
 ## Status: ✅ LOCKED & WORKING
 
-- Backend server running on port 3002
+- Backend server running on port 4002
 - CORS configured correctly
 - Authentication working
 - Vector DB endpoints responding

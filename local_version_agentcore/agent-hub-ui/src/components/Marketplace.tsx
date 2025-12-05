@@ -8,7 +8,7 @@ import Card from './common/Card';
 import Badge from './common/Badge';
 import { theme } from '../styles/theme';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 // Type assertions for React Icons
 const StoreIcon = FaStore as any;

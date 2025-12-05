@@ -585,7 +585,7 @@ This ${language} code appears to be ${complexity.toLowerCase()} complexity with 
       try {
         // Call the production agent execution service
         const config = require('../config');
-        const apiUrl = config.get('endpoints.api') || 'http://localhost:3002';
+        const apiUrl = config.get('endpoints.api') || 'http://localhost:4002';
         const response = await fetch(`${apiUrl}/api/v1/agents/${templateId}/execute`, {
           method: 'POST',
           headers: {

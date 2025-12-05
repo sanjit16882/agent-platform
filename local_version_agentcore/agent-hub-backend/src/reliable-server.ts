@@ -32,7 +32,7 @@ config();
 // DevOps features loaded
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 4002;
 
 // Security middleware
 app.use(helmet({
@@ -44,9 +44,9 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-    'http://localhost:3003',
+    'http://localhost:4001',
+    'http://localhost:4002',
+    'http://localhost:4003',
     'http://localhost:3004',
     'http://localhost:3005'
   ],

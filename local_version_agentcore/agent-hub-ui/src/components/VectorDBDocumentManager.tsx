@@ -118,7 +118,7 @@ const VectorDBDocumentManager: React.FC = () => {
       formData.append('category', category);
       formData.append('providerId', providerId);
       
-      const response = await fetch('http://localhost:3002/api/v1/vector-db/documents/upload', {
+      const response = await fetch('http://localhost:4002/api/v1/vector-db/documents/upload', {
         method: 'POST',
         body: formData
       });
@@ -147,7 +147,7 @@ const VectorDBDocumentManager: React.FC = () => {
     }
     
     try {
-      const response = await fetch('http://localhost:3002/api/v1/vector-db/documents/import/text', {
+      const response = await fetch('http://localhost:4002/api/v1/vector-db/documents/import/text', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,7 +184,7 @@ const VectorDBDocumentManager: React.FC = () => {
     if (!documentToDelete) return;
     
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/vector-db/documents/${documentToDelete}`, {
+      const response = await fetch(`http://localhost:4002/api/v1/vector-db/documents/${documentToDelete}`, {
         method: 'DELETE'
       });
       
@@ -207,7 +207,7 @@ const VectorDBDocumentManager: React.FC = () => {
   
   const handleReindex = async (id: string) => {
     try {
-      const response = await fetch(`http://localhost:3002/api/v1/vector-db/documents/${id}/reindex`, {
+      const response = await fetch(`http://localhost:4002/api/v1/vector-db/documents/${id}/reindex`, {
         method: 'POST'
       });
       

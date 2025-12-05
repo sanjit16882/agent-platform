@@ -168,7 +168,7 @@ const RestApiSection: React.FC = () => (
       <div style={{ marginBottom: theme.spacing.xl }}>
         <h4>Base URL</h4>
         <code style={{ padding: theme.spacing.sm, backgroundColor: theme.colors.backgroundSecondary, borderRadius: theme.borderRadius.sm, display: 'block' }}>
-          http://localhost:3002/api/v1/testing
+          http://localhost:4002/api/v1/testing
         </code>
       </div>
 
@@ -196,7 +196,7 @@ const RestApiSection: React.FC = () => (
           </ul>
           <p><strong>Example:</strong></p>
           <pre style={{ padding: theme.spacing.sm, backgroundColor: theme.colors.backgroundSecondary, borderRadius: theme.borderRadius.sm }}>
-{`curl http://localhost:3002/api/v1/testing/tests?category=functional`}
+{`curl http://localhost:4002/api/v1/testing/tests?category=functional`}
           </pre>
         </Card.Body>
       </Card>
@@ -263,7 +263,7 @@ const RestApiSection: React.FC = () => (
           <p><strong>Description:</strong> Get execution status and results</p>
           <p><strong>Example:</strong></p>
           <pre style={{ padding: theme.spacing.sm, backgroundColor: theme.colors.backgroundSecondary, borderRadius: theme.borderRadius.sm }}>
-{`curl http://localhost:3002/api/v1/testing/execute/run_abc123`}
+{`curl http://localhost:4002/api/v1/testing/execute/run_abc123`}
           </pre>
         </Card.Body>
       </Card>
@@ -309,14 +309,14 @@ npm link`}
         <p>Create <code>~/.agent-hub/config.json</code>:</p>
         <pre style={{ padding: theme.spacing.md, backgroundColor: theme.colors.backgroundSecondary, borderRadius: theme.borderRadius.md }}>
 {`{
-  "apiUrl": "http://localhost:3002",
+  "apiUrl": "http://localhost:4002",
   "apiKey": "your-api-key-here",
   "defaultAgent": "agent_123"
 }`}
         </pre>
         <p style={{ marginTop: theme.spacing.md }}>Or use environment variables:</p>
         <pre style={{ padding: theme.spacing.md, backgroundColor: theme.colors.backgroundSecondary, borderRadius: theme.borderRadius.md }}>
-{`export AGENT_HUB_API_URL=http://localhost:3002
+{`export AGENT_HUB_API_URL=http://localhost:4002
 export AGENT_HUB_API_KEY=your-api-key-here`}
         </pre>
       </div>
@@ -439,7 +439,7 @@ const SdkSection: React.FC = () => (
 
 // Initialize client
 const client = new AgentTestingClient({
-  apiUrl: 'http://localhost:3002',
+  apiUrl: 'http://localhost:4002',
   apiKey: 'your-api-key-here'
 });
 
@@ -492,7 +492,7 @@ const analytics = await client.analytics.get({
 {`import { AgentTestingClient, TestRun, TestResult } from '@agent-hub/testing-sdk';
 
 const client = new AgentTestingClient({
-  apiUrl: 'http://localhost:3002',
+  apiUrl: 'http://localhost:4002',
   apiKey: process.env.AGENT_HUB_API_KEY!
 });
 
@@ -709,7 +709,7 @@ agent-test results <run_id> --detailed`}
 
 async function runTestSuite() {
   const client = new AgentTestingClient({
-    apiUrl: 'http://localhost:3002',
+    apiUrl: 'http://localhost:4002',
     apiKey: process.env.AGENT_HUB_API_KEY
   });
 

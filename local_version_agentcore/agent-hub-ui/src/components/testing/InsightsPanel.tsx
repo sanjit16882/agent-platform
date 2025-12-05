@@ -3,7 +3,7 @@ import Card from '../common/Card';
 import Button from '../common/Button';
 import { theme } from '../../styles/theme';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 interface InsightsPanelProps {
   runId?: string;

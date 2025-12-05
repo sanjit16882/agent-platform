@@ -27,7 +27,7 @@ function loadConfig(): Config {
 
   // Environment variables take precedence
   return {
-    apiUrl: process.env.AGENT_HUB_API_URL || fileConfig.apiUrl || 'http://localhost:3002',
+    apiUrl: process.env.AGENT_HUB_API_URL || fileConfig.apiUrl || 'http://localhost:4002',
     apiKey: process.env.AGENT_HUB_API_KEY || fileConfig.apiKey || '',
     defaultAgent: process.env.AGENT_HUB_DEFAULT_AGENT || fileConfig.defaultAgent
   };

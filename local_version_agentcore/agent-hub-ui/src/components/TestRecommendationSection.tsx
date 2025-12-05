@@ -42,7 +42,7 @@ const TestRecommendationSection: React.FC<TestRecommendationSectionProps> = ({
 
     try {
       const response = await fetch(
-        `http://localhost:3002/api/v1/test-metadata/agent-types/${selectedCategory}`
+        `http://localhost:4002/api/v1/test-metadata/agent-types/${selectedCategory}`
       );
 
       if (!response.ok) {

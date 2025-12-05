@@ -391,7 +391,7 @@ PINECONE_ENVIRONMENT=your_environment
 ### 1. Upload a Text File
 
 ```bash
-curl -X POST http://localhost:3002/api/v1/vector-db/documents/upload \
+curl -X POST http://localhost:4002/api/v1/vector-db/documents/upload \
   -F "files=@test.txt" \
   -F "category=test" \
   -F "providerId=pinecone"
@@ -400,19 +400,19 @@ curl -X POST http://localhost:3002/api/v1/vector-db/documents/upload \
 ### 2. List Documents
 
 ```bash
-curl http://localhost:3002/api/v1/vector-db/documents?providerId=pinecone
+curl http://localhost:4002/api/v1/vector-db/documents?providerId=pinecone
 ```
 
 ### 3. Get Statistics
 
 ```bash
-curl http://localhost:3002/api/v1/vector-db/documents/stats?providerId=pinecone
+curl http://localhost:4002/api/v1/vector-db/documents/stats?providerId=pinecone
 ```
 
 ### 4. Search Documents
 
 ```bash
-curl -X POST http://localhost:3002/api/v1/vector-db/documents/search \
+curl -X POST http://localhost:4002/api/v1/vector-db/documents/search \
   -H "Content-Type: application/json" \
   -d '{"query": "how to reset password", "providerId": "pinecone", "topK": 5}'
 ```

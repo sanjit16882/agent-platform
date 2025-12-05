@@ -32,7 +32,7 @@ const StepInsights: React.FC<StepInsightsProps> = ({
       setLoading(true);
       setError(null);
 
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       
       // First, fetch the test run data
       console.log('📥 Fetching test run data...');

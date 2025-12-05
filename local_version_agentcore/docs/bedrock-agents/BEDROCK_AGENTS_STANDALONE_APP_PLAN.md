@@ -161,7 +161,7 @@ bedrock-backend/
 | **Testing** | Your framework | Similar + Bedrock metrics |
 | **Analytics** | Your dashboard | Similar + AWS CloudWatch |
 | **Deployment** | Your infra | Serverless (AWS) |
-| **Port** | 3000/3002 | 3004/3005 |
+| **Port** | 3000/4002 | 3004/3005 |
 | **Database** | Your DB | Separate DB |
 
 ---
@@ -689,7 +689,7 @@ export class BedrockAgentService {
 ```bash
 # Terminal 1: Current Agent Factory
 cd agent-factory/local_version/agent-hub-backend
-npm start  # Runs on port 3002
+npm start  # Runs on port 4002
 
 cd agent-factory/local_version/agent-hub-ui
 npm start  # Runs on port 3000
@@ -714,12 +714,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:3002
+      - REACT_APP_API_URL=http://localhost:4002
 
   agent-factory-backend:
     build: ./agent-factory/local_version/agent-hub-backend
     ports:
-      - "3002:3002"
+      - "4002:4002"
     environment:
       - NODE_ENV=production
 

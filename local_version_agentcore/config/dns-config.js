@@ -6,20 +6,20 @@ const config = {
     ui: {
       protocol: 'http',
       host: 'agenthub.local',
-      port: 3001,
-      url: 'http://agenthub.local:3001'
+      port: 4001,
+      url: 'http://agenthub.local:4001'
     },
     api: {
       protocol: 'http',
       host: 'api.agenthub.local',
-      port: 3002,
-      url: 'http://api.agenthub.local:3002'
+      port: 4002,
+      url: 'http://api.agenthub.local:4002'
     },
     services: {
-      dashboard: 'http://dashboard.agenthub.local:3001',
-      finops: 'http://finops.agenthub.local:3001',
-      mcp: 'http://mcp.agenthub.local:3002',
-      analytics: 'http://analytics.agenthub.local:3001'
+      dashboard: 'http://dashboard.agenthub.local:4001',
+      finops: 'http://finops.agenthub.local:4001',
+      mcp: 'http://mcp.agenthub.local:4002',
+      analytics: 'http://analytics.agenthub.local:4001'
     }
   },
 
@@ -29,14 +29,14 @@ const config = {
     ui: {
       protocol: 'http',
       host: 'agenthub.local',
-      port: 3001,
-      url: 'http://agenthub.local:3001'
+      port: 4001,
+      url: 'http://agenthub.local:4001'
     },
     api: {
       protocol: 'http',
       host: 'api.agenthub.local',
-      port: 3002,
-      url: 'http://api.agenthub.local:3002'
+      port: 4002,
+      url: 'http://api.agenthub.local:4002'
     },
     aws: {
       // Use real AWS services for specific features

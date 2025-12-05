@@ -135,7 +135,7 @@ Check `CONFLUENCE_INTEGRATION_COMPLETE.md` for:
 
 ## API Endpoints
 
-All at: `http://localhost:3002/api/v1/vector-db/`
+All at: `http://localhost:4002/api/v1/vector-db/`
 
 ### Create Integration
 ```bash

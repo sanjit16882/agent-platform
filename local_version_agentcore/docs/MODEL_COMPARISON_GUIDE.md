@@ -217,7 +217,7 @@ const models = [
 ];
 
 for (const modelId of models) {
-  const response = await fetch('http://localhost:3002/api/testing/execute', {
+  const response = await fetch('http://localhost:4002/api/testing/execute', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

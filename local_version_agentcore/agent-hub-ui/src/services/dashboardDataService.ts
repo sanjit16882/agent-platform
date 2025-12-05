@@ -137,7 +137,7 @@ export const dashboardDataService = new DashboardDataService();
 // Common data fetchers with proper error handling
 export const dataFetchers = {
   finOpsData: async () => {
-    const response = await fetch('http://localhost:3002/api/v1/finops/dashboard');
+    const response = await fetch('http://localhost:4002/api/v1/finops/dashboard');
     if (!response.ok) {
       throw new Error(`FinOps API error: ${response.status}`);
     }
@@ -145,7 +145,7 @@ export const dataFetchers = {
   },
 
   analyticsData: async () => {
-    const response = await fetch('http://localhost:3002/api/v1/analytics/executions');
+    const response = await fetch('http://localhost:4002/api/v1/analytics/executions');
     if (!response.ok) {
       throw new Error(`Analytics API error: ${response.status}`);
     }
@@ -153,7 +153,7 @@ export const dataFetchers = {
   },
 
   agentsData: async () => {
-    const response = await fetch('http://localhost:3002/api/v1/agents');
+    const response = await fetch('http://localhost:4002/api/v1/agents');
     if (!response.ok) {
       throw new Error(`Agents API error: ${response.status}`);
     }
@@ -161,7 +161,7 @@ export const dataFetchers = {
   },
 
   cloudWatchMetrics: async () => {
-    const response = await fetch('http://localhost:3002/api/v1/cloudwatch/metrics');
+    const response = await fetch('http://localhost:4002/api/v1/cloudwatch/metrics');
     if (!response.ok) {
       throw new Error(`CloudWatch API error: ${response.status}`);
     }

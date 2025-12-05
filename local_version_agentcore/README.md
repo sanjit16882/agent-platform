@@ -33,9 +33,9 @@ npm start
 ```
 
 ### Access Points
-- **Frontend UI:** http://localhost:3001
-- **Backend API:** http://localhost:3002
-- **Learning Dashboard:** http://localhost:3001/learning
+- **Frontend UI:** http://localhost:4001
+- **Backend API:** http://localhost:4002
+- **Learning Dashboard:** http://localhost:4001/learning
 
 ---
 
@@ -173,12 +173,12 @@ The following files are **LOCKED** and should not be modified without review:
 
 ### Test Backend
 ```bash
-curl http://localhost:3002/health
-curl http://localhost:3002/api/intelligence/learning-analytics
+curl http://localhost:4002/health
+curl http://localhost:4002/api/intelligence/learning-analytics
 ```
 
 ### Test Frontend
-1. Open http://localhost:3001
+1. Open http://localhost:4001
 2. Navigate to Analytics → Continuous Learning
 3. Should see real-time data
 
@@ -209,7 +209,7 @@ Create `.env` files in both directories:
 
 **Backend (.env):**
 ```
-PORT=3002
+PORT=4002
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_key
 AWS_SECRET_ACCESS_KEY=your_secret
@@ -217,7 +217,7 @@ AWS_SECRET_ACCESS_KEY=your_secret
 
 **Frontend (.env):**
 ```
-REACT_APP_BACKEND_URL=http://localhost:3002
+REACT_APP_BACKEND_URL=http://localhost:4002
 ```
 
 ---
@@ -310,14 +310,14 @@ git push origin main
 ### Common Issues
 
 **"Error Loading Learning Data"**
-- Check backend is running on port 3002
+- Check backend is running on port 4002
 - Verify data files exist in `agent-hub-backend/data/learning/`
 - Run `node seed-learning-data.js` to regenerate
 
 **"Unexpected token '<'" Error**
 - Frontend is calling wrong URL
 - Check `API_CONFIG.BACKEND_URL` in `agent-hub-ui/src/config/api.ts`
-- Should be `http://localhost:3002`
+- Should be `http://localhost:4002`
 
 **No Data Showing**
 - Generate sample data: `node seed-learning-data.js`

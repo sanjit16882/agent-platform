@@ -1,7 +1,7 @@
 // API Configuration for Agent Hub UI
 export const API_CONFIG = {
   // Backend API (Intelligence Layer + Production Agents)
-  BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3002',
+  BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:4002',
   
   // API Endpoints
   ENDPOINTS: {

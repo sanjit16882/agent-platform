@@ -6,17 +6,17 @@
 import { MCPServer, MCPIntegrationConfig, AgentMCPConfig } from '../types/mcp';
 
 class RealMCPService {
-  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+  private baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:4002';
   
   // MCP server endpoints
   // NOTE: Only GitHub uses real endpoint, others use mock endpoints for demonstration
   private dockerServers = {
-    filesystem: 'http://localhost:3002/mcp-health/filesystem',
-    database: 'http://localhost:3002/mcp-health/database', 
-    git: 'http://localhost:3002/mcp-health/git',
+    filesystem: 'http://localhost:4002/mcp-health/filesystem',
+    database: 'http://localhost:4002/mcp-health/database', 
+    git: 'http://localhost:4002/mcp-health/git',
     github: 'https://api.github.com', // REAL GitHub API endpoint
-    office365: 'http://localhost:3002/mcp-health/office365',
-    jira: 'http://localhost:3002/mcp-health/jira'
+    office365: 'http://localhost:4002/mcp-health/office365',
+    jira: 'http://localhost:4002/mcp-health/jira'
   };
 
   async getRealDockerServers(): Promise<(MCPServer & { url?: string })[]> {

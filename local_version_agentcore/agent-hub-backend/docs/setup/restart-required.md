@@ -35,16 +35,16 @@ Once the server is restarted, test with:
 
 ```bash
 # Test execution history
-curl http://localhost:3002/api/v1/agents/github-mcp/executions?limit=10
+curl http://localhost:4002/api/v1/agents/github-mcp/executions?limit=10
 
 # Test analytics
-curl http://localhost:3002/api/v1/agents/github-mcp/analytics?days=30
+curl http://localhost:4002/api/v1/agents/github-mcp/analytics?days=30
 
 # Test Vector DB analytics
-curl http://localhost:3002/api/v1/analytics/vector-db
+curl http://localhost:4002/api/v1/analytics/vector-db
 
 # Test cost optimization
-curl http://localhost:3002/api/v1/analytics/cost-optimization
+curl http://localhost:4002/api/v1/analytics/cost-optimization
 ```
 
 ## Expected Behavior

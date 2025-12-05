@@ -274,10 +274,10 @@ npm start
 ### API Tests
 ```bash
 # Test Vector DB providers endpoint
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/providers
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/providers
 
 # Test Vector DB configs endpoint
-curl -H "x-demo-password: agenthub2024" http://localhost:3002/api/v1/vector-db/configs
+curl -H "x-demo-password: agenthub2024" http://localhost:4002/api/v1/vector-db/configs
 ```
 
 ---

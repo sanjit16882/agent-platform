@@ -93,7 +93,7 @@ class DynamicIntelligenceService {
       // Fetch real agents from the catalog API using built-in http
       const http = require('http');
       const response = await new Promise((resolve, reject) => {
-        const req = http.get('http://localhost:3002/api/v1/agents', (res) => {
+        const req = http.get('http://localhost:4002/api/v1/agents', (res) => {
           let data = '';
           res.on('data', (chunk) => data += chunk);
           res.on('end', () => {

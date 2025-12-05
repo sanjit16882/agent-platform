@@ -128,7 +128,7 @@ const CloudWatchMetrics: React.FC = () => {
     const loadMetrics = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:3002/api/v1/cloudwatch/metrics');
+        const response = await fetch('http://localhost:4002/api/v1/cloudwatch/metrics');
         const data = await response.json();
         
         if (data.success && data.data) {

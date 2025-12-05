@@ -13,7 +13,7 @@ import TestRecommendationSection from './TestRecommendationSection';
 import { IntelligenceModal } from './IntelligenceModal';
 import { realTestingFramework } from '../services/realTestingFramework';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 interface NLPAnalysisResult {
   intent: {

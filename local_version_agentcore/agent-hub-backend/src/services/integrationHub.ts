@@ -360,7 +360,7 @@ export class IntegrationHub extends EventEmitter {
         type: 'api-key',
         header: 'X-API-Key'
       },
-      baseUrl: process.env.API_BASE_URL || 'http://localhost:3002'
+      baseUrl: process.env.API_BASE_URL || 'http://localhost:4002'
     };
   }
 

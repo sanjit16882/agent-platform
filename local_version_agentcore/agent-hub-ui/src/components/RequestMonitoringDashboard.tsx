@@ -29,7 +29,7 @@ const RequestMonitoringDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('http://localhost:3002/api/v1/monitoring/request-stats');
+      const response = await fetch('http://localhost:4002/api/v1/monitoring/request-stats');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }

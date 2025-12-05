@@ -31,7 +31,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents',
           description: 'Retrieve all available agents from S3 storage',
-          cli: 'curl http://localhost:3002/api/v1/agents',
+          cli: 'curl http://localhost:4002/api/v1/agents',
           response: `{
   "success": true,
   "data": [
@@ -51,7 +51,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/s3',
           description: 'Get all custom agents from S3 bucket',
-          cli: 'curl http://localhost:3002/api/v1/agents/s3',
+          cli: 'curl http://localhost:4002/api/v1/agents/s3',
           response: `{
   "success": true,
   "data": [...],
@@ -62,7 +62,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/:id',
           description: 'Get detailed information about a specific agent',
-          cli: 'curl http://localhost:3002/api/v1/agents/agent-123',
+          cli: 'curl http://localhost:4002/api/v1/agents/agent-123',
           response: `{
   "success": true,
   "agent": {
@@ -77,7 +77,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'POST',
           path: '/api/v1/agents/upload',
           description: 'Upload a new custom agent to S3',
-          cli: `curl -X POST http://localhost:3002/api/v1/agents/upload \\
+          cli: `curl -X POST http://localhost:4002/api/v1/agents/upload \\
   -H "Content-Type: application/json" \\
   -d '{
     "name": "My Custom Agent",
@@ -97,7 +97,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'DELETE',
           path: '/api/v1/agents/:id',
           description: 'Delete an agent from S3',
-          cli: 'curl -X DELETE http://localhost:3002/api/v1/agents/agent-123',
+          cli: 'curl -X DELETE http://localhost:4002/api/v1/agents/agent-123',
           response: `{
   "success": true,
   "message": "Agent deleted successfully"
@@ -113,7 +113,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/suites/universal',
           description: 'Get all test categories and test cases',
-          cli: 'curl http://localhost:3002/api/testing/suites/universal',
+          cli: 'curl http://localhost:4002/api/testing/suites/universal',
           response: `{
   "success": true,
   "categories": [
@@ -137,7 +137,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/agents',
           description: 'Get all agents available for testing',
-          cli: 'curl http://localhost:3002/api/testing/agents',
+          cli: 'curl http://localhost:4002/api/testing/agents',
           response: `{
   "success": true,
   "agents": [...]
@@ -147,7 +147,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'POST',
           path: '/api/testing/run/category',
           description: 'Execute tests for selected agents and test category',
-          cli: `curl -X POST http://localhost:3002/api/testing/run/category \\
+          cli: `curl -X POST http://localhost:4002/api/testing/run/category \\
   -H "Content-Type: application/json" \\
   -d '{
     "agentIds": ["agent-123", "agent-456"],
@@ -164,7 +164,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/test-runs',
           description: 'Get all test execution history',
-          cli: 'curl http://localhost:3002/api/testing/test-runs',
+          cli: 'curl http://localhost:4002/api/testing/test-runs',
           response: `{
   "success": true,
   "runs": [
@@ -185,7 +185,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/test-runs/:runId',
           description: 'Get detailed results for a specific test run',
-          cli: 'curl http://localhost:3002/api/testing/test-runs/run-123',
+          cli: 'curl http://localhost:4002/api/testing/test-runs/run-123',
           response: `{
   "success": true,
   "run": {
@@ -217,7 +217,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/metrics',
           description: 'Get testing metrics with cost analysis and performance data',
-          cli: 'curl "http://localhost:3002/api/testing/metrics?days=7"',
+          cli: 'curl "http://localhost:4002/api/testing/metrics?days=7"',
           response: `{
   "success": true,
   "metrics": {
@@ -266,7 +266,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/insights',
           description: 'Get AI-powered testing insights and recommendations',
-          cli: 'curl http://localhost:3002/api/testing/insights',
+          cli: 'curl http://localhost:4002/api/testing/insights',
           response: `{
   "success": true,
   "insights": {
@@ -300,7 +300,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/testing/analytics/overview',
           description: 'Get testing overview dashboard metrics',
-          cli: 'curl http://localhost:3002/api/testing/analytics/overview',
+          cli: 'curl http://localhost:4002/api/testing/analytics/overview',
           response: `{
   "totalAgents": 15,
   "testCoverage": 40,
@@ -332,7 +332,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'POST',
           path: '/api/v1/agents/hybrid/execute',
           description: 'Execute hybrid agent with natural language query',
-          cli: `curl -X POST http://localhost:3002/api/v1/agents/hybrid/execute \\
+          cli: `curl -X POST http://localhost:4002/api/v1/agents/hybrid/execute \\
   -H "Content-Type: application/json" \\
   -d '{
     "query": "Generate test cases for login functionality",
@@ -357,7 +357,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/finops/dashboard',
           description: 'Get FinOps dashboard data with cost analysis',
-          cli: 'curl http://localhost:3002/api/v1/finops/dashboard',
+          cli: 'curl http://localhost:4002/api/v1/finops/dashboard',
           response: `{
   "totalCost": 1234.56,
   "costByService": [
@@ -380,7 +380,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/finops/cost-explorer',
           description: 'Get detailed cost breakdown and trends',
-          cli: 'curl http://localhost:3002/api/v1/finops/cost-explorer',
+          cli: 'curl http://localhost:4002/api/v1/finops/cost-explorer',
           response: `{
   "costs": [...],
   "trends": [...],
@@ -397,7 +397,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/dashboard/stats',
           description: 'Get real-time dashboard statistics',
-          cli: 'curl http://localhost:3002/api/v1/dashboard/stats',
+          cli: 'curl http://localhost:4002/api/v1/dashboard/stats',
           response: `{
   "totalAgents": 15,
   "activeExecutions": 3,
@@ -409,7 +409,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/analytics/executions',
           description: 'Get agent execution history and analytics',
-          cli: 'curl http://localhost:3002/api/v1/analytics/executions',
+          cli: 'curl http://localhost:4002/api/v1/analytics/executions',
           response: `{
   "executions": [
     {
@@ -427,7 +427,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/cloudwatch/metrics',
           description: 'Get CloudWatch metrics for system monitoring',
-          cli: 'curl http://localhost:3002/api/v1/cloudwatch/metrics',
+          cli: 'curl http://localhost:4002/api/v1/cloudwatch/metrics',
           response: `{
   "metrics": {
     "cpu": 45.2,
@@ -448,7 +448,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/:id/executions',
           description: 'Get detailed execution history for a specific agent with filtering and pagination',
-          cli: `curl "http://localhost:3002/api/v1/agents/code-reviewer/executions?execution_mode=rag&limit=20"`,
+          cli: `curl "http://localhost:4002/api/v1/agents/code-reviewer/executions?execution_mode=rag&limit=20"`,
           response: `{
   "success": true,
   "data": {
@@ -486,7 +486,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/:id/analytics',
           description: 'Get comprehensive analytics for a specific agent including cost, latency, and success rates',
-          cli: `curl "http://localhost:3002/api/v1/agents/code-reviewer/analytics?days=30"`,
+          cli: `curl "http://localhost:4002/api/v1/agents/code-reviewer/analytics?days=30"`,
           response: `{
   "success": true,
   "data": {
@@ -519,7 +519,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/analytics/vector-db',
           description: 'Get Vector DB usage statistics across all agents',
-          cli: `curl "http://localhost:3002/api/v1/analytics/vector-db?days=30"`,
+          cli: `curl "http://localhost:4002/api/v1/analytics/vector-db?days=30"`,
           response: `{
   "success": true,
   "data": {
@@ -548,7 +548,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/analytics/cost-optimization',
           description: 'Get cost optimization recommendations based on execution patterns',
-          cli: `curl "http://localhost:3002/api/v1/analytics/cost-optimization?days=30"`,
+          cli: `curl "http://localhost:4002/api/v1/analytics/cost-optimization?days=30"`,
           response: `{
   "success": true,
   "data": {
@@ -586,7 +586,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/search',
           description: 'Search agents by name, category, or capabilities',
-          cli: 'curl "http://localhost:3002/api/v1/agents/search?q=test&category=qa"',
+          cli: 'curl "http://localhost:4002/api/v1/agents/search?q=test&category=qa"',
           response: `{
   "success": true,
   "results": [...],
@@ -597,7 +597,7 @@ const RealAPIDocumentation: React.FC = () => {
           method: 'GET',
           path: '/api/v1/agents/categories',
           description: 'Get all agent categories',
-          cli: 'curl http://localhost:3002/api/v1/agents/categories',
+          cli: 'curl http://localhost:4002/api/v1/agents/categories',
           response: `{
   "categories": ["QE", "DevOps", "Security", "Data", "Custom"]
 }`
@@ -624,7 +624,7 @@ const RealAPIDocumentation: React.FC = () => {
             Comprehensive API reference with ready-to-use CLI commands for all Agent Hub endpoints
           </p>
           <Alert variant="info" style={{ fontSize: '1.1em', color: '#000000', fontWeight: 500 }}>
-            <strong style={{ color: '#000000' }}>Base URL:</strong> <code style={{ color: '#000000', fontSize: '1em' }}>http://localhost:3002</code>
+            <strong style={{ color: '#000000' }}>Base URL:</strong> <code style={{ color: '#000000', fontSize: '1em' }}>http://localhost:4002</code>
             {' | '}
             <strong style={{ color: '#000000' }}>Format:</strong> <span style={{ color: '#000000' }}>JSON</span>
             {' | '}

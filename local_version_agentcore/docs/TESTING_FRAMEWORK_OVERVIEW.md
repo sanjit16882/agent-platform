@@ -378,12 +378,12 @@ test-2,Tool Usage Test,true,87.5,2345
 # Backend
 cd local_version/agent-hub-backend
 npm install
-npm start  # Port 3002
+npm start  # Port 4002
 
 # Frontend
 cd local_version/agent-hub-ui
 npm install
-npm start  # Port 3001
+npm start  # Port 4001
 ```
 
 ### Production
@@ -479,8 +479,8 @@ npm run build
 5. Contact support
 
 ### Common Issues
-- Backend not running → Check port 3002
-- Frontend not loading → Check port 3001
+- Backend not running → Check port 4002
+- Frontend not loading → Check port 4001
 - Tests failing → Check AWS credentials
 - Slow execution → Check network/region
 

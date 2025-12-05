@@ -407,7 +407,7 @@ const handleSaveAgent = async () => {
       } : null
     };
 
-    const response = await fetch(`http://localhost:3002/api/v1/agents/${editingAgent.id}`, {
+    const response = await fetch(`http://localhost:4002/api/v1/agents/${editingAgent.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updateData)
@@ -459,7 +459,7 @@ const handleCreateAgent = async () => {
     } : undefined
   };
   
-  const response = await fetch('http://localhost:3002/api/v1/agents/create', {
+  const response = await fetch('http://localhost:4002/api/v1/agents/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(requestBody)

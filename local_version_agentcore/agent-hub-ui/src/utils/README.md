@@ -71,7 +71,7 @@ const response = await api.post('/api/v1/agents', data, {
 Set these environment variables in your `.env` file:
 
 ```env
-REACT_APP_API_BASE_URL=http://localhost:3002
+REACT_APP_API_BASE_URL=http://localhost:4002
 REACT_APP_DEMO_PASSWORD=agenthub2024
 ```
 
@@ -80,7 +80,7 @@ REACT_APP_DEMO_PASSWORD=agenthub2024
 ### Before (Old Way)
 
 ```typescript
-const response = await fetch('http://localhost:3002/api/v1/agents', {
+const response = await fetch('http://localhost:4002/api/v1/agents', {
   headers: {
     'Content-Type': 'application/json',
     'x-demo-password': 'agenthub2024'

@@ -35,7 +35,7 @@ const StepProvideInput: React.FC<StepProvideInputProps> = ({
     setLoadingPrompts(prev => ({ ...prev, [test.id]: true }));
 
     try {
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
       
       const requestBody = {
         agent: {

@@ -103,7 +103,7 @@ cd local_version
 ```
 
 ### **Step 2: Access Real MCP Dashboard**
-- Navigate to `http://localhost:3001/real-mcp-dashboard`
+- Navigate to `http://localhost:4001/real-mcp-dashboard`
 - Check server status (should show all running)
 - Execute real MCP tools:
   - **Filesystem**: `read_file`, `write_file`, `list_directory`, `search_files`
@@ -200,14 +200,14 @@ cd local_version
 ```bash
 cd local_version/agent-hub-ui
 npm start
-# Navigate to http://localhost:3001/real-mcp-dashboard
+# Navigate to http://localhost:4001/real-mcp-dashboard
 ```
 
 ### **Backend Testing:**
 ```bash
 cd local_version/agent-hub-backend
 npm start
-# Backend runs on http://localhost:3002
+# Backend runs on http://localhost:4002
 ```
 
 ### **Docker MCP Servers:**
@@ -220,13 +220,13 @@ cd local_version
 ### **API Testing:**
 ```bash
 # Check server status
-curl http://localhost:3002/api/v1/mcp/status
+curl http://localhost:4002/api/v1/mcp/status
 
 # List available servers
-curl http://localhost:3002/api/v1/mcp/servers
+curl http://localhost:4002/api/v1/mcp/servers
 
 # Test MCP tool call
-curl -X POST http://localhost:3002/api/v1/mcp/tools/call \
+curl -X POST http://localhost:4002/api/v1/mcp/tools/call \
   -H "Content-Type: application/json" \
   -d '{"serverId": "filesystem", "toolName": "read_file", "args": {"path": "package.json"}}'
 ```

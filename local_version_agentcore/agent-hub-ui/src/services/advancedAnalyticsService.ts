@@ -125,8 +125,8 @@ class AdvancedAnalyticsService {
     try {
       // Fetch both FinOps executions and Agent Testing executions
       const [finopsResponse, testingResponse] = await Promise.all([
-        fetch('http://localhost:3002/api/v1/analytics/executions').catch(() => null),
-        fetch('http://localhost:3002/api/testing/runs?limit=1000').catch(() => null)
+        fetch('http://localhost:4002/api/v1/analytics/executions').catch(() => null),
+        fetch('http://localhost:4002/api/testing/runs?limit=1000').catch(() => null)
       ]);
 
       let finopsExecutions: any[] = [];

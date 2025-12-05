@@ -4,7 +4,7 @@ import Button from '../common/Button';
 import { theme } from '../../styles/theme';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4002';
 
 interface Model {
   id: string;

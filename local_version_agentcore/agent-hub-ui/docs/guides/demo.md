@@ -100,7 +100,7 @@
 ## 🖥️ **Demo Environment Setup**
 
 ### **URLs to Have Ready:**
-- **Web Dashboard:** http://localhost:3001
+- **Web Dashboard:** http://localhost:4001
 - **API Endpoint:** https://z5ujq1k916.execute-api.us-east-1.amazonaws.com/prod
 - **AWS Console:** CloudFormation, Lambda, DynamoDB
 
