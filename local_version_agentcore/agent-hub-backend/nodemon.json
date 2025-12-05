@@ -1,0 +1,12 @@
+{
+  "watch": ["src", "services"],
+  "ext": "ts,js,json",
+  "ignore": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "test-runs-cache.json",
+    "*.db",
+    "*.log"
+  ],
+  "exec": "ts-node src/server.ts"
+}

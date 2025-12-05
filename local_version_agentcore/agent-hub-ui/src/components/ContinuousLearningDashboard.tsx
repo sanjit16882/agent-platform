@@ -1,0 +1,544 @@
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Badge, Alert, Button, Modal, Table, ProgressBar } from 'react-bootstrap';
+import { API_CONFIG } from '../config/api';
+// React Icons compatibility fix - using createElement
+const { createElement } = React;
+const icons = require('react-icons/fa');
+
+const FaBrain = (props: any) => createElement(icons.FaBrain, props);
+const FaChartLine = (props: any) => createElement(icons.FaChartLine, props);
+const FaUsers = (props: any) => createElement(icons.FaUsers, props);
+const FaLightbulb = (props: any) => createElement(icons.FaLightbulb, props);
+const FaCog = (props: any) => createElement(icons.FaCog, props);
+const FaFlask = (props: any) => createElement(icons.FaFlask, props);
+const FaDownload = (props: any) => createElement(icons.FaDownload, props);
+
+interface LearningAnalytics {
+  totalUsers: number;
+  activeUsers: number;
+  totalInteractions: number;
+  totalFeedback: number;
+  avgAcceptanceRate: number;
+  avgExplorationLevel: number;
+  feedbackRate: number;
+  learningVelocity: number;
+  topIntents: Array<{ intent: string; count: number }>;
+  topSuggestionTypes: Array<{ type: string; score: number; positive: number; negative: number }>;
+  insights: Array<{
+    type: string;
+    title: string;
+    description: string;
+    recommendation: string;
+  }>;
+}
+
+interface UserProfile {
+  userId: string;
+  interactionCount: number;
+  learningProgress: number;
+  acceptanceRate: number;
+  explorationLevel: number;
+  confidenceThreshold: number;
+  recommendations: string[];
+  lastActive: string;
+}
+
+const ContinuousLearningDashboard: React.FC = () => {
+  const [analytics, setAnalytics] = useState<LearningAnalytics | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [abTestResults, setAbTestResults] = useState<any>(null);
+
+  const currentUserId = 'user_demo_001'; // In production, get from auth context
+
+  useEffect(() => {
+    fetchLearningData();
+  }, []);
+
+  const fetchLearningData = async () => {
+    try {
+      setLoading(true);
+      const baseUrl = API_CONFIG.BACKEND_URL;
+      
+      // Fetch learning analytics
+      const analyticsResponse = await fetch(`${baseUrl}/api/intelligence/learning-analytics`);
+      const analyticsData = await analyticsResponse.json();
+      
+      if (analyticsData.success) {
+        setAnalytics(analyticsData.analytics);
+      }
+
+      // Fetch user profile
+      const profileResponse = await fetch(`${baseUrl}/api/intelligence/learning/profile/${currentUserId}`);
+      const profileData = await profileResponse.json();
+      
+      if (profileData.success) {
+        setUserProfile(profileData.profile);
+      }
+
+      // Fetch A/B test results for demo
+      try {
+        const abResponse = await fetch(`${baseUrl}/api/intelligence/learning/ab-test/suggestion_algorithm_v2/results`);
+        const abData = await abResponse.json();
+        if (abData.success) {
+          setAbTestResults(abData);
+        }
+      } catch (abError) {
+        console.log('No A/B test data available');
+      }
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch learning data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOptimizeProfile = async (optimizationType: string) => {
+    try {
+      setOptimizing(true);
+      const baseUrl = API_CONFIG.BACKEND_URL;
+      
+      const response = await fetch(`${baseUrl}/api/intelligence/learning/optimize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUserId,
+          optimizationType
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh user profile
+        await fetchLearningData();
+        setShowOptimizeModal(false);
+      } else {
+        setError(data.error || 'Optimization failed');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Optimization failed');
+    } finally {
+      setOptimizing(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    try {
+      const baseUrl = API_CONFIG.BACKEND_URL;
+      const response = await fetch(`${baseUrl}/api/intelligence/learning/export`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Create and download file
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `learning-data-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        setShowExportModal(false);
+      } else {
+        setError(data.error || 'Export failed');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed');
+    }
+  };
+
+  const getInsightBadgeVariant = (type: string) => {
+    switch (type) {
+      case 'success': return 'success';
+      case 'warning': return 'warning';
+      case 'info': return 'info';
+      default: return 'secondary';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container-fluid mt-4">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading learning analytics...</span>
+          </div>
+          <p className="mt-2">Loading continuous learning analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container-fluid mt-4">
+        <Alert variant="danger">
+          <Alert.Heading>Error Loading Learning Data</Alert.Heading>
+          <p>{error}</p>
+          <Button variant="outline-danger" onClick={fetchLearningData}>
+            Try Again
+          </Button>
+        </Alert>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container-fluid mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2><FaBrain className="me-2 text-primary" />Continuous Learning Dashboard</h2>
+          <p className="text-muted">Monitor and optimize AI learning performance across the platform</p>
+        </div>
+        <div>
+          <Button 
+            variant="outline-primary" 
+            className="me-2"
+            onClick={() => setShowOptimizeModal(true)}
+          >
+            <FaCog className="me-1" />Optimize
+          </Button>
+          <Button 
+            variant="outline-secondary"
+            onClick={() => setShowExportModal(true)}
+          >
+            <FaDownload className="me-1" />Export Data
+          </Button>
+        </div>
+      </div>
+
+      {/* Platform Learning Overview */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Card className="h-100">
+            <Card.Body className="text-center">
+              <FaUsers className="text-primary mb-2" size={32} />
+              <h4>{analytics?.totalUsers || 0}</h4>
+              <p className="text-muted mb-0">Total Users</p>
+              <small className="text-success">
+                {analytics?.activeUsers || 0} active
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="h-100">
+            <Card.Body className="text-center">
+              <FaChartLine className="text-success mb-2" size={32} />
+              <h4>{analytics?.avgAcceptanceRate || 0}%</h4>
+              <p className="text-muted mb-0">Avg Acceptance Rate</p>
+              <small className="text-info">
+                {analytics?.totalInteractions || 0} interactions
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="h-100">
+            <Card.Body className="text-center">
+              <FaLightbulb className="text-warning mb-2" size={32} />
+              <h4>{analytics?.learningVelocity || 0}</h4>
+              <p className="text-muted mb-0">Learning Velocity</p>
+              <small className="text-info">
+                interactions/user/week
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="h-100">
+            <Card.Body className="text-center">
+              <FaFlask className="text-info mb-2" size={32} />
+              <h4>{analytics?.avgExplorationLevel || 0}%</h4>
+              <p className="text-muted mb-0">Exploration Level</p>
+              <small className="text-muted">
+                {analytics?.feedbackRate || 0}% feedback rate
+              </small>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* User Learning Profile */}
+      {userProfile && (
+        <Row className="mb-4">
+          <Col md={8}>
+            <Card>
+              <Card.Header>
+                <h5 className="mb-0">Your Learning Profile</h5>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={6}>
+                    <div className="mb-3">
+                      <label className="form-label">Learning Progress</label>
+                      <ProgressBar 
+                        now={userProfile.learningProgress} 
+                        label={`${userProfile.learningProgress}%`}
+                        variant={userProfile.learningProgress > 70 ? 'success' : 'primary'}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Acceptance Rate</label>
+                      <ProgressBar 
+                        now={userProfile.acceptanceRate} 
+                        label={`${userProfile.acceptanceRate}%`}
+                        variant={userProfile.acceptanceRate > 60 ? 'success' : 'warning'}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Exploration Level</label>
+                      <ProgressBar 
+                        now={userProfile.explorationLevel} 
+                        label={`${userProfile.explorationLevel}%`}
+                        variant="info"
+                      />
+                    </div>
+                  </Col>
+                  <Col md={6}>
+                    <p><strong>Interactions:</strong> {userProfile.interactionCount}</p>
+                    <p><strong>Confidence Threshold:</strong> {(userProfile.confidenceThreshold * 100).toFixed(0)}%</p>
+                    <p><strong>Last Active:</strong> {new Date(userProfile.lastActive).toLocaleDateString()}</p>
+                    
+                    {userProfile.recommendations.length > 0 && (
+                      <div className="mt-3">
+                        <strong>Recommendations:</strong>
+                        <ul className="mt-2">
+                          {userProfile.recommendations.map((rec, index) => (
+                            <li key={index} className="small text-muted">{rec}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={4}>
+            <Card>
+              <Card.Header>
+                <h5 className="mb-0">Learning Insights</h5>
+              </Card.Header>
+              <Card.Body>
+                {analytics?.insights && analytics.insights.length > 0 ? (
+                  analytics.insights.map((insight, index) => (
+                    <Alert key={index} variant={getInsightBadgeVariant(insight.type)} className="p-2 mb-2">
+                      <div className="small">
+                        <strong>{insight.title}</strong><br />
+                        {insight.description}
+                      </div>
+                    </Alert>
+                  ))
+                ) : (
+                  <p className="text-muted">No insights available yet. Keep using the platform to generate insights!</p>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Popular Intents and Suggestion Types */}
+      <Row className="mb-4">
+        <Col md={6}>
+          <Card>
+            <Card.Header>
+              <h5 className="mb-0">Top User Intents</h5>
+            </Card.Header>
+            <Card.Body>
+              {analytics?.topIntents && analytics.topIntents.length > 0 ? (
+                <Table size="sm">
+                  <thead>
+                    <tr>
+                      <th>Intent</th>
+                      <th>Usage Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.topIntents.map((intent, index) => (
+                      <tr key={index}>
+                        <td>{intent.intent}</td>
+                        <td>
+                          <Badge bg="primary">{intent.count}</Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              ) : (
+                <p className="text-muted">No intent data available yet.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card>
+            <Card.Header>
+              <h5 className="mb-0">Suggestion Performance</h5>
+            </Card.Header>
+            <Card.Body>
+              {analytics?.topSuggestionTypes && analytics.topSuggestionTypes.length > 0 ? (
+                <Table size="sm">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Score</th>
+                      <th>Feedback</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {analytics.topSuggestionTypes.map((type, index) => (
+                      <tr key={index}>
+                        <td>{type.type}</td>
+                        <td>
+                          <Badge bg={type.score > 0 ? 'success' : 'danger'}>
+                            {type.score > 0 ? '+' : ''}{type.score}
+                          </Badge>
+                        </td>
+                        <td className="small">
+                          <span className="text-success">{type.positive}↑</span>
+                          {' '}
+                          <span className="text-danger">{type.negative}↓</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              ) : (
+                <p className="text-muted">No suggestion performance data available yet.</p>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* A/B Testing Results */}
+      {abTestResults && (
+        <Row className="mb-4">
+          <Col>
+            <Card>
+              <Card.Header>
+                <h5 className="mb-0">A/B Testing Results: {abTestResults.testName}</h5>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={4}>
+                    <div className="text-center p-3 border rounded">
+                      <h6>Variant A</h6>
+                      <h4>{(abTestResults.results.A.conversionRate * 100).toFixed(1)}%</h4>
+                      <small className="text-muted">
+                        {abTestResults.results.A.conversions}/{abTestResults.results.A.interactions} conversions
+                      </small>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="text-center p-3 border rounded">
+                      <h6>Variant B</h6>
+                      <h4>{(abTestResults.results.B.conversionRate * 100).toFixed(1)}%</h4>
+                      <small className="text-muted">
+                        {abTestResults.results.B.conversions}/{abTestResults.results.B.interactions} conversions
+                      </small>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="text-center p-3 border rounded">
+                      <h6>Analysis</h6>
+                      <Badge bg={
+                        abTestResults.analysis.significance === 'significant' ? 'success' :
+                        abTestResults.analysis.significance === 'trending' ? 'warning' : 'secondary'
+                      }>
+                        {abTestResults.analysis.significance.replace('_', ' ')}
+                      </Badge>
+                      <div className="mt-2 small text-muted">
+                        {abTestResults.analysis.conversionDifference}% difference
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
+
+      {/* Optimization Modal */}
+      <Modal show={showOptimizeModal} onHide={() => setShowOptimizeModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Optimize Learning Profile</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Choose an optimization type to improve your learning experience:</p>
+          <div className="d-grid gap-2">
+            <Button 
+              variant="outline-primary"
+              onClick={() => handleOptimizeProfile('confidence_threshold')}
+              disabled={optimizing}
+            >
+              Optimize Confidence Threshold
+            </Button>
+            <Button 
+              variant="outline-primary"
+              onClick={() => handleOptimizeProfile('exploration_level')}
+              disabled={optimizing}
+            >
+              Optimize Exploration Level
+            </Button>
+            <Button 
+              variant="outline-primary"
+              onClick={() => handleOptimizeProfile('full_optimization')}
+              disabled={optimizing}
+            >
+              Full Profile Optimization
+            </Button>
+          </div>
+          {optimizing && (
+            <div className="text-center mt-3">
+              <div className="spinner-border spinner-border-sm" role="status">
+                <span className="visually-hidden">Optimizing...</span>
+              </div>
+              <span className="ms-2">Optimizing profile...</span>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Export Modal */}
+      <Modal show={showExportModal} onHide={() => setShowExportModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Export Learning Data</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Export comprehensive learning data for analysis:</p>
+          <ul>
+            <li>User interactions and preferences</li>
+            <li>Feedback patterns and ratings</li>
+            <li>Suggestion performance metrics</li>
+            <li>A/B testing results</li>
+          </ul>
+          <Alert variant="info" className="small">
+            Data will be exported as JSON format with anonymized user identifiers.
+          </Alert>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowExportModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleExportData}>
+            <FaDownload className="me-1" />Export Data
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
+  );
+};
+
+export default ContinuousLearningDashboard;

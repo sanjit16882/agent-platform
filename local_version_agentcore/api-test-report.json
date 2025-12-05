@@ -1,0 +1,187 @@
+{
+  "timestamp": "2025-11-07T22:34:34.801Z",
+  "summary": {
+    "total": 14,
+    "successful": 1,
+    "authRequired": 13,
+    "failed": 0
+  },
+  "successes": [
+    {
+      "name": "Health Check",
+      "method": "GET",
+      "url": "/health",
+      "status": 200,
+      "success": true,
+      "data": {
+        "status": "healthy",
+        "timestamp": "2025-11-07T22:34:34.738Z",
+        "version": "1.0.0",
+        "services": {
+          "apiKeys": "healthy",
+          "s3": "healthy",
+          "agents": "healthy"
+        }
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "name": "List Agents",
+      "method": "GET",
+      "url": "/api/v1/agents",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Get Specific Agent",
+      "method": "GET",
+      "url": "/api/v1/agents/test-agent",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Get GitHub MCP Agent",
+      "method": "GET",
+      "url": "/api/v1/agents/github-mcp",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Execute Agent",
+      "method": "POST",
+      "url": "/api/v1/agents/test-agent/execute",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Create Hybrid Agent",
+      "method": "POST",
+      "url": "/api/v1/agents/hybrid/create",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "List S3 Agents",
+      "method": "GET",
+      "url": "/api/v1/agents/s3",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Get S3 Agent",
+      "method": "GET",
+      "url": "/api/v1/agents/s3/test-agent",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Get Executions",
+      "method": "GET",
+      "url": "/api/v1/analytics/executions",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "FinOps Dashboard",
+      "method": "GET",
+      "url": "/api/v1/finops/dashboard",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "List MCP Servers",
+      "method": "GET",
+      "url": "/api/mcp/servers",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "MCP Server Status",
+      "method": "GET",
+      "url": "/api/mcp/servers/github/status",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "DevOps Metrics",
+      "method": "GET",
+      "url": "/api/devops/metrics",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    },
+    {
+      "name": "Test Suites",
+      "method": "GET",
+      "url": "/api/testing/suites",
+      "status": 401,
+      "success": false,
+      "data": {
+        "success": false,
+        "error": "API key is required",
+        "message": "Include API key in Authorization header or x-api-key header"
+      }
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,58 @@
+.component-palette {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.palette-header {
+  flex-shrink: 0;
+}
+
+.palette-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.palette-footer {
+  flex-shrink: 0;
+}
+
+.component-template-card {
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.component-template-card:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.template-details {
+  font-size: 10px;
+}
+
+.badge-sm {
+  font-size: 9px;
+  padding: 2px 4px;
+}
+
+/* Custom scrollbar */
+.palette-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.palette-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.palette-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.palette-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

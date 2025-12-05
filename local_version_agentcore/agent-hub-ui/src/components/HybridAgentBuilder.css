@@ -1,0 +1,77 @@
+/* Template card styling */
+.template-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid #dee2e6;
+}
+
+.template-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+.template-card .card-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Component palette styling */
+.component-palette {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.palette-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.component-template-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.component-template-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge styling */
+.badge-sm {
+  font-size: 0.65rem;
+  padding: 0.25em 0.4em;
+}
+
+/* Template details styling */
+.template-details {
+  font-size: 0.75rem;
+}
+
+.template-details .text-muted {
+  color: #6c757d !important;
+}
+
+/* Fix for dark input fields in incognito/dark mode */
+.form-control,
+textarea.form-control,
+input.form-control {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #ced4da !important;
+}
+
+.form-control:focus,
+textarea.form-control:focus,
+input.form-control:focus {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-color: #86b7fe !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.form-control::placeholder {
+  color: #6c757d !important;
+  opacity: 1 !important;
+}

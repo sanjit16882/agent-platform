@@ -1,0 +1,378 @@
+/* AWS Console Inspired Theme */
+
+/* ===== AWS-STYLE COLOR PALETTE ===== */
+:root {
+  /* AWS Console Colors */
+  --aws-orange: #ff9900;
+  --aws-blue: #232f3e;
+  --aws-light-blue: #4a90e2;
+  --aws-dark-blue: #161e2d;
+  
+  /* Professional Grays (AWS Style) */
+  --aws-gray-50: #fafafa;
+  --aws-gray-100: #f5f5f5;
+  --aws-gray-200: #eeeeee;
+  --aws-gray-300: #e0e0e0;
+  --aws-gray-400: #bdbdbd;
+  --aws-gray-500: #9e9e9e;
+  --aws-gray-600: #757575;
+  --aws-gray-700: #616161;
+  --aws-gray-800: #424242;
+  --aws-gray-900: #212121;
+  
+  /* Status Colors */
+  --aws-success: #1b7e34;
+  --aws-success-light: #d4edda;
+  --aws-warning: #856404;
+  --aws-warning-light: #fff3cd;
+  --aws-danger: #721c24;
+  --aws-danger-light: #f8d7da;
+  --aws-info: #0c5460;
+  --aws-info-light: #d1ecf1;
+  
+  /* Typography */
+  --aws-font-family: 'Amazon Ember', 'Helvetica Neue', Roboto, Arial, sans-serif;
+  --aws-font-size-xs: 0.75rem;
+  --aws-font-size-sm: 0.875rem;
+  --aws-font-size-base: 1rem;
+  --aws-font-size-lg: 1.125rem;
+  --aws-font-size-xl: 1.25rem;
+  
+  /* Spacing (AWS Console spacing) */
+  --aws-spacing-xs: 0.25rem;
+  --aws-spacing-sm: 0.5rem;
+  --aws-spacing-md: 1rem;
+  --aws-spacing-lg: 1.5rem;
+  --aws-spacing-xl: 2rem;
+  --aws-spacing-2xl: 3rem;
+  
+  /* Border Radius */
+  --aws-border-radius: 4px;
+  --aws-border-radius-lg: 8px;
+  
+  /* Shadows */
+  --aws-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --aws-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --aws-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== AWS-STYLE LAYOUT ===== */
+.aws-layout {
+  background-color: var(--aws-gray-50);
+  min-height: 100vh;
+  font-family: var(--aws-font-family);
+}
+
+.aws-main-content {
+  padding: var(--aws-spacing-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ===== AWS-STYLE NAVIGATION ===== */
+.aws-navbar {
+  background-color: var(--aws-blue) !important;
+  border-bottom: 1px solid var(--aws-gray-300);
+  box-shadow: var(--aws-shadow-sm);
+  padding: 0 !important;
+}
+
+.aws-navbar .navbar-brand {
+  color: white !important;
+  font-weight: 600;
+  font-size: var(--aws-font-size-lg);
+  padding: var(--aws-spacing-md) var(--aws-spacing-lg);
+}
+
+.aws-navbar .nav-link {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-size: var(--aws-font-size-sm);
+  padding: var(--aws-spacing-md) var(--aws-spacing-lg) !important;
+  border-radius: 0;
+  transition: all 0.2s ease;
+}
+
+.aws-navbar .nav-link:hover,
+.aws-navbar .nav-link.active {
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.aws-secondary-nav {
+  background-color: white;
+  border-bottom: 1px solid var(--aws-gray-200);
+  padding: var(--aws-spacing-sm) 0;
+}
+
+.aws-secondary-nav .nav-link {
+  color: var(--aws-gray-700) !important;
+  font-size: var(--aws-font-size-sm);
+  padding: var(--aws-spacing-sm) var(--aws-spacing-md) !important;
+  border-radius: var(--aws-border-radius);
+  margin: 0 var(--aws-spacing-xs);
+}
+
+.aws-secondary-nav .nav-link:hover {
+  background-color: var(--aws-gray-100);
+  color: var(--aws-blue) !important;
+}
+
+/* ===== AWS-STYLE BREADCRUMBS ===== */
+.aws-breadcrumb {
+  background-color: transparent;
+  padding: var(--aws-spacing-md) 0;
+  margin-bottom: var(--aws-spacing-lg);
+  font-size: var(--aws-font-size-sm);
+}
+
+.aws-breadcrumb .breadcrumb-item {
+  color: var(--aws-gray-600);
+}
+
+.aws-breadcrumb .breadcrumb-item.active {
+  color: var(--aws-gray-800);
+  font-weight: 500;
+}
+
+.aws-breadcrumb .breadcrumb-item a {
+  color: var(--aws-light-blue);
+  text-decoration: none;
+}
+
+.aws-breadcrumb .breadcrumb-item a:hover {
+  text-decoration: underline;
+}
+
+/* ===== AWS-STYLE CARDS ===== */
+.aws-card {
+  background-color: white;
+  border: 1px solid var(--aws-gray-200);
+  border-radius: var(--aws-border-radius);
+  box-shadow: var(--aws-shadow-sm);
+  margin-bottom: var(--aws-spacing-lg);
+}
+
+.aws-card-header {
+  background-color: var(--aws-gray-50);
+  border-bottom: 1px solid var(--aws-gray-200);
+  padding: var(--aws-spacing-md) var(--aws-spacing-lg);
+  font-weight: 600;
+  font-size: var(--aws-font-size-base);
+  color: var(--aws-gray-800);
+}
+
+.aws-card-body {
+  padding: var(--aws-spacing-lg);
+}
+
+/* ===== AWS-STYLE TABLES ===== */
+.aws-table {
+  background-color: white;
+  border: 1px solid var(--aws-gray-200);
+  border-radius: var(--aws-border-radius);
+  overflow: hidden;
+}
+
+.aws-table table {
+  margin-bottom: 0;
+  font-size: var(--aws-font-size-sm);
+}
+
+.aws-table thead th {
+  background-color: var(--aws-gray-50);
+  border-bottom: 2px solid var(--aws-gray-200);
+  color: var(--aws-gray-700);
+  font-weight: 600;
+  padding: var(--aws-spacing-md);
+  font-size: var(--aws-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aws-table tbody td {
+  padding: var(--aws-spacing-md);
+  border-bottom: 1px solid var(--aws-gray-100);
+  vertical-align: middle;
+}
+
+.aws-table tbody tr:hover {
+  background-color: var(--aws-gray-50);
+}
+
+/* ===== AWS-STYLE BUTTONS ===== */
+.aws-btn {
+  font-size: var(--aws-font-size-sm);
+  font-weight: 500;
+  padding: var(--aws-spacing-sm) var(--aws-spacing-md);
+  border-radius: var(--aws-border-radius);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--aws-spacing-xs);
+}
+
+.aws-btn-primary {
+  background-color: var(--aws-orange);
+  border-color: var(--aws-orange);
+  color: white;
+}
+
+.aws-btn-primary:hover {
+  background-color: #e88900;
+  border-color: #e88900;
+  color: white;
+}
+
+.aws-btn-secondary {
+  background-color: white;
+  border-color: var(--aws-gray-300);
+  color: var(--aws-gray-700);
+}
+
+.aws-btn-secondary:hover {
+  background-color: var(--aws-gray-50);
+  border-color: var(--aws-gray-400);
+  color: var(--aws-gray-800);
+}
+
+.aws-btn-outline {
+  background-color: transparent;
+  border-color: var(--aws-light-blue);
+  color: var(--aws-light-blue);
+}
+
+.aws-btn-outline:hover {
+  background-color: var(--aws-light-blue);
+  color: white;
+}
+
+.aws-btn-sm {
+  font-size: var(--aws-font-size-xs);
+  padding: var(--aws-spacing-xs) var(--aws-spacing-sm);
+}
+
+.aws-btn-lg {
+  font-size: var(--aws-font-size-base);
+  padding: var(--aws-spacing-md) var(--aws-spacing-lg);
+}
+
+/* ===== AWS-STYLE STATUS BADGES ===== */
+.aws-status-badge {
+  font-size: var(--aws-font-size-xs);
+  font-weight: 600;
+  padding: var(--aws-spacing-xs) var(--aws-spacing-sm);
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aws-status-success {
+  background-color: var(--aws-success-light);
+  color: var(--aws-success);
+}
+
+.aws-status-warning {
+  background-color: var(--aws-warning-light);
+  color: var(--aws-warning);
+}
+
+.aws-status-danger {
+  background-color: var(--aws-danger-light);
+  color: var(--aws-danger);
+}
+
+.aws-status-info {
+  background-color: var(--aws-info-light);
+  color: var(--aws-info);
+}
+
+/* ===== AWS-STYLE METRICS CARDS ===== */
+.aws-metric-card {
+  background-color: white;
+  border: 1px solid var(--aws-gray-200);
+  border-radius: var(--aws-border-radius);
+  padding: var(--aws-spacing-lg);
+  text-align: center;
+  box-shadow: var(--aws-shadow-sm);
+}
+
+.aws-metric-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--aws-blue);
+  margin-bottom: var(--aws-spacing-xs);
+}
+
+.aws-metric-label {
+  font-size: var(--aws-font-size-sm);
+  color: var(--aws-gray-600);
+  font-weight: 500;
+}
+
+/* ===== AWS-STYLE ALERTS ===== */
+.aws-alert {
+  border-radius: var(--aws-border-radius);
+  border: 1px solid;
+  padding: var(--aws-spacing-md);
+  margin-bottom: var(--aws-spacing-lg);
+}
+
+.aws-alert-info {
+  background-color: var(--aws-info-light);
+  border-color: var(--aws-info);
+  color: var(--aws-info);
+}
+
+.aws-alert-success {
+  background-color: var(--aws-success-light);
+  border-color: var(--aws-success);
+  color: var(--aws-success);
+}
+
+.aws-alert-warning {
+  background-color: var(--aws-warning-light);
+  border-color: var(--aws-warning);
+  color: var(--aws-warning);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .aws-main-content {
+    padding: var(--aws-spacing-md);
+  }
+  
+  .aws-card-body {
+    padding: var(--aws-spacing-md);
+  }
+  
+  .aws-table {
+    font-size: var(--aws-font-size-xs);
+  }
+}
+
+/* ===== UTILITY CLASSES ===== */
+.aws-text-muted {
+  color: var(--aws-gray-600) !important;
+}
+
+.aws-text-primary {
+  color: var(--aws-blue) !important;
+}
+
+.aws-bg-light {
+  background-color: var(--aws-gray-50) !important;
+}
+
+.aws-border {
+  border: 1px solid var(--aws-gray-200) !important;
+}
+
+.aws-rounded {
+  border-radius: var(--aws-border-radius) !important;
+}
+
+.aws-shadow {
+  box-shadow: var(--aws-shadow-sm) !important;
+}

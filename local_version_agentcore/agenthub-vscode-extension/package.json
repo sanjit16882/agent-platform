@@ -1,0 +1,243 @@
+{
+  "name": "agenthub-vscode-extension",
+  "displayName": "AgentHub - AI-Powered Development Assistant",
+  "description": "Generic VS Code extension for integrating with AgentHub platforms - enables AI agents for testing, security analysis, and code generation",
+  "version": "1.0.0",
+  "publisher": "your-organization",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other",
+    "Testing",
+    "Linters",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "agenthub",
+    "ai",
+    "agent",
+    "artificial intelligence",
+    "testing",
+    "security",
+    "automation",
+    "code generation",
+    "development tools",
+    "productivity",
+    "ai assistant"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/agenthub-vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/agenthub-vscode-extension/issues"
+  },
+  "homepage": "https://github.com/your-org/agenthub-vscode-extension#readme",
+  "license": "MIT",
+  "icon": "icon.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agenthub.generateTests",
+        "title": "Generate Tests",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.generateTestsForFile",
+        "title": "Generate Tests for This File",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.analyzeSecurity",
+        "title": "Security Analysis",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.analyzeSecurityForFile",
+        "title": "Security Analysis for This File",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.analyzeFailure",
+        "title": "Analyze Failure",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.generateDocs",
+        "title": "Generate Documentation",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.generateDocsForFile",
+        "title": "Generate Documentation for This File",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.listAgents",
+        "title": "List Available Agents",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.configure",
+        "title": "Configure AgentHub",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.initProject",
+        "title": "Initialize AgentHub in Project",
+        "category": "AgentHub"
+      },
+      {
+        "command": "agenthub.showOutput",
+        "title": "Show AgentHub Output",
+        "category": "AgentHub"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java",
+          "command": "agenthub.generateTestsForFile",
+          "group": "agenthub@1"
+        },
+        {
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java",
+          "command": "agenthub.analyzeSecurityForFile",
+          "group": "agenthub@2"
+        },
+        {
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java",
+          "command": "agenthub.generateDocsForFile",
+          "group": "agenthub@3"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "editorHasSelection && (resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java)",
+          "command": "agenthub.generateTestsForFile",
+          "group": "agenthub@1"
+        },
+        {
+          "when": "editorHasSelection && (resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java)",
+          "command": "agenthub.analyzeSecurityForFile",
+          "group": "agenthub@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "agenthub.generateTestsForFile",
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java"
+        },
+        {
+          "command": "agenthub.analyzeSecurityForFile",
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java"
+        },
+        {
+          "command": "agenthub.generateDocsForFile",
+          "when": "resourceExtname == .js || resourceExtname == .ts || resourceExtname == .jsx || resourceExtname == .tsx || resourceExtname == .py || resourceExtname == .java"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AgentHub",
+      "properties": {
+        "agenthub.apiUrl": {
+          "type": "string",
+          "default": "http://localhost:3002",
+          "description": "AgentHub API URL"
+        },
+        "agenthub.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "AgentHub API Key for authentication"
+        },
+        "agenthub.defaultAgent": {
+          "type": "string",
+          "default": "",
+          "description": "Default agent ID to use"
+        },
+        "agenthub.autoGenerateTests": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically generate tests when saving files"
+        },
+        "agenthub.autoSecurityScan": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically run security scans on file changes"
+        },
+        "agenthub.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show AgentHub status in status bar"
+        },
+        "agenthub.outputLevel": {
+          "type": "string",
+          "enum": ["minimal", "normal", "verbose"],
+          "default": "normal",
+          "description": "Output verbosity level"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agenthub",
+          "title": "AgentHub",
+          "icon": "$(robot)"
+        }
+      ]
+    },
+    "views": {
+      "agenthub": [
+        {
+          "id": "agenthub.agents",
+          "name": "Available Agents",
+          "when": "agenthub.initialized"
+        },
+        {
+          "id": "agenthub.history",
+          "name": "Recent Operations",
+          "when": "agenthub.initialized"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "agenthub.agents",
+        "contents": "Welcome to AgentHub! Configure your connection to get started.\n[Configure AgentHub](command:agenthub.configure)\n[Initialize Project](command:agenthub.initProject)"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "deploy:org": "node deploy-organization.js",
+    "publish": "node publish-to-marketplace.js",
+    "publish:check": "node publish-to-marketplace.js --check",
+    "publish:package": "node publish-to-marketplace.js --package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.2.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "axios": "^1.5.0"
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "description": "Mock definitions for AWS Bedrock LLM service",
+  "version": "1.0",
+  "mocks": [
+    {
+      "id": "bedrock-claude-success",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "anthropic.claude-v2"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "completion": "This is a hardcoded response for demo purposes. The agent is working correctly and processing your request.",
+          "stop_reason": "end_turn",
+          "usage": {
+            "input_tokens": 45,
+            "output_tokens": 28
+          },
+          "model": "anthropic.claude-v2"
+        },
+        "latency_ms": 250,
+        "headers": {
+          "Content-Type": "application/json",
+          "X-Request-Id": "mock-request-123"
+        }
+      }
+    },
+    {
+      "id": "bedrock-claude-summarization",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "anthropic.claude-v2",
+        "prompt": "Summarize"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "completion": "Summary: The email discusses Q4 planning meeting. Key action items include reviewing budget proposal and scheduling the meeting. Main topics are budget allocation, resource planning, and timeline review.",
+          "stop_reason": "end_turn",
+          "usage": {
+            "input_tokens": 120,
+            "output_tokens": 45
+          },
+          "model": "anthropic.claude-v2"
+        },
+        "latency_ms": 450
+      }
+    },
+    {
+      "id": "bedrock-claude-code-generation",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "anthropic.claude-v2",
+        "prompt": "Generate code"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "completion": "```python\ndef hello_world():\n    print('Hello, World!')\n\nif __name__ == '__main__':\n    hello_world()\n```",
+          "stop_reason": "end_turn",
+          "usage": {
+            "input_tokens": 30,
+            "output_tokens": 50
+          },
+          "model": "anthropic.claude-v2"
+        },
+        "latency_ms": 600
+      }
+    },
+    {
+      "id": "bedrock-titan-success",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "amazon.titan-text-express-v1"
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "results": [
+            {
+              "outputText": "This is a response from Amazon Titan model for demo purposes.",
+              "tokenCount": 15,
+              "completionReason": "FINISH"
+            }
+          ],
+          "inputTextTokenCount": 25
+        },
+        "latency_ms": 300
+      }
+    },
+    {
+      "id": "bedrock-error-throttling",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "test-throttle"
+      },
+      "response": {
+        "status": 429,
+        "body": {
+          "error": "ThrottlingException",
+          "message": "Rate exceeded. Please retry after some time."
+        },
+        "latency_ms": 100
+      }
+    },
+    {
+      "id": "bedrock-error-invalid-model",
+      "service": "bedrock",
+      "endpoint": "/invoke-model",
+      "method": "POST",
+      "request_matcher": {
+        "modelId": "invalid-model"
+      },
+      "response": {
+        "status": 404,
+        "body": {
+          "error": "ResourceNotFoundException",
+          "message": "The requested model was not found."
+        },
+        "latency_ms": 50
+      }
+    },
+    {
+      "id": "bedrock-list-models",
+      "service": "bedrock",
+      "endpoint": "/api/bedrock/models",
+      "method": "GET",
+      "response": {
+        "status": 200,
+        "body": [
+          {
+            "id": "anthropic.claude-v2",
+            "name": "Claude v2",
+            "provider": "Anthropic",
+            "status": "available"
+          },
+          {
+            "id": "anthropic.claude-instant-v1",
+            "name": "Claude Instant",
+            "provider": "Anthropic",
+            "status": "available"
+          },
+          {
+            "id": "amazon.titan-text-express-v1",
+            "name": "Titan Text Express",
+            "provider": "Amazon",
+            "status": "available"
+          }
+        ],
+        "latency_ms": 150
+      }
+    },
+    {
+      "id": "bedrock-test-connection",
+      "service": "bedrock",
+      "endpoint": "/api/testing/bedrock/test-connection",
+      "method": "POST",
+      "response": {
+        "status": 200,
+        "body": {
+          "connected": true,
+          "message": "Connection successful (mocked)"
+        },
+        "latency_ms": 200
+      }
+    }
+  ]
+}
