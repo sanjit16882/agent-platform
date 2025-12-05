@@ -242,6 +242,41 @@ const AgentTestingMain: React.FC = () => {
             </Button>
           </Card.Body>
         </Card>
+
+        {/* Coming Soon - Advanced Features */}
+        <Card style={{ border: '2px solid #ffc107', backgroundColor: '#fffbf0' }}>
+          <Card.Header style={{ backgroundColor: '#fff3cd', borderBottom: '2px solid #ffc107' }}>
+            <Card.Title>🚀 Coming Soon - Advanced Testing</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary, fontWeight: 600 }}>
+              Next-generation testing capabilities for production-grade AI agents
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl, fontSize: '14px' }}>
+              <li><strong>Agent Hallucination Firewall</strong> - Real-time protection</li>
+              <li><strong>Load Testing & Chaos Engineering</strong> - Stress testing</li>
+              <li><strong>Audit & Compliance Recorder</strong> - HIPAA/GDPR/SOX</li>
+              <li><strong>Behavior Drift Detector</strong> - Continuous monitoring</li>
+              <li><strong>Multi-Agent Orchestrator</strong> - Kubernetes for agents</li>
+              <li><strong>Telemetry & Observability</strong> - Deep insights</li>
+              <li><strong>Identity & Permission Brain</strong> - Dynamic IAM</li>
+              <li><strong>Benchmark Marketplace</strong> - Community tests</li>
+            </ul>
+            <Button
+              variant="warning"
+              onClick={() => {
+                // Scroll to details section
+                const detailsSection = document.getElementById('coming-soon-details');
+                if (detailsSection) {
+                  detailsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              style={{ width: '100%' }}
+            >
+              Learn More →
+            </Button>
+          </Card.Body>
+        </Card>
       </div>
 
       {/* Quick Stats */}
@@ -376,6 +411,245 @@ const AgentTestingMain: React.FC = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Coming Soon - Detailed Section */}
+      <div id="coming-soon-details" style={{ marginTop: theme.spacing['3xl'], padding: theme.spacing.xl, backgroundColor: '#fffbf0', borderRadius: '8px', border: '2px solid #ffc107' }}>
+        <h2 style={{
+          fontSize: theme.typography.fontSize['2xl'],
+          fontWeight: theme.typography.fontWeight.bold,
+          marginBottom: theme.spacing.md,
+          color: '#856404'
+        }}>
+          🚀 Coming Soon: Advanced Agent Testing Capabilities
+        </h2>
+        <p style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.xl, color: theme.colors.textSecondary }}>
+          Next-generation testing features for production-grade AI agents. These capabilities are in active development.
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+          gap: theme.spacing.lg
+        }}>
+          {/* Feature 1 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                🛡️ Agent Hallucination Firewall (AHF)
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#dc3545', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Real-Time Protection
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> Agents hallucinate while calling tools, APIs, or executing code. No realtime firewall exists.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Runtime service between Agent ↔ Tools/APIs that:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Scores every action for hallucination risk</li>
+                <li>Blocks suspicious tool calls</li>
+                <li>Auto-retries with self-correction</li>
+                <li>Logs hallucination metrics</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 2 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                ⚡ Load Testing & Reliability Simulator
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#ffc107', color: '#000', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Chaos Engineering
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> No one knows how agents behave under stress, concurrency, or tool failures.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> "Chaos Monkey for Agents" with:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Random tool outages & latency injection</li>
+                <li>Long-session memory fatigue</li>
+                <li>Multi-agent concurrency battles</li>
+                <li>Reliability scores & drift graphs</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 3 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                📋 Agent Audit & Compliance Recorder
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#28a745', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Enterprise Compliance
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> Enterprises need proof of agent actions for HIPAA/GDPR/SOX compliance.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Compliance layer that:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Records every agent step</li>
+                <li>Hashes actions for immutability</li>
+                <li>Provides "agent replay" capability</li>
+                <li>Generates compliance-ready reports</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 4 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                📊 Agent Behavior Drift Detector
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#007bff', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Continuous Monitoring
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> LLMs drift over time. Agents silently become worse or unpredictable.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Continuous monitoring that:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Runs baseline tests daily</li>
+                <li>Detects behavioral drift</li>
+                <li>Notifies if model updates break agents</li>
+                <li>Auto-retrains guardrails</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 5 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                🎯 Multi-Agent Task Orchestrator (MATO)
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#343a40', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Kubernetes for Agents
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> No universal orchestrator for multiple collaborating agents.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Orchestration framework with:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Auto-routing tasks between agents</li>
+                <li>Resource allocation & conflict resolution</li>
+                <li>Cross-agent memory management</li>
+                <li>Performance scoring</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 6 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                📈 Agent Telemetry & Observability
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#17a2b8', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Datadog for Agents
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> No deep observability, behavior visualization, or intent-path graphs.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Advanced dashboard with:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Agent reasoning timeline</li>
+                <li>Tool call heatmap</li>
+                <li>Token cost optimizer</li>
+                <li>Error clustering & insights</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 7 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                🔐 Real-Time Identity & Permission Brain
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#dc3545', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                Dynamic IAM
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> Cloud IAM isn't built for autonomous agents needing dynamic permissions.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Permission Brain that:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Creates temporary agent identities</li>
+                <li>Issues scoped permissions dynamically</li>
+                <li>Auto-expires permissions</li>
+                <li>Prevents privilege escalation</li>
+              </ul>
+            </Card.Body>
+          </Card>
+
+          {/* Feature 8 */}
+          <Card style={{ border: '1px solid #ffc107' }}>
+            <Card.Body>
+              <h3 style={{ fontSize: theme.typography.fontSize.lg, marginBottom: theme.spacing.sm, color: '#0066cc' }}>
+                🏪 Agent Benchmark Marketplace
+              </h3>
+              <div style={{ display: 'inline-block', padding: '4px 8px', backgroundColor: '#28a745', color: 'white', borderRadius: '4px', fontSize: '11px', marginBottom: theme.spacing.sm }}>
+                MLPerf for Agents
+              </div>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Problem:</strong> Every company tests agents manually. No standardized benchmarks.
+              </p>
+              <p style={{ fontSize: '13px', marginBottom: theme.spacing.sm }}>
+                <strong>Solution:</strong> Marketplace where:
+              </p>
+              <ul style={{ fontSize: '12px', paddingLeft: theme.spacing.lg }}>
+                <li>Anyone can publish test suites</li>
+                <li>Teams run them against any agent</li>
+                <li>Results shareable as scores</li>
+                <li>Community-driven test library</li>
+              </ul>
+            </Card.Body>
+          </Card>
+        </div>
+
+        {/* Call to Action */}
+        <Card style={{ marginTop: theme.spacing.xl, backgroundColor: '#fff3cd', border: '2px solid #ffc107' }}>
+          <Card.Body>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: theme.spacing.lg }}>
+              <div style={{ flex: 1, minWidth: '300px' }}>
+                <h3 style={{ fontSize: theme.typography.fontSize.xl, marginBottom: theme.spacing.sm, color: '#856404' }}>
+                  🎯 Want Early Access to These Features?
+                </h3>
+                <p style={{ fontSize: '14px', marginBottom: 0, color: theme.colors.textSecondary }}>
+                  Join our early access program to influence the roadmap and get priority access when features launch. 
+                  Perfect for enterprises deploying production AI agents.
+                </p>
+              </div>
+              <div>
+                <Button
+                  variant="warning"
+                  onClick={() => alert('Early access program coming soon! Contact us at support@agenthub.com')}
+                  style={{ padding: '12px 24px', fontSize: '16px', fontWeight: 600 }}
+                >
+                  📝 Request Early Access
+                </Button>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
       </div>
     </div>
   );
