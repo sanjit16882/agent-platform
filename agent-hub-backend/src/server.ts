@@ -91,6 +91,9 @@ import missingEndpoints from './routes/missingEndpoints';
 import analyticsRoutes from './routes/analyticsRoutes';
 import vectorDBProviderRoutes from './routes/vectorDBProviderRoutes';
 import vectorDBAccessRequestRoutes from './routes/vectorDBAccessRequestRoutes';
+import vectorDBDocumentRoutes from './routes/vectorDBDocumentRoutes';
+import vectorDBIntegrationRoutes from './routes/vectorDBIntegrationRoutes';
+// const testMetadataRoutes = require('../routes/testMetadataRoutes'); // Disabled - causing module errors
 // Intelligence API temporarily disabled for compilation
 // import intelligenceRouter from './intelligence-api';
 
@@ -116,6 +119,12 @@ app.use('/api/v1/vector-db', vectorDBProviderRoutes);
 // Vector DB Access Request Routes
 app.use('/api/v1/vector-db', vectorDBAccessRequestRoutes);
 
+// Vector DB Document Routes
+app.use('/api/v1/vector-db', vectorDBDocumentRoutes);
+
+// Vector DB Integration Routes
+app.use('/api/v1/vector-db', vectorDBIntegrationRoutes);
+
 // MCP Health endpoints (no auth required, at root level) - MUST BE AFTER API ROUTES
 app.use('/', missingEndpoints);
 
@@ -125,6 +134,9 @@ app.use('/api/devops', devopsRoutes);
 // Real Testing Framework API
 app.use('/api/testing', agentTestingRoutes);
 // app.use('/api/component-testing', testingRoutes); // Commented out - file doesn't exist
+
+// Test Metadata API (for core test mappings) - Disabled due to module errors
+// app.use('/api/v1/test-metadata', testMetadataRoutes);
 
 // FinOps & Cost Management
 app.use('/api/v1/finops', finopsRoutes);

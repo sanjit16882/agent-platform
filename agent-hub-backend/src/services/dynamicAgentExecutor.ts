@@ -157,20 +157,29 @@ Provide a JSON response with:
   "executionStrategy": "direct|multi_step|iterative"
 }`;
 
+    const fallbackAnalysis = {
+      taskType: 'general',
+      complexity: 'moderate',
+      requiredCapabilities: ['general_processing'],
+      outputFormat: 'report',
+      estimatedDuration: 30,
+      modelUsed: 'claude-3-sonnet',
+      executionStrategy: 'direct'
+    };
+
     try {
       const response = await this.invokeBedrockModel(analysisPrompt, 'claude-3-haiku');
-      return JSON.parse(response);
+      const parsed = JSON.parse(response);
+      
+      // Ensure requiredCapabilities is always an array
+      if (!Array.isArray(parsed.requiredCapabilities)) {
+        parsed.requiredCapabilities = fallbackAnalysis.requiredCapabilities;
+      }
+      
+      return { ...fallbackAnalysis, ...parsed };
     } catch (error) {
-      // Fallback to basic analysis
-      return {
-        taskType: 'general',
-        complexity: 'moderate',
-        requiredCapabilities: ['general_processing'],
-        outputFormat: 'report',
-        estimatedDuration: 30,
-        modelUsed: 'claude-3-sonnet',
-        executionStrategy: 'direct'
-      };
+      console.warn('⚠️ Task analysis failed, using fallback:', error);
+      return fallbackAnalysis;
     }
   }
 
@@ -243,8 +252,8 @@ ${JSON.stringify(request.inputs, null, 2)}
 ${mcpResults ? `MCP CONTEXT:\n${JSON.stringify(mcpResults.enhancedContext, null, 2)}\n` : ''}
 
 EXECUTION REQUIREMENTS:
-- Output Format: ${taskAnalysis.outputFormat}
-- Required Capabilities: ${taskAnalysis.requiredCapabilities.join(', ')}
+- Output Format: ${taskAnalysis.outputFormat || 'report'}
+- Required Capabilities: ${(taskAnalysis.requiredCapabilities || ['general_processing']).join(', ')}
 - Execution Mode: ${request.context?.executionMode || 'ui'}
 
 INSTRUCTIONS:

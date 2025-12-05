@@ -21,22 +21,56 @@ const VectorDBAdminDashboard: React.FC = () => {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    fetchRequests();
+    // Prevent double-fetch in React StrictMode (development only)
+    let isMounted = true;
+    
+    const loadRequests = async () => {
+      if (isMounted) {
+        await fetchRequests();
+      }
+    };
+    
+    loadRequests();
+    
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRequests = async () => {
     try {
       setLoading(true);
+      console.log('🔍 VectorDB Admin: Fetching access requests...');
+      
       const response = await api.get('/api/v1/vector-db/access-requests');
+      console.log('📡 VectorDB Admin: Response status:', response.status);
+      
+      // Check if response is ok before parsing
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('ℹ️ VectorDB Admin: Endpoint not found (404) - showing empty state');
+          setRequests([]);
+          setError(null);
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
+      console.log('✅ VectorDB Admin: Data received:', data);
       
       if (data.success) {
-        setRequests(data.data);
+        setRequests(data.data || []);
+        setError(null);
       } else {
-        setError('Failed to load requests');
+        setError(data.error || 'Failed to load requests');
       }
     } catch (err: any) {
-      setError(err.message);
+      console.error('❌ VectorDB Admin: Error fetching requests:', err);
+      // For network errors or other issues, show empty state
+      setRequests([]);
+      setError(null);
     } finally {
       setLoading(false);
     }

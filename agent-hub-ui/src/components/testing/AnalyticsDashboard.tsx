@@ -42,10 +42,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   agentId: initialAgentId,
   dateRange: initialDateRange
 }) => {
+  // Read agentId from URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const agentIdFromUrl = urlParams.get('agentId');
+  
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedAgent, setSelectedAgent] = useState(initialAgentId || 'all');
+  const [selectedAgent, setSelectedAgent] = useState(agentIdFromUrl || initialAgentId || 'all');
   const [selectedDays, setSelectedDays] = useState('30');
   const [availableAgents, setAvailableAgents] = useState<Array<{ id: string; name: string }>>([]);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -63,6 +67,14 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       // Fetch unique agents from test runs
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
       const response = await fetch(`${API_BASE_URL}/api/testing/runs`);
+      
+      // Handle 404 gracefully - API endpoint not implemented yet
+      if (response.status === 404) {
+        console.log('ℹ️ Testing API not available yet - showing empty state');
+        setAvailableAgents([]);
+        return;
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch agents');
       
       const data = await response.json();
@@ -80,6 +92,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       setAvailableAgents(agents);
     } catch (err) {
       console.error('Error fetching agents:', err);
+      setAvailableAgents([]);
     }
   };
 
@@ -100,6 +113,24 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         : `${API_BASE_URL}/api/testing/runs?agentId=${selectedAgent}`;
       
       const response = await fetch(url);
+      
+      // Handle 404 gracefully - API endpoint not implemented yet
+      if (response.status === 404) {
+        console.log('ℹ️ Testing API not available yet - showing empty analytics');
+        setAnalytics({
+          totalTests: 0,
+          totalRuns: 0,
+          averagePassRate: 0,
+          averageScore: 0,
+          totalCost: 0,
+          passRateTrend: [],
+          categoryPerformance: [],
+          recentRuns: []
+        });
+        setLoading(false);
+        return;
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch analytics');
       
       const data = await response.json();

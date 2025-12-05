@@ -8,16 +8,17 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 
-// Load comprehensive test library
-let SYSTEM_TESTS = [];
-try {
-  const testsPath = path.join(__dirname, '../data/comprehensiveTests.json');
-  SYSTEM_TESTS = JSON.parse(fs.readFileSync(testsPath, 'utf8'));
-  console.log(`✅ Loaded ${SYSTEM_TESTS.length} system tests from comprehensive library`);
-} catch (error) {
-  console.warn('⚠️ Could not load comprehensive tests, using minimal fallback');
-  // Minimal fallback tests
-  SYSTEM_TESTS = [
+// Function to load comprehensive test library (reloads on every call for hot-reload support)
+function loadSystemTests() {
+  try {
+    const testsPath = path.join(__dirname, '../data/comprehensiveTests.json');
+    const tests = JSON.parse(fs.readFileSync(testsPath, 'utf8'));
+    console.log(`✅ Loaded ${tests.length} system tests from comprehensive library`);
+    return tests;
+  } catch (error) {
+    console.warn('⚠️ Could not load comprehensive tests, using minimal fallback');
+    // Minimal fallback tests
+    return [
   {
     id: 'sys-hallucination-001',
     name: 'Hallucination Detection - Basic Facts',
@@ -128,6 +129,7 @@ try {
     updated_at: new Date().toISOString()
   }
   ];
+  }
 }
 
 class TestLibraryService {
@@ -233,7 +235,8 @@ class TestLibraryService {
         offset = 0
       } = filters;
 
-      let filteredTests = [...SYSTEM_TESTS];
+      // Load tests fresh on every call for hot-reload support
+      let filteredTests = [...loadSystemTests()];
 
       // Apply filters
       if (type) {
@@ -332,7 +335,8 @@ class TestLibraryService {
   async getTestById(testId) {
     // If no database, search in predefined tests
     if (!this.db) {
-      const test = SYSTEM_TESTS.find(t => t.id === testId);
+      // Load tests fresh for hot-reload support
+      const test = loadSystemTests().find(t => t.id === testId);
       if (!test) {
         throw new Error(`Test not found: ${testId}`);
       }
@@ -587,6 +591,116 @@ class TestLibraryService {
       ...stats,
       by_category: categoryCounts
     };
+  }
+
+  /**
+   * Get tests by IDs (for CORE test retrieval)
+   * @param {string[]} testIds - Array of test IDs
+   * @returns {Array} Array of test objects
+   */
+  getTestsByIds(testIds) {
+    if (!testIds || testIds.length === 0) {
+      return [];
+    }
+
+    // Load from testLibrary.json
+    try {
+      const testLibraryPath = path.join(__dirname, '../data/testLibrary.json');
+      const testLibraryData = fs.readFileSync(testLibraryPath, 'utf8');
+      const testLibrary = JSON.parse(testLibraryData);
+      
+      return testLibrary.tests.filter(test => testIds.includes(test.id));
+    } catch (error) {
+      console.error('Error loading test library:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all CORE tests
+   * @returns {Array} Array of CORE tests
+   */
+  getCoreTests() {
+    try {
+      const testLibraryPath = path.join(__dirname, '../data/testLibrary.json');
+      const testLibraryData = fs.readFileSync(testLibraryPath, 'utf8');
+      const testLibrary = JSON.parse(testLibraryData);
+      
+      return testLibrary.tests.filter(test => test.isCoreTest === true);
+    } catch (error) {
+      console.error('Error loading CORE tests:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get tests by category (from testLibrary.json)
+   * @param {string} category - Category name
+   * @returns {Array} Array of tests
+   */
+  getTestsByCategory(category) {
+    try {
+      const testLibraryPath = path.join(__dirname, '../data/testLibrary.json');
+      const testLibraryData = fs.readFileSync(testLibraryPath, 'utf8');
+      const testLibrary = JSON.parse(testLibraryData);
+      
+      return testLibrary.tests.filter(test => 
+        test.category === category || 
+        test.category === 'Universal' ||
+        (test.applicableCategories && test.applicableCategories.includes(category)) ||
+        (test.applicableCategories && test.applicableCategories.includes('*'))
+      );
+    } catch (error) {
+      console.error('Error loading tests by category:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get tests by agent type (from testLibrary.json)
+   * @param {string} category - Category name
+   * @param {string} agentType - Agent type name
+   * @returns {Array} Array of tests
+   */
+  getTestsByAgentType(category, agentType) {
+    try {
+      const testLibraryPath = path.join(__dirname, '../data/testLibrary.json');
+      const testLibraryData = fs.readFileSync(testLibraryPath, 'utf8');
+      const testLibrary = JSON.parse(testLibraryData);
+      
+      return testLibrary.tests.filter(test => 
+        (test.applicableAgentTypes && test.applicableAgentTypes.includes(agentType)) ||
+        (test.applicableAgentTypes && test.applicableAgentTypes.includes('*')) ||
+        test.category === 'Universal'
+      );
+    } catch (error) {
+      console.error('Error loading tests by agent type:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Mark a test as CORE test
+   * @param {string} testId - Test ID
+   * @param {boolean} isCoreTest - Whether it's a CORE test
+   */
+  markTestAsCoreTest(testId, isCoreTest = true) {
+    try {
+      const testLibraryPath = path.join(__dirname, '../data/testLibrary.json');
+      const testLibraryData = fs.readFileSync(testLibraryPath, 'utf8');
+      const testLibrary = JSON.parse(testLibraryData);
+      
+      const test = testLibrary.tests.find(t => t.id === testId);
+      if (test) {
+        test.isCoreTest = isCoreTest;
+        fs.writeFileSync(testLibraryPath, JSON.stringify(testLibrary, null, 2));
+        console.log(`✅ Test ${testId} marked as CORE test: ${isCoreTest}`);
+      } else {
+        console.warn(`Test ${testId} not found`);
+      }
+    } catch (error) {
+      console.error('Error marking test as CORE:', error);
+    }
   }
 }
 

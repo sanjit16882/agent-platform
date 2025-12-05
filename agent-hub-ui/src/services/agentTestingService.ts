@@ -300,6 +300,11 @@ class AgentTestingSummaryService {
    * Convert model ID to display name
    */
   private getModelDisplayName(modelId: string): string {
+    // Handle missing or unknown model IDs
+    if (!modelId || modelId === 'unknown' || modelId === 'null' || modelId === 'undefined') {
+      return 'Model Not Specified';
+    }
+
     const modelNames: Record<string, string> = {
       'anthropic.claude-3-5-sonnet-20240620-v1:0': 'Claude 3.5 Sonnet',
       'anthropic.claude-3-sonnet-20240229-v1:0': 'Claude 3 Sonnet',

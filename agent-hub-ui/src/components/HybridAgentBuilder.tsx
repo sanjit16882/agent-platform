@@ -21,6 +21,7 @@ import { IntelligenceModal } from './IntelligenceModal';
 import { MCPAgentCreationStep, MCPAgentConfig } from './mcp/MCPAgentCreationStep';
 import VectorDBConfigSection from './VectorDBConfigSection';
 import AgentConfigurationGuide from './AgentConfigurationGuide';
+import TestRecommendationSection from './TestRecommendationSection';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
@@ -90,6 +91,10 @@ const HybridAgentBuilder: React.FC = () => {
     autoDetected: false,
     recommendedServers: []
   });
+
+  // Test Recommendation state
+  const [agentCategory, setAgentCategory] = useState<string | null>(null);
+  const [agentSubType, setAgentSubType] = useState<string | null>(null);
 
   // Vector DB configuration state
   const [vectorDBConfig, setVectorDBConfig] = useState({
@@ -797,6 +802,12 @@ const HybridAgentBuilder: React.FC = () => {
       return;
     }
 
+    // Validate AI model selection (required unless MCP is configured)
+    if (!selectedBedrockModel && !(mcpConfig.enabled && mcpConfig.selectedServers.length > 0)) {
+      alert('Please select an AI model for your agent. This is required to power the agent\'s intelligence.');
+      return;
+    }
+
     // Validate agent first
     await validateAgent();
     if (validationResults && !validationResults.isValid) {
@@ -970,64 +981,61 @@ const HybridAgentBuilder: React.FC = () => {
       <div className="aws-layout">
         <Container fluid className="aws-main-content">
           {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h1 className="h3 mb-1" style={{ color: 'var(--aws-gray-800)' }}>
-                Hybrid Agent Builder
+          <div className="d-flex justify-content-between align-items-start mb-4" style={{ gap: '2rem' }}>
+            <div style={{ flex: '1', maxWidth: '60%' }}>
+              <h1 className="h3 mb-2" style={{ color: 'var(--aws-gray-800)' }}>
+                Multi-Component Agent Builder
               </h1>
               <p className="aws-text-muted mb-0">
-                Create multi-domain agents combining LLM, RPA, Selenium, and custom components
+                Build complex agents by combining multiple components (LLM, RPA, Selenium, Custom) into a coordinated workflow. 
+                Each component can have its own AI model, knowledge base, and external tools.
               </p>
             </div>
-            <div>
-              <Badge bg="primary" className="me-2">
-                Components: {components.length}
-              </Badge>
-              <Button 
-                variant="outline-primary"
-                className="me-2"
-                onClick={() => setShowTemplateModal(true)}
-              >
-                Add Component
-              </Button>
-              <Button 
-                variant="outline-primary"
-                className="me-2"
-                onClick={() => setIntelligenceSidebarOpen(true)}
-                disabled={components.length === 0 && !agentDescription}
-              >
-                🧠 Get AI Suggestions
-              </Button>
+            <div className="d-flex flex-column align-items-end" style={{ gap: '0.5rem', minWidth: 'fit-content' }}>
+              <div className="d-flex align-items-center" style={{ gap: '0.5rem' }}>
+                <Badge bg="primary">
+                  Components: {components.length}
+                </Badge>
+                <Button 
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => setShowTemplateModal(true)}
+                >
+                  Add Component
+                </Button>
+                <Button 
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => setIntelligenceSidebarOpen(true)}
+                  disabled={components.length === 0 && !agentDescription}
+                >
+                  🧠 Get AI Suggestions
+                </Button>
+              </div>
               <Button 
                 variant="primary"
                 onClick={saveAgent}
                 disabled={saving || components.length === 0}
+                style={{ width: '100%' }}
               >
                 {saving ? 'Saving...' : 'Save Agent'}
               </Button>
             </div>
           </div>
 
-          {/* Platform Overview - Compact */}
-          <div className="aws-card mb-3" style={{ padding: '0.75rem' }}>
-            <div className="aws-card-body" style={{ padding: '0.5rem' }}>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="mb-1">Hybrid Agent Platform</h6>
-                  <p className="small aws-text-muted mb-0">
-                    Combine LLM, RPA, Selenium, and custom components into powerful workflows.
-                  </p>
-                </div>
-                <Button 
-                  variant="outline-primary" 
-                  size="sm"
-                  onClick={() => setActiveTab('faq')}
-                >
-                  Learn More
-                </Button>
+          {/* Key Concept - What Makes This Different */}
+          <Alert variant="info" className="mb-3">
+            <div className="d-flex align-items-start">
+              <div className="me-2" style={{ fontSize: '1.5rem' }}>💡</div>
+              <div>
+                <strong>Multi-Component Workflow</strong>
+                <p className="mb-0 mt-1 small">
+                  Unlike simple agents that perform one task, multi-component agents orchestrate multiple steps. 
+                  For example: Component 1 (AI) analyzes data → Component 2 (RPA) fills a form → Component 3 (Selenium) tests it → Component 4 (AI) summarizes results.
+                </p>
               </div>
             </div>
-          </div>
+          </Alert>
 
           {/* Bedrock Integration Status */}
           <div className="mb-4">
@@ -1108,15 +1116,22 @@ const HybridAgentBuilder: React.FC = () => {
                       setSelectedBedrockModelName(modelName);
                     }}
                     agentType="hybrid"
-                    label="Default AI Model"
-                    required={false}
+                    label="AI Model"
+                    required={!(mcpConfig.enabled && mcpConfig.selectedServers.length > 0)}
                     disabled={mcpConfig.enabled && mcpConfig.selectedServers.length > 0}
                   />
-                  {mcpConfig.enabled && mcpConfig.selectedServers.length > 0 && (
+                  {mcpConfig.enabled && mcpConfig.selectedServers.length > 0 ? (
                     <Alert variant="info" className="mt-2">
                       <small>
                         <strong>ℹ️ Model Selection Disabled</strong><br />
                         Model is configured through the selected MCP server. Go to the MCP Integration tab to change servers.
+                      </small>
+                    </Alert>
+                  ) : (
+                    <Alert variant="info" className="mt-2">
+                      <small>
+                        <strong>💡 Default AI Model for Components</strong><br />
+                        This model will be used by all AI components in your workflow. Each AI component (like Text Analyzer, Code Generator) will use this model unless configured otherwise.
                       </small>
                     </Alert>
                   )}
@@ -1124,6 +1139,15 @@ const HybridAgentBuilder: React.FC = () => {
               </Row>
             </div>
           </div>
+
+          {/* Test Recommendation Section */}
+          <TestRecommendationSection
+            category={agentCategory}
+            agentSubType={agentSubType}
+            onCategoryChange={setAgentCategory}
+            onAgentSubTypeChange={setAgentSubType}
+            disabled={saving}
+          />
 
           {/* Cost & Performance Estimation Card */}
           {(selectedBedrockModel || vectorDBConfig.enabled || mcpConfig.enabled) && (
@@ -1397,6 +1421,16 @@ const HybridAgentBuilder: React.FC = () => {
                                 </div>
                                 {getComponentTypeBadge(node.component.type)}
                               </div>
+                              
+                              {/* Show AI Model for LLM components */}
+                              {node.component.type === 'llm' && (
+                                <div className="mb-2">
+                                  <Badge bg="info" className="me-1">AI Component</Badge>
+                                  <small className="text-muted">
+                                    Uses: {selectedBedrockModelName || (node.component.config as any)?.model || 'Default AI Model'}
+                                  </small>
+                                </div>
+                              )}
                               
                               <div className="mb-2">
                                 <small><strong>Inputs:</strong> {node.component.inputs.map(i => i.name).join(', ')}</small>

@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Accordion, Tabs, Tab, Table, ProgressBar } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CodeHighlighter from './CodeHighlighter';
@@ -44,6 +44,9 @@ const DynamicAgentExecutor: React.FC = () => {
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('execute');
+  const [testingData, setTestingData] = useState<any>(null);
+  const [loadingTests, setLoadingTests] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
 
@@ -80,6 +83,30 @@ const DynamicAgentExecutor: React.FC = () => {
       fetchAgentInfo();
     }
   }, [agentId, API_BASE_URL]);
+
+  // Fetch testing data when Testing tab is selected
+  useEffect(() => {
+    const fetchTestingData = async () => {
+      if (activeTab !== 'testing' || !agentId) return;
+      
+      setLoadingTests(true);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/testing/agents/${agentId}/runs`);
+        console.log('🧪 Testing Data Response:', response.data);
+        if (response.data.success) {
+          console.log('📊 Testing Data:', response.data.data);
+          setTestingData(response.data.data);
+        }
+      } catch (err) {
+        console.log('No testing data available for agent:', agentId);
+        setTestingData(null);
+      } finally {
+        setLoadingTests(false);
+      }
+    };
+
+    fetchTestingData();
+  }, [activeTab, agentId, API_BASE_URL]);
 
   // Helper functions to get agent info from ID
   const getAgentName = (id: string): string => {
@@ -232,13 +259,20 @@ const DynamicAgentExecutor: React.FC = () => {
           </Card>
         </Col>
 
-        {/* Right Column - Execution */}
+        {/* Right Column - Tabs */}
         <Col md={8}>
-          <Card className="mb-3">
-            <Card.Header className="bg-primary text-white">
-              <h5 className="mb-0">🚀 Execute Agent</h5>
-            </Card.Header>
-            <Card.Body>
+          <Tabs
+            activeKey={activeTab}
+            onSelect={(k) => setActiveTab(k || 'execute')}
+            className="mb-3"
+          >
+            {/* Execute Tab */}
+            <Tab eventKey="execute" title="🚀 Execute">
+              <Card className="mb-3">
+                <Card.Header className="bg-primary text-white">
+                  <h5 className="mb-0">Execute Agent</h5>
+                </Card.Header>
+                <Card.Body>
               {error && (
                 <Alert variant="danger" dismissible onClose={() => setError(null)}>
                   {error}
@@ -455,6 +489,153 @@ Example JSON:
               </Card.Body>
             </Card>
           )}
+            </Tab>
+
+            {/* Testing & Performance Tab */}
+            <Tab eventKey="testing" title="🧪 Testing & Performance">
+              <Card>
+                <Card.Header className="bg-success text-white">
+                  <h5 className="mb-0">Testing & Performance Analysis</h5>
+                </Card.Header>
+                <Card.Body>
+                  {loadingTests ? (
+                    <div className="text-center py-5">
+                      <Spinner animation="border" />
+                      <p className="mt-2">Loading testing data...</p>
+                    </div>
+                  ) : !testingData || testingData.length === 0 ? (
+                    <Alert variant="info">
+                      <Alert.Heading>No Testing Data Available</Alert.Heading>
+                      <p>This agent hasn't been tested yet. Run tests from the Agent Testing page to see performance metrics here.</p>
+                      <hr />
+                      <div className="d-flex justify-content-end">
+                        <Button variant="primary" onClick={() => navigate('/agent-testing')}>
+                          Go to Agent Testing →
+                        </Button>
+                      </div>
+                    </Alert>
+                  ) : (
+                    <>
+                      {/* Overall Performance Summary */}
+                      <div className="mb-4">
+                        <h6 className="text-primary mb-3">📊 Overall Performance Summary</h6>
+                        <Table striped bordered hover responsive>
+                          <thead>
+                            <tr>
+                              <th>Model</th>
+                              <th>Score</th>
+                              <th>Pass Rate</th>
+                              <th>Tests Run</th>
+                              <th>Last Tested</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {testingData.map((run: any, idx: number) => {
+                              // Extract from summary object if it exists
+                              const summary = run.summary || {};
+                              const passedTests = summary.passed || 0;
+                              const totalTests = summary.total || 0;
+                              const passRate = summary.pass_rate || (totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0);
+                              
+                              // Handle different date field names
+                              const dateStr = run.created_at || run.createdAt || run.timestamp || run.date;
+                              const testDate = dateStr ? new Date(dateStr) : null;
+                              const isValidDate = testDate && !isNaN(testDate.getTime());
+                              
+                              return (
+                                <tr key={idx}>
+                                  <td>
+                                    <Badge style={{ backgroundColor: '#1e3a8a' }}>
+                                      {run.model_name || run.modelName || run.model_id || run.modelId || 'Unknown Model'}
+                                    </Badge>
+                                  </td>
+                                  <td>
+                                    <strong className={run.overall_score >= 85 ? 'text-success' : run.overall_score >= 70 ? 'text-warning' : 'text-danger'}>
+                                      {run.overall_score ? `${Math.round(run.overall_score)}%` : 'N/A'}
+                                    </strong>
+                                  </td>
+                                  <td>
+                                    {passedTests}/{totalTests} ({Math.round(passRate)}%)
+                                  </td>
+                                  <td>{totalTests}</td>
+                                  <td>{isValidDate ? testDate.toLocaleDateString() : 'N/A'}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </Table>
+                      </div>
+
+                      {/* Model Comparison Chart */}
+                      <div className="mb-4">
+                        <h6 className="text-primary mb-3">📈 Model Comparison</h6>
+                        {testingData.slice(0, 5).map((run: any, idx: number) => {
+                          const score = run.overall_score || 0;
+                          return (
+                            <div key={idx} className="mb-3">
+                              <div className="d-flex justify-content-between mb-1">
+                                <span><strong>{run.model_name || run.model_id || 'Unknown Model'}</strong></span>
+                                <Badge bg={score >= 85 ? 'success' : score >= 70 ? 'warning' : 'danger'}>
+                                  {score}%
+                                </Badge>
+                              </div>
+                              <ProgressBar 
+                                now={score} 
+                                variant={score >= 85 ? 'success' : score >= 70 ? 'warning' : 'danger'}
+                                style={{ height: '25px' }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Category Breakdown */}
+                      {testingData[0]?.category_scores && (
+                        <div className="mb-4">
+                          <h6 className="text-primary mb-3">📋 Category Breakdown (Best Model)</h6>
+                          <Accordion>
+                            {Object.entries(testingData[0].category_scores).map(([category, score]: [string, any], idx: number) => (
+                              <Accordion.Item eventKey={String(idx)} key={idx}>
+                                <Accordion.Header>
+                                  <div className="d-flex justify-content-between w-100 pe-3">
+                                    <span>{category}</span>
+                                    <Badge bg={score >= 85 ? 'success' : score >= 70 ? 'warning' : 'danger'}>
+                                      {score}%
+                                    </Badge>
+                                  </div>
+                                </Accordion.Header>
+                                <Accordion.Body>
+                                  <ProgressBar now={score} variant={score >= 85 ? 'success' : score >= 70 ? 'warning' : 'danger'} />
+                                </Accordion.Body>
+                              </Accordion.Item>
+                            ))}
+                          </Accordion>
+                        </div>
+                      )}
+
+                      {/* Recommendations */}
+                      <Alert variant="info">
+                        <Alert.Heading>💡 Recommendations</Alert.Heading>
+                        {testingData[0]?.overall_score >= 85 ? (
+                          <p>The best performing model ({testingData[0]?.model_name}) shows excellent results. Consider using this model for production workloads.</p>
+                        ) : testingData[0]?.overall_score >= 70 ? (
+                          <p>The best performing model ({testingData[0]?.model_name}) shows good results but has room for improvement. Consider prompt optimization or testing with higher-tier models.</p>
+                        ) : (
+                          <p>Current models show suboptimal performance. Consider testing with different models or improving prompts and test cases.</p>
+                        )}
+                        <hr />
+                        <div className="d-flex justify-content-end">
+                          <Button variant="outline-primary" size="sm" onClick={() => navigate('/agent-testing')}>
+                            Run More Tests →
+                          </Button>
+                        </div>
+                      </Alert>
+                    </>
+                  )}
+                </Card.Body>
+              </Card>
+            </Tab>
+          </Tabs>
         </Col>
       </Row>
     </Container>

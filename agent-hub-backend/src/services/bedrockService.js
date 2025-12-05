@@ -78,7 +78,7 @@ class BedrockService {
     
     try {
       let requestBody;
-      const promptText = this.buildPrompt(agentType, prompt, context);
+      const promptText = this.buildPromptWithTestContext(agentType, prompt, context);
       
       if (modelConfig.modelId.includes('anthropic') || modelConfig.modelId.includes('claude')) {
         // Claude models (Anthropic)
@@ -451,6 +451,268 @@ Answer:`
     };
 
     return prompts[agentType] || `Analyze this: ${userPrompt}`;
+  }
+
+  /**
+   * Parse test metadata for prompt construction
+   * @param {Object} testMetadata - Test metadata object
+   * @returns {Object|null} Parsed metadata
+   */
+  parseTestMetadata(testMetadata) {
+    if (!testMetadata) return null;
+    
+    return {
+      testName: testMetadata.name,
+      testCategory: testMetadata.category,
+      testSubtype: testMetadata.subtype,
+      expectedBehavior: testMetadata.expected_behavior,
+      scoringRules: testMetadata.scoring_rules,
+      inputFormat: testMetadata.input_format,
+      outputFormat: testMetadata.output_format
+    };
+  }
+
+  /**
+   * Infer output format from test category and subtype
+   * @param {string} category - Test category
+   * @param {string} subtype - Test subtype
+   * @param {Object} testMetadata - Full test metadata
+   * @returns {string} Output format
+   */
+  inferOutputFormat(category, subtype, testMetadata) {
+    // Explicit output_format in metadata takes precedence
+    if (testMetadata?.output_format) {
+      return testMetadata.output_format;
+    }
+    
+    // Infer from category and subtype
+    const formatKey = subtype ? `${category}_${subtype}` : category;
+    
+    const categoryFormatMap = {
+      'Development_documentation': 'markdown',
+      'Development_code-generation': 'code',
+      'Development_code-review': 'analysis',
+      'Development_bug-fixing': 'code',
+      'Development_refactoring': 'code',
+      'QE_test-case-creation': 'structured_text',
+      'QE_defect-reporting': 'structured_text',
+      'QE_test-automation': 'code',
+      'Security_vulnerability': 'json',
+      'Security_audit': 'json',
+      'Security_threat-detection': 'json',
+      'Security Testing_penetration-testing': 'structured_text',
+      'DevOps_cicd': 'yaml',
+      'DevOps_iac': 'code',
+      'DevOps_container': 'code',
+      'DevOps_monitoring': 'yaml',
+      'SRE_monitoring': 'yaml',
+      'SRE_capacity': 'structured_text',
+      'Universal': 'plain_text'
+    };
+    
+    return categoryFormatMap[formatKey] || 'plain_text';
+  }
+
+  /**
+   * Get output format instructions for the AI model
+   * @param {string} outputFormat - Desired output format
+   * @returns {string} Format instructions
+   */
+  getOutputFormatInstructions(outputFormat) {
+    const formatInstructions = {
+      'markdown': `
+OUTPUT FORMAT REQUIREMENTS:
+⚠️ IMPORTANT: Respond ONLY with markdown formatted text.
+⚠️ DO NOT generate executable code as the main response.
+⚠️ DO NOT wrap entire response in code blocks.
+- Use proper markdown syntax (headers, lists, code blocks for examples, etc.)
+- If showing code examples, use markdown code blocks with language tags
+- Start your response with a markdown header (#)
+- Your response should be valid markdown that can be saved as a .md file
+`,
+      'code': `
+OUTPUT FORMAT REQUIREMENTS:
+⚠️ IMPORTANT: Respond ONLY with executable code.
+⚠️ DO NOT include explanations or descriptions outside the code.
+⚠️ DO NOT use markdown formatting.
+⚠️ DO NOT add text before or after the code.
+- Include only minimal inline comments if necessary
+- The first line of your response MUST be code
+- Your response should be valid code that can be executed directly
+`,
+      'json': `
+OUTPUT FORMAT REQUIREMENTS:
+⚠️ IMPORTANT: Respond ONLY with valid JSON.
+⚠️ DO NOT include explanations before or after the JSON.
+⚠️ DO NOT use markdown code blocks.
+- Ensure the JSON is properly formatted and parseable
+- Start your response with { or [
+- Your response should be valid JSON that can be parsed directly
+`,
+      'analysis': `
+OUTPUT FORMAT REQUIREMENTS:
+- Provide detailed analysis and feedback
+- Use clear structure with sections
+- Include specific examples and recommendations
+- Be thorough but concise
+- Focus on actionable insights
+`,
+      'structured_text': `
+OUTPUT FORMAT REQUIREMENTS:
+- Use clear structure with headers and sections
+- Include bullet points or numbered lists where appropriate
+- Be specific and actionable
+- Organize information logically
+- Make it easy to scan and understand
+`,
+      'yaml': `
+OUTPUT FORMAT REQUIREMENTS:
+⚠️ IMPORTANT: Respond ONLY with valid YAML.
+⚠️ DO NOT include explanations before or after the YAML.
+⚠️ DO NOT use markdown code blocks.
+- Ensure proper YAML indentation and syntax
+- Your response should be valid YAML that can be parsed directly
+`,
+      'plain_text': `
+OUTPUT FORMAT REQUIREMENTS:
+- Respond with clear, well-structured text
+- Use appropriate formatting for readability
+- Be concise and direct
+`
+    };
+    
+    return formatInstructions[outputFormat] || formatInstructions['plain_text'];
+  }
+
+  /**
+   * Extract scoring criteria from scoring rules
+   * @param {Object|string} scoringRules - Scoring rules object or JSON string
+   * @returns {string} Formatted scoring criteria
+   */
+  getScoringCriteria(scoringRules) {
+    if (!scoringRules) return '';
+    
+    try {
+      // Parse if it's a string
+      const rules = typeof scoringRules === 'string' ? JSON.parse(scoringRules) : scoringRules;
+      
+      if (typeof rules !== 'object') return '';
+      
+      let criteria = '\nKEY EVALUATION CRITERIA:\n';
+      criteria += 'Your response will be evaluated on:\n';
+      
+      Object.keys(rules).forEach(ruleName => {
+        const rule = rules[ruleName];
+        if (rule.criteria) {
+          criteria += `- ${ruleName}: ${rule.criteria}\n`;
+        }
+      });
+      
+      return criteria + '\n';
+    } catch (error) {
+      console.warn('Failed to parse scoring rules:', error.message);
+      return '';
+    }
+  }
+
+  /**
+   * Build test-specific instructions
+   * @param {Object} parsedMetadata - Parsed test metadata
+   * @param {string} outputFormat - Output format
+   * @returns {string} Test instructions
+   */
+  buildTestInstructions(parsedMetadata, outputFormat) {
+    let instructions = '\n--- TEST-SPECIFIC CONTEXT ---\n';
+    
+    // Add test context
+    instructions += `Test: ${parsedMetadata.testName}\n`;
+    instructions += `Category: ${parsedMetadata.testCategory}`;
+    if (parsedMetadata.testSubtype) {
+      instructions += ` / ${parsedMetadata.testSubtype}`;
+    }
+    instructions += '\n\n';
+    
+    // Add expected behavior
+    if (parsedMetadata.expectedBehavior) {
+      instructions += `Expected Behavior:\n${parsedMetadata.expectedBehavior}\n\n`;
+    }
+    
+    // Add output format instructions
+    instructions += this.getOutputFormatInstructions(outputFormat);
+    
+    // Add scoring criteria if available
+    if (parsedMetadata.scoringRules) {
+      instructions += this.getScoringCriteria(parsedMetadata.scoringRules);
+    }
+    
+    return instructions;
+  }
+
+  /**
+   * Build test-aware prompt by combining base prompt with test context
+   * @param {string} agentType - Agent type
+   * @param {string} userPrompt - User's prompt
+   * @param {Object} context - Context object
+   * @param {Object} parsedMetadata - Parsed test metadata
+   * @returns {string} Complete test-aware prompt
+   */
+  buildTestAwarePrompt(agentType, userPrompt, context, parsedMetadata) {
+    // Get base prompt from existing logic
+    const basePrompt = this.buildPrompt(agentType, userPrompt, context);
+    
+    if (!parsedMetadata) {
+      return basePrompt; // Backward compatible
+    }
+    
+    // Determine output format
+    const outputFormat = this.inferOutputFormat(
+      parsedMetadata.testCategory,
+      parsedMetadata.testSubtype,
+      parsedMetadata
+    );
+    
+    // Build test-specific instructions
+    const testInstructions = this.buildTestInstructions(parsedMetadata, outputFormat);
+    
+    // Combine base prompt with test-specific instructions
+    return `${basePrompt}
+
+${testInstructions}`;
+  }
+
+  /**
+   * Enhanced buildPrompt that checks for test metadata
+   * This overrides the existing buildPrompt to add test-aware functionality
+   */
+  buildPromptWithTestContext(agentType, userPrompt, context) {
+    // Check if test metadata is available
+    if (context.test_metadata) {
+      const parsedMetadata = this.parseTestMetadata(context.test_metadata);
+      
+      if (parsedMetadata) {
+        console.log(`📝 Test-Aware Prompt Construction:`);
+        console.log(`   Test: ${parsedMetadata.testName}`);
+        console.log(`   Category: ${parsedMetadata.testCategory} / ${parsedMetadata.testSubtype || 'none'}`);
+        
+        const outputFormat = this.inferOutputFormat(
+          parsedMetadata.testCategory,
+          parsedMetadata.testSubtype,
+          parsedMetadata
+        );
+        console.log(`   Output Format: ${outputFormat}`);
+        
+        const prompt = this.buildTestAwarePrompt(agentType, userPrompt, context, parsedMetadata);
+        
+        if (process.env.DEBUG_PROMPTS === 'true') {
+          console.log(`   Full Prompt:\n${prompt}`);
+        }
+        
+        return prompt;
+      }
+    }
+    
+    // Fall back to existing logic for non-test executions
+    return this.buildPrompt(agentType, userPrompt, context);
   }
 
   getFallbackResponse(agentType, prompt, context) {

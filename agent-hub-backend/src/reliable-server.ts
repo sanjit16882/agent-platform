@@ -52,8 +52,12 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-user-id', 'X-User-Id']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'x-user-id', 'X-User-Id', 'x-demo-password', 'x-api-key']
 }));
+
+// Body parsing middleware - MUST be before rate limiting
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Rate limiting - More restrictive for dashboard endpoints
 const generalLimiter = rateLimit({
@@ -65,7 +69,7 @@ const generalLimiter = rateLimit({
 // Specific rate limiter for dashboard endpoints to prevent excessive polling
 const dashboardLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute window
-  max: 50, // temporarily increased limit for testing
+  max: 500, // High limit for development (React StrictMode causes double renders)
   message: {
     success: false,
     error: 'Dashboard requests are rate limited. Please wait before refreshing.',
@@ -77,18 +81,16 @@ const dashboardLimiter = rateLimit({
 
 app.use('/api/', generalLimiter);
 
-// Apply stricter rate limiting to dashboard endpoints
-app.use('/api/v1/finops/dashboard', dashboardLimiter);
-app.use('/api/v1/analytics/executions', dashboardLimiter);
-app.use('/api/v1/cloudwatch/metrics', dashboardLimiter);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Apply stricter rate limiting to dashboard endpoints (disabled in development due to React StrictMode)
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/v1/finops/dashboard', dashboardLimiter);
+  app.use('/api/v1/analytics/executions', dashboardLimiter);
+  app.use('/api/v1/cloudwatch/metrics', dashboardLimiter);
+}
 
 // API Key validation middleware
 const validateAPIKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // Skip API key validation for health check, API key management, security policy, bedrock, agents catalog, analytics, dashboard, testing, finops dashboard, models, and MCP endpoints
+  // Skip API key validation for health check, API key management, security policy, bedrock, agents catalog, analytics, dashboard, testing, finops dashboard, costs, vector-db, models, test-metadata, and MCP endpoints
   if (req.path === '/health' || 
       req.path.startsWith('/v1/auth/') || 
       req.path.startsWith('/v1/security/') || 
@@ -98,6 +100,9 @@ const validateAPIKey = (req: express.Request, res: express.Response, next: expre
       req.path.startsWith('/v1/analytics') ||
       req.path.startsWith('/v1/dashboard') ||
       req.path === '/v1/finops/dashboard' ||
+      req.path.startsWith('/v1/costs') ||
+      req.path.startsWith('/v1/vector-db') ||
+      req.path.startsWith('/v1/test-metadata') ||
       req.path.startsWith('/testing') ||
       req.path.startsWith('/api/mcp/')) {
     return next();
@@ -137,6 +142,18 @@ import agentTestingRoutes from './routes/agentTesting';
 // Import Models routes
 import modelsRoutes from './routes/modelsRoutes';
 
+// Import Vector DB routes
+import vectorDBRoutes from './routes/vectorDBProviderRoutes';
+
+// Import FinOps routes
+import finopsRoutes from './routes/finops';
+
+// Import Analytics routes
+import analyticsRoutes from './routes/analyticsRoutes';
+
+// Import Test Metadata routes (JavaScript module)
+const testMetadataRoutes = require('./routes/testMetadata');
+
 // Import MCP routes
 import mcpRoutes from './mcp/mcpRoutes';
 
@@ -152,6 +169,9 @@ app.use('/api/mcp/real', realMCPRoutes);
 // MCP (Model Context Protocol) Features - Old Implementation (also before API key validation)
 app.use('/api/mcp', mcpRoutes);
 
+// Test Metadata routes (before API key validation for agent builder access)
+app.use('/api/v1/test-metadata', testMetadataRoutes);
+
 // Apply API key validation to all other API routes (but not health check or MCP)
 app.use('/api', validateAPIKey);
 
@@ -163,6 +183,15 @@ app.use('/api/testing', agentTestingRoutes);
 
 // Models API (for Agent Testing)
 app.use('/api/v1/models', modelsRoutes);
+
+// Vector DB API
+app.use('/api/v1/vector-db', vectorDBRoutes);
+
+// FinOps API
+app.use('/api/v1/finops', finopsRoutes);
+
+// Analytics API (Agent execution history and analytics)
+app.use('/api/v1', analyticsRoutes);
 
 // In-memory storage for created agents (in production, this would be a database)
 const createdAgents = new Map<string, any>();
@@ -203,10 +232,115 @@ app.get('/health', (_req, res): void => {
   });
 });
 
+// MCP Health Check Endpoints (Mock)
+app.get('/mcp-health/filesystem', (_req, res): void => {
+  res.json({ status: 'running', server: 'filesystem', tools: ['read_file', 'write_file', 'list_directory'] });
+});
+
+app.get('/mcp-health/database', (_req, res): void => {
+  res.json({ status: 'running', server: 'database', tools: ['execute_query', 'get_schema', 'list_tables'] });
+});
+
+app.get('/mcp-health/git', (_req, res): void => {
+  res.json({ status: 'running', server: 'git', tools: ['get_repositories', 'get_commits', 'create_issue'] });
+});
+
+app.get('/mcp-health/office365', (_req, res): void => {
+  res.json({ status: 'running', server: 'office365', tools: ['get_emails', 'send_email', 'get_calendar'] });
+});
+
+app.get('/mcp-health/jira', (_req, res): void => {
+  res.json({ status: 'running', server: 'jira', tools: ['create_issue', 'get_issues', 'update_issue', 'get_projects', 'assign_issue'] });
+});
+
 // Request monitoring stats endpoint
 app.get('/api/v1/monitoring/request-stats', getRequestStats);
 
+// ===== AWS COST ESTIMATION ENDPOINTS =====
 
+// Import AWS Cost Service
+const awsCostService = require('../services/awsCostService');
+
+// Get cost estimate for an agent
+app.get('/api/v1/costs/estimate/:agentId', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    console.log(`💰 Cost estimate requested for agent: ${agentId}`);
+    
+    const estimate = await awsCostService.getCostEstimate(agentId);
+    res.json({
+      success: true,
+      data: estimate
+    });
+  } catch (error: any) {
+    console.error('❌ Cost estimate error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Save cost data for an execution
+app.post('/api/v1/costs/save', async (req, res) => {
+  try {
+    const costData = req.body;
+    console.log(`💾 Saving cost data for execution: ${costData.executionId}`);
+    
+    const result = await awsCostService.saveCostData(costData);
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('❌ Save cost data error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get cost history for an agent
+app.get('/api/v1/costs/history/:agentId', async (req, res) => {
+  try {
+    const { agentId } = req.params;
+    const { limit } = req.query;
+    console.log(`📊 Cost history requested for agent: ${agentId}`);
+    
+    const history = await awsCostService.getCostHistory(agentId, limit ? parseInt(limit as string) : undefined);
+    res.json({
+      success: true,
+      data: history
+    });
+  } catch (error: any) {
+    console.error('❌ Cost history error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get aggregated cost analytics
+app.get('/api/v1/costs/analytics', async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    console.log(`📈 Cost analytics requested`);
+    
+    const analytics = await awsCostService.getCostAnalytics(startDate as string, endDate as string);
+    res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error: any) {
+    console.error('❌ Cost analytics error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
 
 // ===== BEDROCK ENDPOINTS =====
 
@@ -884,7 +1018,7 @@ app.get('/api/v1/agents/:agentId', (req, res): void => {
 });
 
 app.post('/api/v1/agents/create', async (req, res): Promise<void> => {
-  const { templateId, name, description, customInputs, purpose, category, inputSchema, outputSchema, processingLogic, selectedModel, mcpIntegration, metadata } = req.body;
+  const { templateId, name, description, customInputs, purpose, category, agentSubType, inputSchema, outputSchema, processingLogic, selectedModel, mcpIntegration, metadata } = req.body;
   
   console.log('🎯 [DEMO] Creating agent with REAL Bedrock integration:', { templateId, name, selectedModel });
   
@@ -963,6 +1097,7 @@ app.post('/api/v1/agents/create', async (req, res): Promise<void> => {
     author: 'current-user',
     tags: [template.category.toLowerCase(), 'purpose-driven', template.id],
     category: template.category,
+    agentSubType: agentSubType, // Add subcategory for test recommendations
     usage_count: 0,
     average_rating: 0,
     inputSchema: template.inputSchema,
@@ -976,7 +1111,9 @@ app.post('/api/v1/agents/create', async (req, res): Promise<void> => {
       functionalityScope: template.purpose,
       estimatedRuntime: '1-3 seconds',
       resourceUsage: 'low',
-      securityLevel: 'internal'
+      securityLevel: 'internal',
+      agentCategory: category, // Store category in metadata
+      agentSubType: agentSubType // Store subcategory in metadata
     }
   };
 
@@ -989,6 +1126,16 @@ app.post('/api/v1/agents/create', async (req, res): Promise<void> => {
 
   // Store the created agent in memory
   createdAgents.set(agentId, purposeDrivenAgent);
+  
+  // CRITICAL FIX: Save to S3 for persistence
+  try {
+    console.log(`💾 Saving agent to S3: ${agentId} (${name})`);
+    await s3Storage.saveAgent(purposeDrivenAgent);
+    console.log(`✅ Agent saved to S3 successfully: ${agentId}`);
+  } catch (s3Error) {
+    console.error(`❌ Failed to save agent to S3: ${agentId}`, s3Error);
+    // Continue anyway - agent is still in memory
+  }
   
   console.log(`Purpose-driven agent created successfully: ${agentId} (${template.name})`);
 
@@ -3614,119 +3761,7 @@ async function analyzeQueryIntelligently(query: string, availableAgents: any[]) 
 }
 
 // Dynamic Intelligence Analysis Function
-async function analyzeQueryDynamically(query: string, userId: string, context: any) {
-  try {
-    console.log('🔍 Analyzing query dynamically:', query.substring(0, 50) + '...');
-    
-    // Enhanced keyword-based analysis
-    const lowerQuery = query.toLowerCase();
-    let intent = 'create-agent';
-    let confidence = 0.7;
-    let frameworks: string[] = [];
-    let languages: string[] = [];
-    let capabilities: string[] = [];
-    let keywords: string[] = [];
-
-    // Extract keywords
-    keywords = query.split(/\s+/).filter(word => word.length > 2);
-
-    // Detect frameworks
-    if (lowerQuery.includes('react') || lowerQuery.includes('jsx')) {
-      frameworks.push('React');
-      languages.push('JavaScript', 'TypeScript');
-    }
-    if (lowerQuery.includes('vue')) {
-      frameworks.push('Vue.js');
-      languages.push('JavaScript');
-    }
-    if (lowerQuery.includes('angular')) {
-      frameworks.push('Angular');
-      languages.push('TypeScript');
-    }
-    if (lowerQuery.includes('node') || lowerQuery.includes('express')) {
-      frameworks.push('Node.js');
-      languages.push('JavaScript');
-    }
-    if (lowerQuery.includes('python') || lowerQuery.includes('django') || lowerQuery.includes('flask')) {
-      languages.push('Python');
-      if (lowerQuery.includes('django')) frameworks.push('Django');
-      if (lowerQuery.includes('flask')) frameworks.push('Flask');
-    }
-
-    // Detect capabilities
-    if (lowerQuery.includes('api') || lowerQuery.includes('rest') || lowerQuery.includes('endpoint')) {
-      capabilities.push('API Development');
-    }
-    if (lowerQuery.includes('database') || lowerQuery.includes('sql') || lowerQuery.includes('mongodb')) {
-      capabilities.push('Database Integration');
-    }
-    if (lowerQuery.includes('auth') || lowerQuery.includes('login') || lowerQuery.includes('security')) {
-      capabilities.push('Authentication');
-    }
-    if (lowerQuery.includes('test') || lowerQuery.includes('unit') || lowerQuery.includes('integration')) {
-      capabilities.push('Testing');
-    }
-    if (lowerQuery.includes('deploy') || lowerQuery.includes('docker') || lowerQuery.includes('kubernetes')) {
-      capabilities.push('Deployment');
-    }
-
-    // Generate suggestions
-    const suggestions = [
-      {
-        title: 'Custom Development Agent',
-        description: 'Build a specialized agent for your requirements',
-        confidence: 0.8
-      },
-      {
-        title: 'API Integration Agent',
-        description: 'Create an agent for API development and integration',
-        confidence: 0.6
-      },
-      {
-        title: 'Full-Stack Development Agent',
-        description: 'Comprehensive development agent with multiple capabilities',
-        confidence: 0.7
-      }
-    ];
-
-    return {
-      success: true,
-      analysis: {
-        intent,
-        confidence,
-        frameworks,
-        languages,
-        capabilities,
-        keywords: keywords.slice(0, 10) // Limit to 10 keywords
-      },
-      suggestions,
-      existingAgents: [],
-      metadata: {
-        processingTime: Date.now(),
-        analysisType: 'enhanced-keyword-based'
-      }
-    };
-
-  } catch (error) {
-    console.error('❌ Dynamic analysis failed:', error);
-    return {
-      success: false,
-      analysis: {
-        intent: 'create-agent',
-        confidence: 0.5,
-        frameworks: [],
-        languages: [],
-        capabilities: [],
-        keywords: []
-      },
-      suggestions: [],
-      existingAgents: [],
-      error: error instanceof Error ? error.message : 'Analysis failed'
-    };
-  }
-}
-
-// Dynamic Intelligence Service - using fix with cache busting
+// Dynamic Intelligence Service - using fix with cache busting (OLD UNUSED FUNCTION REMOVED)
 let analyzeQueryDynamicallyFix: any;
 function loadIntelligenceFix() {
   // Clear module cache to get fresh version

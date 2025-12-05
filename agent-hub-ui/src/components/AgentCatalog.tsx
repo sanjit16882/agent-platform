@@ -455,9 +455,21 @@ const AgentCatalog: React.FC = () => {
 
   const handleSaveAgent = async (updatedAgent: any) => {
     try {
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('💾 AGENT CATALOG - Saving Agent to Backend');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('Updated Agent Data:', JSON.stringify(updatedAgent, null, 2));
+      console.log('Category:', updatedAgent.category);
+      console.log('Agent Sub-Type:', updatedAgent.agentSubType);
+      
       // Update agent via API
       const agentId = updatedAgent.agent_id || updatedAgent.id;
-      await axios.put(`${API_BASE_URL}/api/v1/agents/s3/${agentId}`, updatedAgent);
+      console.log('Calling API: PUT', `${API_BASE_URL}/api/v1/agents/s3/${agentId}`);
+      
+      const response = await axios.put(`${API_BASE_URL}/api/v1/agents/s3/${agentId}`, updatedAgent);
+      
+      console.log('✅ API Response:', response.data);
+      console.log('═══════════════════════════════════════════════════════');
       
       // Refresh agents list
       await fetchAgents();
@@ -466,7 +478,11 @@ const AgentCatalog: React.FC = () => {
       setShowEditModal(false);
       setSelectedAgentForEdit(null);
     } catch (error) {
-      console.error('Failed to save agent:', error);
+      console.error('❌ Failed to save agent:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Response data:', error.response?.data);
+        console.error('Response status:', error.response?.status);
+      }
       throw error;
     }
   };
@@ -475,36 +491,66 @@ const AgentCatalog: React.FC = () => {
     // Check if it's a deployed agent, hybrid agent, or built-in agent
     const deployedAgent = deployedAgents.find(a => a.id === agentId);
     const agent = agents.find(a => a.agent_id === agentId);
-    const isHybridAgent = agent && agent.agent_type === 'hybrid';
+    const isCustomAgent = agent && (agent.agent_type === 'hybrid' || agent.agent_type === 'demo' || agent.agent_type === 'custom' || agent.agent_type === 's3_custom');
+    const isBuiltInAgent = agent && (agent.agent_type === 'production' || agent.agent_type === 'builtin');
     
-    if (deployedAgent) {
-      if (window.confirm(`Are you sure you want to delete "${deployedAgent.name}"?`)) {
-        removeDeployedAgent(agentId);
-        fetchAgents();
+    console.log('🗑️ Delete requested for agent:', agentId);
+    console.log('   Agent type:', agent?.agent_type);
+    console.log('   Is deployed:', !!deployedAgent);
+    console.log('   Is custom:', isCustomAgent);
+    console.log('   Is built-in:', isBuiltInAgent);
+    
+    // Handle built-in agents (cannot be deleted)
+    if (isBuiltInAgent) {
+      alert(`"${agent.name}" is a built-in agent and cannot be deleted. You can deactivate it instead.`);
+      return;
+    }
+    
+    // Confirm deletion
+    if (!window.confirm(`Are you sure you want to delete "${agent?.name || deployedAgent?.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    // Optimistic UI update - remove from list immediately
+    setAgents(prev => prev.filter(a => a.agent_id !== agentId));
+    
+    try {
+      // For deployed agents, use the context method (which handles S3 internally)
+      if (deployedAgent) {
+        console.log(`🗑️ Deleting deployed agent via context: ${agentId}`);
+        await removeDeployedAgent(agentId);
+        console.log(`✅ Agent deleted successfully`);
+      } 
+      // For custom agents not in deployed list, delete directly from S3
+      else if (isCustomAgent) {
+        console.log(`🗑️ Deleting custom agent from S3: ${agentId}`);
+        await axios.delete(`${API_BASE_URL}/api/v1/agents/s3/${agentId}`);
+        console.log(`✅ Agent deleted from S3`);
       }
-    } else if (isHybridAgent) {
-      // Hybrid agents can be deleted from the backend
-      if (window.confirm(`Are you sure you want to delete "${agent.name}"? This action cannot be undone.`)) {
-        try {
-          await axios.delete(`${API_BASE_URL}/api/v1/agents/hybrid/${agentId}`);
-          console.log(`Hybrid agent ${agentId} deleted successfully`);
-          // Refresh the agents list
-          fetchAgents();
-        } catch (error) {
-          console.error('Failed to delete hybrid agent:', error);
-          alert('Failed to delete agent. Please try again.');
-        }
+      // Fallback: try hybrid endpoint
+      else {
+        console.log(`🗑️ Attempting hybrid endpoint delete: ${agentId}`);
+        await axios.delete(`${API_BASE_URL}/api/v1/agents/hybrid/${agentId}`);
+        console.log(`✅ Agent deleted from hybrid endpoint`);
       }
-    } else if (agent) {
-      // Built-in agents can't be deleted, but show a message
-      if (window.confirm(`"${agent.name}" is a built-in agent. This action cannot be undone. Are you sure you want to hide it from your catalog?`)) {
-        alert(`"${agent.name}" has been hidden from your catalog. You can restore it later from settings.`);
-        // In a real implementation, this would hide the agent from user's view
-      }
+      
+    } catch (error: any) {
+      console.error('❌ Failed to delete agent:', error);
+      // Revert optimistic update on error
+      await fetchAgents();
+      alert(`Failed to delete agent: ${error.response?.data?.error || error.message || 'Unknown error'}`);
     }
   };
 
   const handleViewDetails = (agent: Agent) => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('👁️ VIEW DETAILS - Agent Data');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('Agent ID:', agent.agent_id);
+    console.log('Agent Name:', agent.name);
+    console.log('Testing Status:', agent.testingStatus);
+    console.log('Full Agent Object:', JSON.stringify(agent, null, 2));
+    console.log('═══════════════════════════════════════════════════════');
     setSelectedAgentForDetails(agent);
     setShowDetailsModal(true);
   };
@@ -543,23 +589,38 @@ const AgentCatalog: React.FC = () => {
 
   // Helper function to enrich agents with testing data
   const enrichAgentsWithTestingData = async (agents: Agent[]): Promise<Agent[]> => {
+    console.log('🔄 Starting enrichAgentsWithTestingData for', agents.length, 'agents');
     try {
       // Fetch test runs for all agents
+      console.log('📡 Fetching test runs from:', `${API_BASE_URL}/api/testing/runs`);
       const testRunsResponse = await axios.get(`${API_BASE_URL}/api/testing/runs`);
       
-      if (!testRunsResponse.data || !Array.isArray(testRunsResponse.data)) {
-        console.log('No test runs data available');
+      console.log('📦 Test runs response:', testRunsResponse);
+      console.log('📦 Test runs data type:', typeof testRunsResponse.data);
+      console.log('📦 Is array?:', Array.isArray(testRunsResponse.data));
+      
+      // Handle both response formats: direct array or wrapped in {data: [...]}
+      let testRuns: any[];
+      if (Array.isArray(testRunsResponse.data)) {
+        testRuns = testRunsResponse.data;
+      } else if (testRunsResponse.data && Array.isArray(testRunsResponse.data.data)) {
+        testRuns = testRunsResponse.data.data;
+      } else {
+        console.log('❌ No test runs data available - returning agents unchanged');
         return agents;
       }
-      
-      const testRuns = testRunsResponse.data;
+      console.log('✅ Test runs loaded:', testRuns.length, 'runs');
+      console.log('📊 Sample test run:', testRuns[0]);
       
       // Enrich each agent with its testing data
       return agents.map(agent => {
-        // Find all test runs for this agent
+        // Find all test runs for this agent (check both agentId and agentIds)
         const agentTestRuns = testRuns.filter((run: any) => 
-          run.agentIds && run.agentIds.includes(agent.agent_id)
+          (run.agentId && run.agentId === agent.agent_id) ||
+          (run.agentIds && run.agentIds.includes(agent.agent_id))
         );
+        
+        console.log(`🔍 Agent ${agent.name} (${agent.agent_id}): Found ${agentTestRuns.length} test runs`);
         
         if (agentTestRuns.length === 0) {
           return agent; // No test data for this agent
@@ -607,7 +668,9 @@ const AgentCatalog: React.FC = () => {
         };
       });
     } catch (error) {
-      console.error('Error enriching agents with testing data:', error);
+      console.error('❌ ERROR in enrichAgentsWithTestingData:', error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : String(error));
+      console.error('❌ Stack:', error instanceof Error ? error.stack : 'No stack trace');
       return agents; // Return agents without testing data on error
     }
   };
@@ -656,16 +719,22 @@ const AgentCatalog: React.FC = () => {
           agent_id: agent.id || agent.agent_id,
           name: agent.name,
           description: agent.description,
-          category: agent.category,
+          category: agent.category || 'Custom',
+          agentSubType: agent.agentSubType || null, // Include agentSubType
           usage_count: agent.usage_count || agent.metrics?.totalExecutions || 0,
           average_rating: agent.average_rating || 4.5,
           created_at: agent.createdAt || agent.created_at || agent.created || new Date().toISOString(),
           agent_type: agent.type || agent.agent_type || 'hybrid',
-          testingStatus: agent.testingStatus // Include testing status from API
+          testingStatus: agent.testingStatus, // Include testing status from API
+          selectedModel: agent.selectedModel, // Include selected model
+          selectedModelName: agent.selectedModelName, // Include selected model name
+          bedrockConfig: agent.bedrockConfig, // Include bedrock config
+          mcpIntegration: agent.mcpIntegration // Include MCP integration
         }));
         
         console.log('✅ Mapped agents:', apiAgents.length);
         console.log('✅ Agent IDs:', apiAgents.map((a: Agent) => a.agent_id));
+        console.log('✅ Agent Categories:', apiAgents.map((a: Agent) => `${a.name}: ${a.category}`));
         
         // Fetch and enrich with testing data
         const enrichedAgents = await enrichAgentsWithTestingData(apiAgents);
@@ -821,11 +890,26 @@ const AgentCatalog: React.FC = () => {
   // Combined filtered agents for backward compatibility
   const filteredAgents = [...sortedActiveAgents, ...sortedAvailableAgents, ...sortedTemplateAgents];
 
-  const categories = ['All', 'QE', 'DevOps', 'Security', 'Business', 'Market Data', 'Custom'];
+  // Dynamically build categories from actual agent data
+  const uniqueCategories = Array.from(new Set(agents.map(agent => agent.category).filter(Boolean)));
+  const categories = ['All', ...uniqueCategories.sort()];
+  
+  console.log('📊 Available categories from agents:', uniqueCategories);
+  console.log('📊 Total agents:', agents.length);
+  console.log('📊 Agent details:', agents.map(a => ({ name: a.name, category: a.category })));
+
+  // Reset selected category if it's no longer valid
+  React.useEffect(() => {
+    if (selectedCategory !== 'All' && !categories.includes(selectedCategory)) {
+      console.log(`⚠️ Selected category "${selectedCategory}" not found, resetting to "All"`);
+      setSelectedCategory('All');
+    }
+  }, [categories, selectedCategory]);
 
   const getCategoryCount = (category: string) => {
     if (category === 'All') return agents.length;
-    return agents.filter(agent => agent.category === category).length;
+    const count = agents.filter(agent => agent.category === category).length;
+    return count;
   };
 
   const getCategoryColor = (category: string) => {
@@ -999,14 +1083,21 @@ const AgentCatalog: React.FC = () => {
                   color: theme.colors.textPrimary
                 }}
               >
-                {categories.map(category => (
-                  <option key={category} value={category}>
-                    {category === 'All' 
-                      ? `All Categories (${getCategoryCount(category)})` 
-                      : `${category} Agents (${getCategoryCount(category)})`
-                    }
-                  </option>
-                ))}
+                {categories.length === 1 ? (
+                  <option value="All">No agents available</option>
+                ) : (
+                  categories.map(category => {
+                    const count = getCategoryCount(category);
+                    return (
+                      <option key={category} value={category}>
+                        {category === 'All' 
+                          ? `All Categories (${count})` 
+                          : `${category} (${count})`
+                        }
+                      </option>
+                    );
+                  })
+                )}
               </select>
             </div>
             <div>

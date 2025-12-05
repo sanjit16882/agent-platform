@@ -6,6 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
+const { getRelevantTestsForAgent, getAllCategories, getAgentTypesForCategory } = require('../src/config/categoryTestMapping');
 const TestLibraryService = require('../services/testLibraryService');
 const TestExecutionService = require('../services/testExecutionService');
 const InsightsService = require('../services/insightsService');
@@ -1044,54 +1045,6 @@ router.get('/multimodal/capabilities', (req, res) => {
 });
 
 // ============================================================================
-// SAMPLE PROMPTS ENDPOINT
-// ============================================================================
-
-/**
- * POST /api/testing/sample-prompts
- * Generate sample prompts dynamically based on agent configuration and selected tests
- */
-router.post('/sample-prompts', async (req, res) => {
-  try {
-    const { agent, selectedTests } = req.body;
-    
-    if (!agent) {
-      return res.status(400).json({
-        success: false,
-        error: 'agent object is required'
-      });
-    }
-    
-    console.log('📝 Generating sample prompts for agent:', agent.id || agent.name);
-    
-    // If tests are selected, generate prompts based on test categories
-    let prompts;
-    if (selectedTests && selectedTests.length > 0) {
-      console.log(`🎯 Generating prompts for ${selectedTests.length} selected tests`);
-      prompts = samplePromptService.generatePromptsForTests(agent, selectedTests);
-    } else {
-      // Fallback to agent-based prompts
-      prompts = samplePromptService.generateSamplePrompts(agent);
-    }
-    
-    res.json({
-      success: true,
-      data: prompts,
-      count: prompts.length,
-      agentId: agent.id,
-      agentName: agent.name,
-      basedOnTests: !!selectedTests && selectedTests.length > 0
-    });
-    
-  } catch (error) {
-    console.error('Error generating sample prompts:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
 // ============================================================================
 // HEALTH CHECK
 // ============================================================================
@@ -1112,6 +1065,241 @@ router.get('/health', (req, res) => {
       insights: !!insightsService
     }
   });
+});
+
+/**
+ * POST /api/testing/relevant-tests
+ * Get relevant tests for a specific agent based on category and type
+ */
+router.post('/relevant-tests', async (req, res) => {
+  try {
+    const { agent } = req.body;
+    
+    if (!agent) {
+      return res.status(400).json({
+        success: false,
+        error: 'Agent information is required'
+      });
+    }
+    
+    console.log('🎯 Getting relevant tests for agent:', agent);
+    
+    // Extract category and type from agent
+    const category = agent.category || '';
+    const agentType = agent.agentSubType || agent.agent_sub_type || agent.type || agent.agentType || '';
+    
+    // Get relevant test IDs from metadata service
+    const relevantTestIds = getRelevantTestsForAgent(category, agentType);
+    
+    console.log(`📋 Found ${relevantTestIds.length} relevant test IDs for ${category}/${agentType}`);
+    
+    // Fetch actual test objects from testLibraryService
+    const allTests = await testLibraryService.listTests({});
+    
+    // Filter tests to only include relevant ones by ID
+    const coreTestObjects = allTests.filter(test => 
+      relevantTestIds.includes(test.id)
+    );
+    
+    // Get additional tests from same categories (but not already in core)
+    const coreCategories = new Set(coreTestObjects.map(t => t.category));
+    const additionalTestObjects = allTests.filter(test => 
+      coreCategories.has(test.category) && !relevantTestIds.includes(test.id)
+    );
+    
+    console.log(`✅ Found ${coreTestObjects.length} core tests and ${additionalTestObjects.length} additional tests`);
+    
+    res.json({
+      success: true,
+      data: {
+        coreTests: coreTestObjects,
+        additionalTests: additionalTestObjects,
+        allTests: [...coreTestObjects, ...additionalTestObjects]
+      },
+      count: coreTestObjects.length + additionalTestObjects.length,
+      metadata: {
+        category,
+        agentType,
+        coreTestIds: relevantTestIds
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error getting relevant tests:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+/**
+ * GET /api/testing/categories
+ * Get all available agent categories
+ */
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = getAllCategories();
+    
+    res.json({
+      success: true,
+      data: categories,
+      count: categories.length
+    });
+  } catch (error) {
+    console.error('❌ Error getting categories:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/categories/:category/agent-types
+ * Get agent types for a specific category
+ */
+router.get('/categories/:category/agent-types', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const agentTypes = getAgentTypesForCategory(category);
+    
+    res.json({
+      success: true,
+      data: agentTypes,
+      count: agentTypes.length
+    });
+  } catch (error) {
+    console.error('❌ Error getting agent types:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/agent-types/:category
+ * Get available agent sub-types for a category
+ */
+router.get('/agent-types/:category', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const testMetadataService = require('../src/services/testMetadataService');
+    
+    const agentTypes = testMetadataService.getAgentTypesForCategory(category);
+    
+    res.json({
+      success: true,
+      category: category,
+      agentTypes: agentTypes,
+      count: agentTypes.length
+    });
+  } catch (error) {
+    console.error('❌ Error getting agent types for category:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;
+
+
+// ============================================================================
+// SAMPLE PROMPTS ENDPOINT
+// ============================================================================
+
+/**
+ * POST /api/testing/sample-prompts
+ * Get relevant sample prompts for a test and agent combination
+ * 
+ * Body:
+ * {
+ *   "agent": { "id": "...", "name": "...", "category": "...", "subtype": "..." },
+ *   "test": { "id": "...", "name": "...", "category": "...", "subtype": "..." },
+ *   "limit": 4  // optional, default 4
+ * }
+ */
+router.post('/sample-prompts', async (req, res) => {
+  try {
+    const { agent, test, limit } = req.body;
+    
+    console.log('\n🔍 DEBUG: Sample Prompts API Request');
+    console.log('Agent:', JSON.stringify(agent, null, 2));
+    console.log('Test:', JSON.stringify(test, null, 2));
+    console.log('Limit:', limit);
+    
+    if (!agent || !test) {
+      return res.status(400).json({
+        success: false,
+        error: 'Both agent and test objects are required'
+      });
+    }
+    
+    // Initialize sample prompt service if not already done
+    const SamplePromptService = require('../services/samplePromptService');
+    const promptService = new SamplePromptService(null);
+    
+    // Get relevant prompts
+    const prompts = promptService.getPromptsForTest(agent, test, limit || 4);
+    
+    console.log('🔍 DEBUG: Prompts returned:', prompts.length);
+    
+    res.json({
+      success: true,
+      data: {
+        agent: {
+          id: agent.id,
+          name: agent.name,
+          category: agent.category,
+          subtype: agent.subtype
+        },
+        test: {
+          id: test.id,
+          name: test.name,
+          category: test.category,
+          subtype: test.subtype
+        },
+        prompts: prompts,
+        count: prompts.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error getting sample prompts:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/testing/sample-prompts/statistics
+ * Get statistics about the sample prompt library
+ */
+router.get('/sample-prompts/statistics', async (req, res) => {
+  try {
+    const SamplePromptService = require('../services/samplePromptService');
+    const promptService = new SamplePromptService(null);
+    
+    const stats = promptService.getStatistics();
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+    
+  } catch (error) {
+    console.error('Error getting prompt statistics:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
 });
 
 module.exports = router;

@@ -43,16 +43,20 @@ const BedrockModelSelector: React.FC<BedrockModelSelectorProps> = ({
     try {
       setLoading(true);
       setError(null);
+      console.log('🔍 BedrockModelSelector: Loading models...');
       const status = await bedrockService.getAvailableModels();
+      console.log('✅ BedrockModelSelector: Models loaded:', status.available_models.length);
+      console.log('📋 BedrockModelSelector: Models:', status.available_models);
       setModels(status.available_models);
       setIsBedrockAvailable(status.demo_info.real_ai);
     } catch (error) {
+      console.error('❌ BedrockModelSelector: Error loading models:', error);
       setError(error instanceof Error ? error.message : 'Failed to load models');
       // Fallback to mock models if Bedrock is unavailable
-      setModels([
+      const fallbackModels = [
         {
-          id: 'haiku',
-          name: 'anthropic.claude-3-haiku-20240307-v1:0',
+          id: 'anthropic.claude-3-haiku-20240307-v1:0',
+          name: 'Claude 3 Haiku',
           max_tokens: 2000,
           temperature: 0.1,
           cost_per_1m_tokens: '$0.25',
@@ -60,15 +64,17 @@ const BedrockModelSelector: React.FC<BedrockModelSelectorProps> = ({
           status: '⚠️ Fallback'
         },
         {
-          id: 'sonnet',
-          name: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+          id: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+          name: 'Claude 3.5 Sonnet',
           max_tokens: 4000,
           temperature: 0.1,
           cost_per_1m_tokens: '$3.00',
           best_for: ['Complex reasoning', 'High quality'],
           status: '⚠️ Fallback'
         }
-      ]);
+      ];
+      console.log('⚠️ BedrockModelSelector: Using fallback models:', fallbackModels);
+      setModels(fallbackModels);
       setIsBedrockAvailable(false);
     } finally {
       setLoading(false);

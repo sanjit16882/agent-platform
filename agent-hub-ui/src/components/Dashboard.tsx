@@ -263,114 +263,133 @@ const Dashboard: React.FC = () => {
           <h5 style={{ margin: 0, fontWeight: theme.typography.fontWeight.semibold }}>Quick Actions</h5>
         </Card.Header>
         <Card.Body style={{ padding: theme.spacing.xl }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: theme.spacing.lg,
-            marginBottom: theme.spacing.lg
-          }}>
-            <Button 
-              variant="outline-primary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/agents')}
-            >
-              Browse Agents
-            </Button>
-            <Button 
-              variant="primary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/agents')}
-            >
-              Quick Execute
-            </Button>
-            <Button 
-              variant="outline-secondary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/manage')}
-            >
-              Management
-            </Button>
-            <Button 
-              variant="outline-secondary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/upload')}
-            >
-              Upload Agent
-            </Button>
+          {/* Core Actions */}
+          <div style={{ marginBottom: theme.spacing.md }}>
+            <h6 style={{ marginBottom: theme.spacing.md, color: theme.colors.textSecondary }}>Core Features</h6>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: theme.spacing.md
+            }}>
+              <Button 
+                variant="primary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/agents')}
+              >
+                🤖 Browse Agents
+              </Button>
+              <Button 
+                variant="outline-primary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/nlp-agent-builder')}
+              >
+                ✨ Build Agent
+              </Button>
+              <Button 
+                variant="outline-primary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/agent-testing')}
+              >
+                🧪 Test Agents
+              </Button>
+              <Button 
+                variant="outline-primary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/marketplace')}
+              >
+                🏪 Marketplace
+              </Button>
+            </div>
           </div>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: theme.spacing.lg
-          }}>
-            <Button 
-              variant="outline-secondary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/integration')}
-            >
-              Documentation
-            </Button>
-            <Button 
-              variant="outline-secondary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/api-docs')}
-            >
-              API Docs
-            </Button>
-            <Button 
-              variant="outline-primary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/analytics')}
-            >
-              Analytics
-            </Button>
-            <Button 
-              variant="primary" 
-              size="lg" 
-              style={{ 
-                padding: theme.spacing.lg,
-                fontSize: theme.typography.fontSize.base,
-                fontWeight: theme.typography.fontWeight.medium
-              }}
-              onClick={() => navigate('/metrics')}
-            >
-              CloudWatch Metrics
-            </Button>
+
+          {/* Analytics & Monitoring */}
+          <div style={{ marginBottom: theme.spacing.md }}>
+            <h6 style={{ marginBottom: theme.spacing.md, color: theme.colors.textSecondary }}>Analytics & Monitoring</h6>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: theme.spacing.md
+            }}>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/analytics')}
+              >
+                📊 Analytics
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/finops')}
+              >
+                💰 FinOps
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/metrics')}
+              >
+                📈 CloudWatch
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/learning')}
+              >
+                🧠 Learning
+              </Button>
+            </div>
+          </div>
+
+          {/* Integration & Management */}
+          <div>
+            <h6 style={{ marginBottom: theme.spacing.md, color: theme.colors.textSecondary }}>Integration & Management</h6>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: theme.spacing.md
+            }}>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/real-mcp-dashboard')}
+              >
+                🔌 MCP Servers
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/vector-db-admin')}
+              >
+                🗄️ Vector DB
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/api-docs')}
+              >
+                📚 API Docs
+              </Button>
+              <Button 
+                variant="outline-secondary" 
+                size="lg" 
+                style={{ padding: theme.spacing.lg }}
+                onClick={() => navigate('/api-keys')}
+              >
+                🔑 API Keys
+              </Button>
+            </div>
           </div>
         </Card.Body>
       </Card>

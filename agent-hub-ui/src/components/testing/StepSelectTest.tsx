@@ -7,7 +7,6 @@ interface StepSelectTestProps {
   selectedAgent: any;
   selectedTests: any[];
   onSelectTests: (tests: any[]) => void;
-  onSamplePromptsLoaded?: (prompts: string[]) => void;
 }
 
 // Core tests that ALWAYS appear for ALL agents
@@ -47,8 +46,7 @@ const CORE_TESTS = {
 const StepSelectTest: React.FC<StepSelectTestProps> = ({
   selectedAgent,
   selectedTests,
-  onSelectTests,
-  onSamplePromptsLoaded
+  onSelectTests
 }) => {
   const [tests, setTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +56,6 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
   const [recommendedTests, setRecommendedTests] = useState<any[]>([]);
   const [coreTestCount, setCoreTestCount] = useState(0);
   const [agentSpecificCount, setAgentSpecificCount] = useState(0);
-  const [samplePrompts, setSamplePrompts] = useState<string[]>([]);
   const [expandedTest, setExpandedTest] = useState<string | null>(null);
 
   // Helper function to render scoring rules (handles objects)
@@ -86,31 +83,174 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     return categoryColors[category] || '#06b6d4'; // Default to cyan for agent-specific
   };
 
+  // Load CORE tests from API based on agent category and sub-type
+  const loadCoreTestsFromAPI = async (category: string, agentSubType: string): Promise<any[]> => {
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      console.log(`🎯 Loading CORE tests from API for ${category} - ${agentSubType}`);
+      
+      const response = await fetch(
+        `${API_BASE_URL}/api/testing/relevant-tests`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            agent: {
+              category: category,
+              agentSubType: agentSubType
+            }
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        console.warn(`⚠️ Failed to load CORE tests from API: ${response.status}`);
+        return [];
+      }
+      
+      const data = await response.json();
+      console.log('✅ CORE tests loaded from API:', data);
+      return data.data?.coreTests || [];
+    } catch (err) {
+      console.error('❌ Error loading CORE tests from API:', err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     loadTests();
   }, []);
 
   useEffect(() => {
-    if (selectedAgent && tests.length > 0) {
-      filterTestsForAgent();
-      loadSamplePrompts();
+    if (selectedAgent) {
+      loadTests(); // Reload tests when agent changes
     }
-  }, [selectedAgent, tests]);
+  }, [selectedAgent]);
 
   const loadTests = async () => {
     try {
       setLoading(true);
-      // Use the correct API base URL (backend runs on port 3002)
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
-      const response = await fetch(`${API_BASE_URL}/api/testing/library/list`);
       
-      if (!response.ok) {
-        throw new Error(`Failed to load tests: ${response.status} ${response.statusText}`);
+      // If agent is selected, get relevant tests based on category
+      if (selectedAgent) {
+        console.log('🎯 Loading relevant tests for agent:', selectedAgent);
+        
+        // Check if agent has Phase 2 category and sub-type
+        const { category, agentSubType } = getAgentCategoryAndType(selectedAgent);
+        
+        if (category && agentSubType) {
+          console.log('✅ Agent has category/sub-type, loading CORE tests from API');
+          
+          // Load CORE tests from API
+          const coreTestsFromAPI = await loadCoreTestsFromAPI(category, agentSubType);
+          
+          // Load all tests for agent-specific recommendations
+          const allTestsResponse = await fetch(`${API_BASE_URL}/api/testing/library/list`);
+          const allTestsData = await allTestsResponse.json();
+          const allTests = allTestsData.data || [];
+          
+          // Mark CORE tests from API
+          const coreTestIds = coreTestsFromAPI.map((t: any) => t.id);
+          const testsWithFlags = allTests.map((test: any) => ({
+            ...test,
+            isCore: coreTestIds.includes(test.id),
+            isCoreFromAPI: coreTestIds.includes(test.id), // New flag for API-based CORE tests
+            section: coreTestIds.includes(test.id) ? 'core' : 'agent-specific'
+          }));
+          
+          setTests(testsWithFlags);
+          
+          // Apply intelligent filtering to get only relevant agent-specific tests
+          const agentType = getAgentType(selectedAgent);
+          console.log(`🎯 Applying intelligent filtering for agent type: ${agentType}`);
+          
+          const filteredResults = applyIntelligentFiltering(testsWithFlags, agentType);
+          
+          setRecommendedTests(filteredResults.allTests);
+          setCoreTestCount(filteredResults.coreTests.length);
+          setAgentSpecificCount(filteredResults.agentSpecificTests.length);
+          
+          console.log(`✅ Loaded ${filteredResults.coreTests.length} CORE tests from API + ${filteredResults.agentSpecificTests.length} agent-specific tests (filtered from ${testsWithFlags.length} total)`);
+        } else {
+          console.log('⚠️ Agent missing category/sub-type, using fallback logic');
+          
+          // Fallback to existing logic for uncategorized agents
+          const response = await fetch(`${API_BASE_URL}/api/testing/relevant-tests`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ agent: selectedAgent })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to load relevant tests: ${response.status} ${response.statusText}`);
+          }
+          
+          const data = await response.json();
+          console.log('✅ Relevant tests loaded (fallback):', data);
+          
+          // Set tests with core/additional flags
+          const allTests = data.data.allTests || [];
+          const coreTestIds = (data.data.coreTests || []).map((t: any) => t.id);
+          
+          // If no tests found, load all tests from library and apply intelligent filtering
+          if (allTests.length === 0) {
+            console.log('⚠️ No relevant tests found, loading all tests and applying intelligent filtering');
+            const libraryResponse = await fetch(`${API_BASE_URL}/api/testing/library/list`);
+            
+            if (!libraryResponse.ok) {
+              throw new Error(`Failed to load test library: ${libraryResponse.status} ${libraryResponse.statusText}`);
+            }
+            
+            const libraryData = await libraryResponse.json();
+            console.log('✅ All tests loaded from library:', libraryData);
+            
+            // Store all tests temporarily for filtering
+            const allLibraryTests = libraryData.data || [];
+            setTests(allLibraryTests);
+            
+            // Apply intelligent filtering based on agent type
+            const agentType = getAgentType(selectedAgent);
+            console.log(`🎯 Applying intelligent filtering for agent type: ${agentType}`);
+            
+            // Get filtered and prioritized tests
+            const filteredResults = applyIntelligentFiltering(allLibraryTests, agentType);
+            
+            setRecommendedTests(filteredResults.allTests);
+            setCoreTestCount(filteredResults.coreTests.length);
+            setAgentSpecificCount(filteredResults.agentSpecificTests.length);
+            
+            console.log(`✅ Intelligent filtering applied: ${filteredResults.coreTests.length} core + ${filteredResults.agentSpecificTests.length} agent-specific tests`);
+          } else {
+            const testsWithFlags = allTests.map((test: any) => ({
+              ...test,
+              isCore: coreTestIds.includes(test.id),
+              isCoreFromAPI: false, // Not from API
+              section: coreTestIds.includes(test.id) ? 'core' : 'agent-specific'
+            }));
+            
+            setTests(testsWithFlags);
+            setRecommendedTests(testsWithFlags);
+            setCoreTestCount(data.data.coreTests?.length || 0);
+            setAgentSpecificCount(data.data.additionalTests?.length || 0);
+          }
+        }
+      } else {
+        // No agent selected, load all tests
+        const response = await fetch(`${API_BASE_URL}/api/testing/library/list`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load tests: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ All tests loaded:', data);
+        setTests(data.data || []);
       }
-      
-      const data = await response.json();
-      console.log('✅ Tests loaded:', data);
-      setTests(data.data || []);
     } catch (err: any) {
       setError(err.message);
       console.error('❌ Error loading tests:', err);
@@ -119,18 +259,384 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     }
   };
 
+  // Helper function to get agent category and sub-type from Phase 2 fields
+  const getAgentCategoryAndType = (agent: any): { category: string | null, agentSubType: string | null } => {
+    return {
+      category: agent.category || null,
+      agentSubType: agent.agentSubType || agent.agent_sub_type || null
+    };
+  };
+
+  // Apply intelligent filtering to tests based on agent type
+  const applyIntelligentFiltering = (tests: any[], agentType: string) => {
+    // Define relevant test categories per agent type with priority scores
+    // These map to actual test categories in the database (e.g., development_code_review, qe_test_case_creation)
+    const agentTestMapping: Record<string, Record<string, number>> = {
+      // Development - Code Review
+      'code-review': {
+        'development_code_review': 10,
+        'development_bug_fixing': 9,
+        'development_documentation': 7,
+        'automated_testing_framework': 6,
+        'security_testing_testgen': 5
+      },
+      // Development - Code Generation
+      'code-generation': {
+        'development_code_generation': 10,
+        'development_documentation': 8,
+        'automated_testing_script': 7,
+        'development_bug_fixing': 6
+      },
+      // Development - Bug Fixing
+      'bug-fixing': {
+        'development_bug_fixing': 10,
+        'development_code_review': 9,
+        'automated_testing_framework': 7,
+        'qe_defect_reporting': 6
+      },
+      // Development - Documentation
+      'documentation': {
+        'development_documentation': 10,
+        'development_code_review': 8,
+        'business_analysis_requirements': 7
+      },
+      // QE - Test Case Creation
+      'test-case-creation': {
+        'qe_test_case_creation': 10,
+        'automated_testing_framework': 8,
+        'qe_defect_reporting': 6
+      },
+      // QE - Defect Reporting
+      'defect-reporting': {
+        'qe_defect_reporting': 10,
+        'qe_test_case_creation': 8,
+        'development_bug_fixing': 7
+      },
+      // QE - Test Automation
+      'test-automation': {
+        'qe_test_automation': 10,
+        'automated_testing_script': 9,
+        'automated_testing_framework': 8,
+        'qe_test_case_creation': 6
+      },
+      // QE - API Testing
+      'api-testing': {
+        'qe_api_testing': 10,
+        'automated_testing_framework': 8,
+        'devops_cicd': 6
+      },
+      // DevOps - CI/CD Pipeline
+      'ci/cd-pipeline': {
+        'devops_cicd': 10,
+        'devops_container': 8,
+        'automated_testing_framework': 7,
+        'devops_iac': 6
+      },
+      // DevOps - Infrastructure as Code
+      'infrastructure-as-code': {
+        'devops_iac': 10,
+        'devops_cicd': 8,
+        'devops_container': 7,
+        'security_audit': 5
+      },
+      // DevOps - Container Management
+      'container-management': {
+        'devops_container': 10,
+        'devops_iac': 8,
+        'devops_cicd': 7,
+        'sre_monitoring': 6
+      },
+      // Security - Vulnerability Assessment
+      'vulnerability-assessment': {
+        'security_vulnerability': 10,
+        'security_audit': 9,
+        'security_testing_pentest': 8,
+        'development_code_review': 6
+      },
+      // Security - Security Audit
+      'security-audit': {
+        'security_audit': 10,
+        'security_vulnerability': 9,
+        'security_threat': 8,
+        'devops_iac': 6
+      },
+      // Security - Threat Modeling
+      'threat-modeling': {
+        'security_threat': 10,
+        'security_audit': 9,
+        'security_vulnerability': 8
+      },
+      // Security Testing - Penetration Testing
+      'penetration-testing': {
+        'security_testing_pentest': 10,
+        'security_vulnerability': 9,
+        'security_audit': 8
+      },
+      // Security Testing - Test Generation
+      'test-generation': {
+        'security_testing_testgen': 10,
+        'automated_testing_framework': 9,
+        'qe_test_case_creation': 8
+      },
+      // Automated Testing - Framework
+      'framework': {
+        'automated_testing_framework': 10,
+        'automated_testing_script': 9,
+        'qe_test_automation': 8
+      },
+      // Automated Testing - Script
+      'script': {
+        'automated_testing_script': 10,
+        'automated_testing_framework': 9,
+        'qe_test_automation': 8
+      },
+      // Business Analysis - Requirements
+      'requirements': {
+        'business_analysis_requirements': 10,
+        'business_analysis_user_story': 9,
+        'product_management_prioritization': 7
+      },
+      // Business Analysis - User Story
+      'user-story': {
+        'business_analysis_user_story': 10,
+        'business_analysis_requirements': 9,
+        'qe_test_case_creation': 7
+      },
+      // Business Analysis - Process
+      'process': {
+        'business_analysis_process': 10,
+        'business_analysis_requirements': 8,
+        'project_management_planning': 7
+      },
+      // Product Management - Prioritization
+      'prioritization': {
+        'product_management_prioritization': 10,
+        'product_management_roadmap': 9,
+        'business_analysis_requirements': 7
+      },
+      // Product Management - Roadmap
+      'roadmap': {
+        'product_management_roadmap': 10,
+        'product_management_prioritization': 9,
+        'product_management_market': 8
+      },
+      // Product Management - Market
+      'market': {
+        'product_management_market': 10,
+        'product_management_roadmap': 8,
+        'business_analysis_requirements': 6
+      },
+      // Project Management - Planning
+      'planning': {
+        'project_management_planning': 10,
+        'project_management_risk': 8,
+        'business_analysis_requirements': 7
+      },
+      // Project Management - Risk
+      'risk': {
+        'project_management_risk': 10,
+        'project_management_planning': 9,
+        'project_management_status': 7
+      },
+      // Project Management - Status
+      'status': {
+        'project_management_status': 10,
+        'project_management_planning': 8,
+        'project_management_risk': 7
+      },
+      // Production Support - Incident
+      'incident': {
+        'production_support_incident': 10,
+        'production_support_rca': 9,
+        'sre_incident_response': 8,
+        'sre_monitoring': 7
+      },
+      // Production Support - RCA
+      'rca': {
+        'production_support_rca': 10,
+        'production_support_incident': 9,
+        'production_support_troubleshoot': 8
+      },
+      // Production Support - Troubleshoot
+      'troubleshoot': {
+        'production_support_troubleshoot': 10,
+        'production_support_rca': 9,
+        'production_support_incident': 8,
+        'sre_monitoring': 7
+      },
+      // SRE - Monitoring
+      'monitoring': {
+        'sre_monitoring': 10,
+        'sre_incident_response': 9,
+        'production_support_incident': 7,
+        'devops_cicd': 6
+      },
+      // SRE - Capacity
+      'capacity': {
+        'sre_capacity': 10,
+        'sre_monitoring': 9,
+        'sre_reliability': 8
+      },
+      // SRE - Incident Response
+      'incident-response': {
+        'sre_incident_response': 10,
+        'sre_monitoring': 9,
+        'production_support_incident': 8,
+        'production_support_rca': 7
+      },
+      // SRE - Reliability
+      'reliability': {
+        'sre_reliability': 10,
+        'sre_monitoring': 9,
+        'sre_capacity': 8,
+        'sre_incident_response': 7
+      },
+      // Fallback for unknown types
+      'general': {
+        'development_code_review': 7,
+        'qe_test_case_creation': 7,
+        'automated_testing_framework': 6,
+        'security_audit': 5,
+        'devops_cicd': 5
+      }
+    };
+
+    const priorityMap = agentTestMapping[agentType] || agentTestMapping['general'];
+    console.log(`🔍 DEBUG: Agent type: ${agentType}, Priority map categories:`, Object.keys(priorityMap));
+    
+    // STEP 1: Get Core Tests (Always included)
+    // First check if tests already have isCore flag from API (Phase 2)
+    console.log(`🔍 DEBUG: Total tests passed to filter: ${tests.length}`);
+    console.log(`🔍 DEBUG: Sample test flags:`, tests.slice(0, 3).map(t => ({ 
+      id: t.id, 
+      name: t.name, 
+      isCore: t.isCore, 
+      isCoreFromAPI: t.isCoreFromAPI 
+    })));
+    
+    const coreTestsFromAPI = tests.filter(test => test.isCore === true || test.isCoreFromAPI === true);
+    console.log(`🔍 DEBUG: Found ${coreTestsFromAPI.length} tests with isCore flag`);
+    
+    if (coreTestsFromAPI.length > 0) {
+      // Use API-provided core tests
+      console.log(`✅ Using ${coreTestsFromAPI.length} CORE tests from API`);
+      var coreTests = coreTestsFromAPI.map(test => ({
+        ...test,
+        section: 'core'
+      }));
+    } else {
+      // Fallback to hardcoded core test categories (Phase 1)
+      const coreTestCategories = Object.keys(CORE_TESTS);
+      
+      // Exclude code-specific tests from core (they should be agent-specific)
+      const isCodeSpecificTest = (test: any): boolean => {
+        const name = test.name?.toLowerCase() || '';
+        return name.includes('code generation') || 
+               name.includes('python') || 
+               name.includes('javascript') ||
+               name.includes('java ') ||
+               name.includes('c++') ||
+               name.includes('programming');
+      };
+      
+      var coreTests = tests
+        .filter(test => coreTestCategories.includes(test.category) && !isCodeSpecificTest(test))
+        .map(test => ({
+          ...test,
+          relevanceScore: CORE_TESTS[test.category as keyof typeof CORE_TESTS].priority,
+          isCore: true,
+          reason: CORE_TESTS[test.category as keyof typeof CORE_TESTS].reason,
+          badge: CORE_TESTS[test.category as keyof typeof CORE_TESTS].badge,
+          badgeColor: CORE_TESTS[test.category as keyof typeof CORE_TESTS].color,
+          section: 'core'
+        }));
+      
+      console.log(`✅ Using ${coreTests.length} core tests from fallback logic`);
+    }
+    
+    // STEP 2: Get Agent-Specific Tests (exclude core tests)
+    const nonCoreTests = tests.filter(test => {
+      // Exclude if already marked as core
+      if (test.isCore === true || test.isCoreFromAPI === true) return false;
+      return true;
+    });
+    
+    console.log(`🔍 DEBUG: Non-core tests: ${nonCoreTests.length}`);
+    console.log(`🔍 DEBUG: Sample non-core test categories:`, nonCoreTests.slice(0, 5).map(t => ({ id: t.id, category: t.category, subtype: t.subtype })));
+    
+    const testsWithScores = nonCoreTests.map(test => {
+      // Create composite key: category_subtype (e.g., "Development" + "code-review" = "development_code_review")
+      // Replace spaces and hyphens with underscores to match priority map keys
+      const compositeKey = test.category && test.subtype 
+        ? `${test.category.toLowerCase()}_${test.subtype.toLowerCase().replace(/[\s-]+/g, '_')}`
+        : test.category?.toLowerCase() || '';
+      
+      return {
+        ...test,
+        relevanceScore: priorityMap[compositeKey] || 0,
+        isCore: false,
+        section: 'agent-specific',
+        _debugKey: compositeKey // For debugging
+      };
+    });
+    
+    const relevantTests = testsWithScores.filter(test => test.relevanceScore > 0);
+    console.log(`🔍 DEBUG: Tests with relevance score > 0: ${relevantTests.length}`);
+    if (relevantTests.length > 0) {
+      console.log(`🔍 DEBUG: Sample relevant tests:`, relevantTests.slice(0, 3).map(t => ({ 
+        name: t.name, 
+        key: t._debugKey, 
+        score: t.relevanceScore 
+      })));
+    } else if (testsWithScores.length > 0) {
+      console.log(`🔍 DEBUG: No matches found. Sample test keys:`, testsWithScores.slice(0, 5).map(t => t._debugKey));
+    }
+    
+    const agentSpecificTests = relevantTests
+      .sort((a, b) => b.relevanceScore - a.relevanceScore) // Sort by priority
+      .slice(0, 15); // Top 15 agent-specific tests
+    
+    console.log(`✅ Found ${agentSpecificTests.length} agent-specific tests for ${agentType}`);
+    if (agentSpecificTests.length > 0) {
+      console.log(`🔍 DEBUG: Top agent-specific tests:`, agentSpecificTests.slice(0, 3).map(t => ({ 
+        name: t.name, 
+        category: t.category, 
+        score: t.relevanceScore 
+      })));
+    }
+    
+    // STEP 3: Combine: core + agent-specific
+    const allRecommendedTests = [...coreTests, ...agentSpecificTests];
+    
+    console.log(`📊 Total recommended: ${allRecommendedTests.length} (${coreTests.length} core + ${agentSpecificTests.length} specific)`);
+    
+    // Return the results for the caller
+    return {
+      coreTests,
+      agentSpecificTests,
+      allTests: allRecommendedTests
+    };
+  };
+
   const getAgentType = (agent: any): string => {
     console.log('🔍 Detecting agent type for:', agent);
     
-    // Extract agent type from agent object
+    // First, try to use Phase 2 fields
+    const { category, agentSubType } = getAgentCategoryAndType(agent);
+    if (category && agentSubType) {
+      console.log('✅ Found Phase 2 fields:', { category, agentSubType });
+      return agentSubType.toLowerCase().replace(/\s+/g, '-');
+    }
+    
+    // Fallback to old detection logic
     if (agent.type) {
       console.log('✅ Found agent.type:', agent.type);
       return agent.type.toLowerCase();
     }
     if (agent.category) {
-      const category = agent.category.toLowerCase().replace(/\s+/g, '-');
-      console.log('✅ Found agent.category:', category);
-      return category;
+      const categoryType = agent.category.toLowerCase().replace(/\s+/g, '-');
+      console.log('✅ Found agent.category:', categoryType);
+      return categoryType;
     }
     if (agent.name) {
       const name = agent.name.toLowerCase();
@@ -275,41 +781,61 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     const priorityMap = agentTestMapping[agentType] || agentTestMapping['general'];
     
     // STEP 1: Get Core Tests (Always included)
-    const coreTestCategories = Object.keys(CORE_TESTS);
+    // First check if tests already have isCore flag from API (Phase 2)
+    console.log(`🔍 DEBUG: Total tests passed to filter: ${tests.length}`);
+    console.log(`🔍 DEBUG: Sample test flags:`, tests.slice(0, 3).map(t => ({ 
+      id: t.id, 
+      name: t.name, 
+      isCore: t.isCore, 
+      isCoreFromAPI: t.isCoreFromAPI 
+    })));
     
-    // Exclude code-specific tests from core (they should be agent-specific)
-    const isCodeSpecificTest = (test: any): boolean => {
-      const name = test.name?.toLowerCase() || '';
-      return name.includes('code generation') || 
-             name.includes('python') || 
-             name.includes('javascript') ||
-             name.includes('java ') ||
-             name.includes('c++') ||
-             name.includes('programming');
-    };
+    const coreTestsFromAPI = tests.filter(test => test.isCore === true || test.isCoreFromAPI === true);
+    console.log(`🔍 DEBUG: Found ${coreTestsFromAPI.length} tests with isCore flag`);
     
-    const coreTests = tests
-      .filter(test => coreTestCategories.includes(test.category) && !isCodeSpecificTest(test))
-      .map(test => ({
+    if (coreTestsFromAPI.length > 0) {
+      // Use API-provided core tests
+      console.log(`✅ Using ${coreTestsFromAPI.length} CORE tests from API`);
+      var coreTests = coreTestsFromAPI.map(test => ({
         ...test,
-        relevanceScore: CORE_TESTS[test.category as keyof typeof CORE_TESTS].priority,
-        isCore: true,
-        reason: CORE_TESTS[test.category as keyof typeof CORE_TESTS].reason,
-        badge: CORE_TESTS[test.category as keyof typeof CORE_TESTS].badge,
-        badgeColor: CORE_TESTS[test.category as keyof typeof CORE_TESTS].color,
         section: 'core'
       }));
+    } else {
+      // Fallback to hardcoded core test categories (Phase 1)
+      const coreTestCategories = Object.keys(CORE_TESTS);
+      
+      // Exclude code-specific tests from core (they should be agent-specific)
+      const isCodeSpecificTest = (test: any): boolean => {
+        const name = test.name?.toLowerCase() || '';
+        return name.includes('code generation') || 
+               name.includes('python') || 
+               name.includes('javascript') ||
+               name.includes('java ') ||
+               name.includes('c++') ||
+               name.includes('programming');
+      };
+      
+      var coreTests = tests
+        .filter(test => coreTestCategories.includes(test.category) && !isCodeSpecificTest(test))
+        .map(test => ({
+          ...test,
+          relevanceScore: CORE_TESTS[test.category as keyof typeof CORE_TESTS].priority,
+          isCore: true,
+          reason: CORE_TESTS[test.category as keyof typeof CORE_TESTS].reason,
+          badge: CORE_TESTS[test.category as keyof typeof CORE_TESTS].badge,
+          badgeColor: CORE_TESTS[test.category as keyof typeof CORE_TESTS].color,
+          section: 'core'
+        }));
+      
+      console.log(`✅ Using ${coreTests.length} core tests from fallback logic`);
+    }
     
-    console.log(`✅ Found ${coreTests.length} core tests`);
-    
-    // STEP 2: Get Agent-Specific Tests (exclude core categories, but include code-specific tests)
+    // STEP 2: Get Agent-Specific Tests (exclude core tests)
     const agentSpecificTests = tests
       .filter(test => {
-        // Include if not in core categories
-        if (!coreTestCategories.includes(test.category)) return true;
-        // OR if it's a code-specific test (even if category is "functional")
-        if (isCodeSpecificTest(test)) return true;
-        return false;
+        // Exclude if already marked as core
+        if (test.isCore === true || test.isCoreFromAPI === true) return false;
+        return true;
       })
       .map(test => ({
         ...test,
@@ -326,90 +852,20 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
     // STEP 3: Combine: core + agent-specific
     const allRecommendedTests = [...coreTests, ...agentSpecificTests];
     
-    setRecommendedTests(allRecommendedTests);
-    setCoreTestCount(coreTests.length);
-    setAgentSpecificCount(agentSpecificTests.length);
-    
     console.log(`📊 Total recommended: ${allRecommendedTests.length} (${coreTests.length} core + ${agentSpecificTests.length} specific)`);
+    
+    // Return the results for the caller
+    return {
+      coreTests,
+      agentSpecificTests,
+      allTests: allRecommendedTests
+    };
     console.log(`📊 Category distribution:`, 
       allRecommendedTests.reduce((acc, t) => {
         acc[t.category] = (acc[t.category] || 0) + 1;
         return acc;
       }, {} as Record<string, number>)
     );
-  };
-
-  const loadSamplePrompts = async () => {
-    try {
-      console.log('🔍 Loading sample prompts for agent:', selectedAgent);
-      
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
-      const response = await fetch(`${API_BASE_URL}/api/testing/sample-prompts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ agent: selectedAgent })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load sample prompts: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Loaded sample prompts:', data);
-      
-      const prompts = data.data || [];
-      setSamplePrompts(prompts);
-      
-      // Notify parent component about loaded prompts
-      if (onSamplePromptsLoaded) {
-        onSamplePromptsLoaded(prompts);
-      }
-    } catch (err: any) {
-      console.error('❌ Error loading sample prompts:', err);
-      // Fallback to empty array if API fails
-      setSamplePrompts([]);
-      if (onSamplePromptsLoaded) {
-        onSamplePromptsLoaded([]);
-      }
-    }
-  };
-
-  const loadSamplePromptsForTests = async (tests: any[]) => {
-    try {
-      console.log(`🎯 Loading sample prompts for ${tests.length} selected tests`);
-      
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
-      const response = await fetch(`${API_BASE_URL}/api/testing/sample-prompts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          agent: selectedAgent,
-          selectedTests: tests 
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to load sample prompts: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('✅ Loaded test-specific sample prompts:', data);
-      
-      const prompts = data.data || [];
-      setSamplePrompts(prompts);
-      
-      // Notify parent component about loaded prompts
-      if (onSamplePromptsLoaded) {
-        onSamplePromptsLoaded(prompts);
-      }
-    } catch (err: any) {
-      console.error('❌ Error loading sample prompts:', err);
-      // Keep existing prompts if reload fails
-    }
   };
 
   const toggleTest = (test: any) => {
@@ -421,26 +877,14 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
       newSelectedTests = [...selectedTests, test];
     }
     onSelectTests(newSelectedTests);
-    
-    // Reload sample prompts when tests change
-    if (newSelectedTests.length > 0) {
-      loadSamplePromptsForTests(newSelectedTests);
-    }
   };
 
   const selectAll = () => {
     onSelectTests(filteredTests);
-    if (filteredTests.length > 0) {
-      loadSamplePromptsForTests(filteredTests);
-    }
   };
 
   const clearAll = () => {
     onSelectTests([]);
-    setSamplePrompts([]);
-    if (onSamplePromptsLoaded) {
-      onSamplePromptsLoaded([]);
-    }
   };
 
   // Use recommended tests if agent is selected, otherwise show all
@@ -487,8 +931,93 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
 
   return (
     <div>
+      {/* Warning Banner for Uncategorized Agents */}
+      {selectedAgent && !selectedAgent.category && (
+        <Card style={{ marginBottom: theme.spacing.xl }}>
+          <Card.Body>
+            <div style={{
+              padding: theme.spacing.lg,
+              backgroundColor: theme.colors.warningLight,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.warning}`
+            }}>
+              <div style={{
+                fontSize: theme.typography.fontSize.base,
+                fontWeight: theme.typography.fontWeight.semibold,
+                color: theme.colors.warning,
+                marginBottom: theme.spacing.sm
+              }}>
+                ⚠️ Agent Not Categorized
+              </div>
+              <div style={{
+                fontSize: theme.typography.fontSize.sm,
+                color: theme.colors.textSecondary,
+                marginBottom: theme.spacing.md
+              }}>
+                This agent doesn't have a category assigned. We're showing general test recommendations based on AI analysis.
+              </div>
+              <div style={{
+                fontSize: theme.typography.fontSize.sm,
+                color: theme.colors.textSecondary
+              }}>
+                💡 <strong>Tip:</strong> Edit your agent and select a category to get more accurate CORE test recommendations!
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
+
       {/* Agent-Specific Info Banner */}
-      {selectedAgent && recommendedTests.length > 0 && (
+      {selectedAgent && selectedAgent.category && recommendedTests.length > 0 && (
+        <Card style={{ marginBottom: theme.spacing.xl }}>
+          <Card.Body>
+            <div style={{
+              padding: theme.spacing.lg,
+              backgroundColor: theme.colors.successLight,
+              borderRadius: theme.borderRadius.md,
+              border: `1px solid ${theme.colors.success}`
+            }}>
+              <div style={{
+                fontSize: theme.typography.fontSize.base,
+                fontWeight: theme.typography.fontWeight.semibold,
+                color: theme.colors.success,
+                marginBottom: theme.spacing.sm
+              }}>
+                ✅ {recommendedTests.length} Recommended Tests for {selectedAgent.name}
+              </div>
+              <div style={{
+                fontSize: theme.typography.fontSize.sm,
+                color: theme.colors.textSecondary,
+                marginBottom: theme.spacing.md
+              }}>
+                These tests are intelligently selected based on your agent's category: <strong>{selectedAgent.category}</strong>
+                {selectedAgent.agentSubType && ` - ${selectedAgent.agentSubType}`}
+              </div>
+              <div style={{
+                display: 'flex',
+                gap: theme.spacing.lg,
+                fontSize: theme.typography.fontSize.sm
+              }}>
+                <div>
+                  <span style={{ fontWeight: theme.typography.fontWeight.semibold, color: '#10b981' }}>
+                    {coreTestCount} CORE Tests
+                  </span>
+                  <span style={{ color: theme.colors.textSecondary }}> (from test metadata)</span>
+                </div>
+                <div>
+                  <span style={{ fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.primary }}>
+                    {agentSpecificCount} Agent-Specific Tests
+                  </span>
+                  <span style={{ color: theme.colors.textSecondary }}> (recommended for this type)</span>
+                </div>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
+      )}
+
+      {/* Fallback Info Banner for Uncategorized Agents */}
+      {selectedAgent && !selectedAgent.category && recommendedTests.length > 0 && (
         <Card style={{ marginBottom: theme.spacing.xl }}>
           <Card.Body>
             <div style={{
@@ -503,14 +1032,14 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                 color: theme.colors.primary,
                 marginBottom: theme.spacing.sm
               }}>
-                🎯 {recommendedTests.length} Recommended Tests for {selectedAgent.name}
+                🤖 {recommendedTests.length} AI-Recommended Tests for {selectedAgent.name}
               </div>
               <div style={{
                 fontSize: theme.typography.fontSize.sm,
                 color: theme.colors.textSecondary,
                 marginBottom: theme.spacing.md
               }}>
-                These tests are intelligently selected based on your agent's type and capabilities.
+                These tests are selected by AI based on your agent's name and description.
               </div>
               <div style={{
                 display: 'flex',
@@ -518,10 +1047,10 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                 fontSize: theme.typography.fontSize.sm
               }}>
                 <div>
-                  <span style={{ fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.danger }}>
-                    {coreTestCount} Core Tests
+                  <span style={{ fontWeight: theme.typography.fontWeight.semibold, color: '#f59e0b' }}>
+                    {coreTestCount} LLM Tests
                   </span>
-                  <span style={{ color: theme.colors.textSecondary }}> (always included)</span>
+                  <span style={{ color: theme.colors.textSecondary }}> (AI-recommended)</span>
                 </div>
                 <div>
                   <span style={{ fontWeight: theme.typography.fontWeight.semibold, color: theme.colors.primary }}>
@@ -641,6 +1170,8 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
           </div>
         )}
 
+
+
         {/* Test List - Redesigned with Sticky Headers */}
         {filteredTests.length === 0 ? (
           <div style={{
@@ -684,7 +1215,10 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                         fontSize: theme.typography.fontSize.xs,
                         opacity: 0.9
                       }}>
-                        Always included • Essential for all agents
+                        {selectedAgent?.category && selectedAgent?.agentSubType
+                          ? `Recommended for ${selectedAgent.category} - ${selectedAgent.agentSubType}`
+                          : 'Always included • Essential for all agents'
+                        }
                       </div>
                     </div>
                     <div style={{
@@ -751,19 +1285,21 @@ const StepSelectTest: React.FC<StepSelectTestProps> = ({
                           {test.name}
                         </div>
 
-                        {/* Badge */}
-                        {test.badge && (
+                        {/* Badge - Green for API CORE, Yellow for LLM */}
+                        {test.isCore && (
                           <div style={{
                             display: 'inline-block',
                             padding: `2px ${theme.spacing.xs}`,
-                            backgroundColor: test.badgeColor || '#667eea',
+                            backgroundColor: test.isCoreFromAPI ? '#10b981' : '#f59e0b',
                             color: theme.colors.white,
                             borderRadius: theme.borderRadius.sm,
                             fontSize: '10px',
                             fontWeight: theme.typography.fontWeight.bold,
                             marginBottom: theme.spacing.xs
-                          }}>
-                            {test.badge}
+                          }}
+                          title={test.isCoreFromAPI ? 'CORE test from test metadata' : 'Recommended by AI'}
+                          >
+                            {test.isCoreFromAPI ? 'CORE' : 'LLM'}
                           </div>
                         )}
 

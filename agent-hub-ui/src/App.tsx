@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/enterprise-theme.css';
 import './styles/aws-inspired-theme.css';
@@ -94,6 +94,7 @@ function App() {
             <Route path="/hybrid-builder" element={<HybridAgentBuilder />} />
             <Route path="/nl-agent-generator" element={<NaturalLanguageAgentGenerator />} />
             <Route path="/agents" element={<AgentCatalog />} />
+            <Route path="/catalog" element={<Navigate to="/agents" replace />} />
             <Route path="/agents/:agentId/execute" element={<DynamicAgentExecutor />} />
             <Route path="/agents/:agentId/execute-legacy" element={<AgentExecutor />} />
             <Route path="/results/:executionId" element={<ResultsViewer />} />

@@ -49,11 +49,13 @@ const VectorDBConfigSection: React.FC<VectorDBConfigSectionProps> = ({
 }) => {
   
   const [availableKnowledgeBases, setAvailableKnowledgeBases] = useState<KnowledgeBase[]>([]);
+  const [providers, setProviders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // Load available knowledge bases
+  // Load available knowledge bases and providers
   useEffect(() => {
     loadKnowledgeBases();
+    loadProviders();
   }, []);
   
   // Calculate cost and latency when config changes
@@ -69,6 +71,26 @@ const VectorDBConfigSection: React.FC<VectorDBConfigSectionProps> = ({
       if (onLatencyChange) onLatencyChange(0);
     }
   }, [config.enabled, onCostChange, onLatencyChange]);
+  
+  const loadProviders = async () => {
+    try {
+      const response = await fetch('http://localhost:3002/api/v1/vector-db/providers');
+      const data = await response.json();
+      
+      if (data.success) {
+        // Combine approved and marketplace providers
+        const allProviders = [
+          ...(data.data.approved || []),
+          ...(data.data.marketplace || [])
+        ];
+        setProviders(allProviders);
+      }
+    } catch (error) {
+      console.error('Failed to load providers:', error);
+      // Fallback to empty array
+      setProviders([]);
+    }
+  };
   
   const loadKnowledgeBases = async () => {
     setLoading(true);
@@ -180,13 +202,21 @@ const VectorDBConfigSection: React.FC<VectorDBConfigSectionProps> = ({
                 value={config.provider}
                 onChange={(e) => handleProviderChange(e.target.value)}
               >
-                <option value="opensearch">AWS OpenSearch</option>
-                <option value="pinecone">Pinecone</option>
-                <option value="pgvector">PostgreSQL (Pgvector)</option>
-                <option value="mock">Mock (Development)</option>
+                {providers.length === 0 ? (
+                  <option>Loading providers...</option>
+                ) : (
+                  <>
+                    <option value="mock">Mock (Development)</option>
+                    {providers.map(provider => (
+                      <option key={provider.id} value={provider.id}>
+                        {provider.icon} {provider.name} {provider.status === 'marketplace' ? '(Marketplace)' : ''}
+                      </option>
+                    ))}
+                  </>
+                )}
               </Form.Select>
               <Form.Text className="text-muted">
-                Select the vector database provider for storing embeddings
+                {providers.find(p => p.id === config.provider)?.description || 'Select the vector database provider for storing embeddings'}
               </Form.Text>
             </Form.Group>
             

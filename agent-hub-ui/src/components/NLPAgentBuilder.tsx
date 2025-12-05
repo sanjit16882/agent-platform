@@ -9,6 +9,7 @@ import { MCPAgentCreationStep, MCPAgentConfig } from './mcp/MCPAgentCreationStep
 import VectorDBConfigSection from './VectorDBConfigSection';
 import AgentConfigurationGuide from './AgentConfigurationGuide';
 import AgentTemplateSelector from './AgentTemplateSelector';
+import TestRecommendationSection from './TestRecommendationSection';
 
 // Local type definitions (previously from nlpAnalysisService)
 interface NLPAnalysis {
@@ -19,6 +20,8 @@ interface NLPAnalysis {
   suggestedTemplates: string[];
   confidence: number;
   keywords: string[];
+  intent?: string; // 'create-agent' or 'use-existing-agent'
+  noMatchesFound?: boolean; // Flag when no existing agents match
 }
 
 interface TemplateMatch {
@@ -134,6 +137,10 @@ const NLPAgentBuilder: React.FC = () => {
     recommendedServers: []
   });
   
+  // Test Recommendation state
+  const [agentCategory, setAgentCategory] = useState<string | null>(null);
+  const [agentSubType, setAgentSubType] = useState<string | null>(null);
+
   // Vector DB configuration state
   const [vectorDBConfig, setVectorDBConfig] = useState({
     enabled: false,
@@ -203,6 +210,8 @@ const NLPAgentBuilder: React.FC = () => {
           // Transform dynamic analysis to NLP format
           // Map backend intent to safe display type
           const safeType = (data.analysis.intent === 'create-agent') ? 'Custom' : (data.analysis.intent || 'Custom');
+          const noMatchesFound = data.analysis.intent === 'create-agent' && data.existingAgents?.length === 0;
+          
           const dynamicAnalysis = {
             type: safeType,
             frameworks: data.analysis.frameworks || [],
@@ -210,7 +219,9 @@ const NLPAgentBuilder: React.FC = () => {
             capabilities: data.analysis.capabilities || [],
             suggestedTemplates: data.suggestions?.map((s: any) => s.title) || [],
             confidence: Math.round(data.analysis.confidence * 100),
-            keywords: data.analysis.keywords || []
+            keywords: data.analysis.keywords || [],
+            intent: data.analysis.intent,
+            noMatchesFound: noMatchesFound
           };
           
           console.log('✅ Dynamic analysis result:', dynamicAnalysis);
@@ -384,7 +395,8 @@ const NLPAgentBuilder: React.FC = () => {
         name: agentName,
         description: agentDescription,
         purpose: agentDescription, // Use description as purpose
-        category: finalType,
+        category: agentCategory || finalType, // Use selected category or fallback to finalType
+        agentSubType: agentSubType, // Add subcategory for test recommendations
         inputSchema: [
           {
             name: 'input',
@@ -415,7 +427,9 @@ const NLPAgentBuilder: React.FC = () => {
           mcpConfig: mcpConfig,
           templateId: selectedTemplate?.id,
           templateName: selectedTemplate?.name,
-          vectorDBConfig: vectorDBConfig
+          vectorDBConfig: vectorDBConfig,
+          agentCategory: agentCategory, // Store in metadata too
+          agentSubType: agentSubType
         },
         mcpIntegration: mcpConfig.enabled ? {
           enabled: true,
@@ -454,7 +468,10 @@ const NLPAgentBuilder: React.FC = () => {
     setAgentName(name);
   };
 
-  const getConfidenceColor = (confidence: number) => {
+  const getConfidenceColor = (confidence: number, noMatchesFound?: boolean) => {
+    // If no matches found, always show success (green) since we're confident about creating new
+    if (noMatchesFound) return 'success';
+    
     // Confidence is already a percentage (0-100), so divide by 100 for comparison
     const normalizedConfidence = confidence / 100;
     if (normalizedConfidence >= 0.8) return 'success';
@@ -462,9 +479,13 @@ const NLPAgentBuilder: React.FC = () => {
     return 'danger';
   };
 
-  const getConfidenceText = (confidence: number) => {
+  const getConfidenceText = (confidence: number, noMatchesFound?: boolean) => {
+    // If no matches found, show clear message instead of percentage
+    if (noMatchesFound) {
+      return '✨ Ready to Create New Agent';
+    }
     // Display confidence as percentage with proper formatting
-    return `${confidence}% Confidence`;
+    return `${confidence}% Match`;
   };
 
   // Intelligence sidebar handlers
@@ -558,7 +579,7 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
   };
 
   // Template selection state
-  const [showTemplateSelector, setShowTemplateSelector] = useState(true);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
   // Apply template configuration
@@ -665,29 +686,40 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
           {/* Configuration Guide */}
           <AgentConfigurationGuide compact={true} />
 
-          {/* Template Selector Modal/Section */}
-          {showTemplateSelector && (
-            <Card className="mb-4 border-primary">
-              <Card.Header className="bg-light">
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <h5 className="mb-1">🎯 Quick Start with Templates</h5>
-                    <small className="text-muted">Choose a pre-configured template or start from scratch</small>
-                  </div>
-                  <Button 
-                    variant="outline-secondary" 
-                    size="sm"
-                    onClick={() => setShowTemplateSelector(false)}
-                  >
-                    Skip Templates
-                  </Button>
+          {/* Template Selector - Collapsible Section */}
+          <Card className="mb-4 border-primary">
+            <Card.Header 
+              className="bg-light"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+            >
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 className="mb-1">
+                    🎯 Quick Start with Templates
+                    <Badge bg="secondary" className="ms-2">Optional</Badge>
+                  </h5>
+                  <small className="text-muted">Choose a pre-configured template or start from scratch</small>
                 </div>
-              </Card.Header>
+                <Button 
+                  variant="link" 
+                  size="sm"
+                  className="text-decoration-none"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTemplateSelector(!showTemplateSelector);
+                  }}
+                >
+                  {showTemplateSelector ? '▼ Collapse' : '▶ Expand'}
+                </Button>
+              </div>
+            </Card.Header>
+            {showTemplateSelector && (
               <Card.Body>
                 <AgentTemplateSelector onSelectTemplate={applyTemplate} />
               </Card.Body>
-            </Card>
-          )}
+            )}
+          </Card>
 
           {/* Show selected template info */}
           {selectedTemplate && !showTemplateSelector && (
@@ -752,13 +784,18 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
 
               {/* NLP Analysis Results */}
               {nlpAnalysis && (
-                <Alert variant="info" className="mb-4">
+                <Alert variant={nlpAnalysis.noMatchesFound ? "success" : "info"} className="mb-4">
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <strong>🔍 Auto-detected Properties</strong>
-                    <Badge bg={getConfidenceColor(nlpAnalysis.confidence)}>
-                      {getConfidenceText(nlpAnalysis.confidence)}
+                    <strong>{nlpAnalysis.noMatchesFound ? '✨ No Matching Agents Found' : '🔍 Auto-detected Properties'}</strong>
+                    <Badge bg={getConfidenceColor(nlpAnalysis.confidence, nlpAnalysis.noMatchesFound)}>
+                      {getConfidenceText(nlpAnalysis.confidence, nlpAnalysis.noMatchesFound)}
                     </Badge>
                   </div>
+                  {nlpAnalysis.noMatchesFound && (
+                    <div className="mb-2 text-muted small">
+                      No existing agents match your description. Let's create a new one!
+                    </div>
+                  )}
                   <Row>
                     <Col md={12}>
                       <div className="mb-2">
@@ -864,16 +901,23 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
               />
 
               {/* Bedrock Model Selection */}
-              <BedrockModelSelector
-                selectedModel={selectedBedrockModel}
-                onModelChange={(modelId, modelName) => {
-                  setSelectedBedrockModel(modelId);
-                  setSelectedBedrockModelName(modelName);
-                }}
-                agentType={nlpAnalysis?.type?.toLowerCase() || 'custom'}
-                label="AI Model (Optional)"
-                required={false}
-              />
+              <Card className="mb-3">
+                <Card.Header>
+                  <strong>AI Model</strong>
+                </Card.Header>
+                <Card.Body>
+                  <BedrockModelSelector
+                    selectedModel={selectedBedrockModel}
+                    onModelChange={(modelId, modelName) => {
+                      setSelectedBedrockModel(modelId);
+                      setSelectedBedrockModelName(modelName);
+                    }}
+                    agentType={nlpAnalysis?.type?.toLowerCase() || 'custom'}
+                    label=""
+                    required={true}
+                  />
+                </Card.Body>
+              </Card>
 
               {/* Vector DB Configuration */}
               <div className="mt-3">
@@ -882,6 +926,17 @@ This agent is based on "${baseAgentName}" but can be customized for your specifi
                   onChange={setVectorDBConfig}
                   onCostChange={setVectorDBCost}
                   onLatencyChange={setVectorDBLatency}
+                />
+              </div>
+
+              {/* Test Recommendation Section */}
+              <div className="mt-3">
+                <TestRecommendationSection
+                  category={agentCategory}
+                  agentSubType={agentSubType}
+                  onCategoryChange={setAgentCategory}
+                  onAgentSubTypeChange={setAgentSubType}
+                  disabled={loading}
                 />
               </div>
 

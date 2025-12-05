@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Row, Col } from 'react-bootstrap';
 import BedrockModelSelector from './BedrockModelSelector';
+import TestRecommendationSection from './TestRecommendationSection';
 import { mcpConfigService } from '../services/mcpConfigService';
 import { realMCPService } from '../services/realMCPService';
 
@@ -26,18 +27,35 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingServers, setLoadingServers] = useState(false);
+  
+  // Test Recommendation state
+  const [agentCategory, setAgentCategory] = useState<string | null>(null);
+  const [agentSubType, setAgentSubType] = useState<string | null>(null);
 
   useEffect(() => {
     if (agent && show) {
       console.log('═══════════════════════════════════════════════════════');
       console.log('📝 EDIT AGENT MODAL - Loading Data');
       console.log('═══════════════════════════════════════════════════════');
+      console.log('📝 Full Agent Object:', JSON.stringify(agent, null, 2));
+      console.log('📝 Agent Category from object:', agent.category);
+      console.log('📝 Agent Sub-Type from object:', agent.agentSubType);
       
       // Load agent data
       setAgentName(agent.name || '');
       setAgentDescription(agent.description || '');
       setSelectedModel(agent.selectedModel || agent.bedrockConfig?.defaultModel || '');
       setSelectedModelName(agent.selectedModelName || agent.bedrockConfig?.modelName || '');
+      
+      // Load Test Recommendation data
+      const loadedCategory = agent.category || null;
+      const loadedSubType = agent.agentSubType || null;
+      
+      console.log('📝 Setting Category to:', loadedCategory);
+      console.log('📝 Setting Sub-Type to:', loadedSubType);
+      
+      setAgentCategory(loadedCategory);
+      setAgentSubType(loadedSubType);
       
       // Load MCP association from agent's mcpIntegration
       const mcpServerId = agent.mcpIntegration?.selectedServers?.[0] || '';
@@ -85,10 +103,21 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
         return;
       }
 
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('💾 SAVING AGENT - Current State');
+      console.log('═══════════════════════════════════════════════════════');
+      console.log('Agent Name:', agentName);
+      console.log('Agent Category:', agentCategory);
+      console.log('Agent Sub-Type:', agentSubType);
+      console.log('Selected Model:', selectedModel);
+      console.log('Selected MCP Server:', selectedMCPServer);
+
       const updatedAgent = {
         ...agent,
         name: agentName,
         description: agentDescription,
+        category: agentCategory,
+        agentSubType: agentSubType,
         selectedModel: selectedModel,
         selectedModelName: selectedModelName,
         bedrockConfig: selectedModel ? {
@@ -104,12 +133,16 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
         } : undefined
       };
 
+      console.log('💾 Updated Agent Object:', JSON.stringify(updatedAgent, null, 2));
+      console.log('═══════════════════════════════════════════════════════');
+
       // MCP association is saved in the agent's mcpIntegration field
       // No need for separate localStorage tracking
       
       await onSave(updatedAgent);
       onHide();
     } catch (err) {
+      console.error('❌ Error saving agent:', err);
       setError(err instanceof Error ? err.message : 'Failed to save agent');
     } finally {
       setSaving(false);
@@ -124,8 +157,14 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
       centered
       dialogClassName="modal-dialog-centered"
     >
-      <Modal.Header closeButton>
-        <Modal.Title>Edit Agent</Modal.Title>
+      <Modal.Header 
+        closeButton
+        style={{ 
+          backgroundColor: '#f0f9ff',
+          borderBottom: '2px solid #0ea5e9'
+        }}
+      >
+        <Modal.Title style={{ color: '#0369a1' }}>Edit Agent</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && (
@@ -220,6 +259,21 @@ export const EditAgentModal: React.FC<EditAgentModalProps> = ({
                   </small>
                 </Alert>
               )}
+            </Col>
+          </Row>
+
+          {/* Test Recommendation Section */}
+          <Row>
+            <Col md={12}>
+              <div className="mt-3">
+                <TestRecommendationSection
+                  category={agentCategory}
+                  agentSubType={agentSubType}
+                  onCategoryChange={setAgentCategory}
+                  onAgentSubTypeChange={setAgentSubType}
+                  disabled={saving}
+                />
+              </div>
             </Col>
           </Row>
         </Form>

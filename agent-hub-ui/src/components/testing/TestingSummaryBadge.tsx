@@ -147,7 +147,7 @@ const TestingSummaryBadge: React.FC<TestingSummaryBadgeProps> = ({ agentId }) =>
                   <div style={{
                     fontSize: theme.typography.fontSize.base,
                     fontWeight: theme.typography.fontWeight.bold,
-                    color: theme.colors.primary
+                    color: summary.bestModel?.name === 'Model Not Specified' ? theme.colors.textSecondary : theme.colors.primary
                   }}>
                     {summary.bestModel?.name || 'N/A'}
                   </div>
@@ -157,6 +157,16 @@ const TestingSummaryBadge: React.FC<TestingSummaryBadgeProps> = ({ agentId }) =>
                   }}>
                     Score: {summary.bestModel?.score || 0}% | Pass Rate: {summary.bestModel?.passRate || 0}%
                   </div>
+                  {summary.bestModel?.name === 'Model Not Specified' && (
+                    <div style={{
+                      fontSize: theme.typography.fontSize.xs,
+                      color: theme.colors.warning,
+                      marginTop: theme.spacing.xs,
+                      fontStyle: 'italic'
+                    }}>
+                      ℹ️ Run tests with a specific model to see model comparison
+                    </div>
+                  )}
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{

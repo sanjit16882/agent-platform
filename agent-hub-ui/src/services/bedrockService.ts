@@ -51,7 +51,8 @@ class BedrockService {
 
   async getAvailableModels(): Promise<BedrockStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/bedrock/models`, {
+      // Use the same endpoint as Agent Testing to get all available models
+      const response = await fetch(`${this.baseUrl}/api/v1/models/available`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -63,7 +64,32 @@ class BedrockService {
       }
 
       const data = await response.json();
-      return data;
+      
+      // Transform the response to match our BedrockStatus interface
+      const models = (data.models || []).map((model: any) => ({
+        id: model.id,
+        name: model.name,
+        max_tokens: 4000, // Default value
+        temperature: 0.1,
+        cost_per_1m_tokens: model.cost === 'Low' ? '$0.25' : model.cost === 'Medium' ? '$3.00' : '$15.00',
+        best_for: [model.description],
+        status: '✅ Available'
+      }));
+      
+      return {
+        success: data.success !== false,
+        bedrock_status: 'connected',
+        timestamp: new Date().toISOString(),
+        available_models: models,
+        agent_model_mapping: [],
+        demo_info: {
+          provider: 'AWS Bedrock',
+          region: 'us-east-1',
+          real_ai: true,
+          cost_tracking: true,
+          models_count: models.length
+        }
+      };
     } catch (error) {
       console.error('Error fetching Bedrock models:', error);
       throw error;
@@ -102,21 +128,64 @@ class BedrockService {
   }
 
   getModelDisplayName(modelId: string): string {
+    // Handle short model IDs (legacy)
     const modelNames: { [key: string]: string } = {
       'haiku': 'Claude 3 Haiku',
       'sonnet': 'Claude 3.5 Sonnet', 
       'titan': 'Amazon Titan Text Express'
     };
-    return modelNames[modelId] || modelId;
+    
+    if (modelNames[modelId]) {
+      return modelNames[modelId];
+    }
+    
+    // Handle full Bedrock model IDs
+    if (modelId.includes('claude-3-5-sonnet')) {
+      return 'Claude 3.5 Sonnet';
+    } else if (modelId.includes('claude-3-sonnet')) {
+      return 'Claude 3 Sonnet';
+    } else if (modelId.includes('claude-3-haiku')) {
+      return 'Claude 3 Haiku';
+    } else if (modelId.includes('claude-3-opus')) {
+      return 'Claude 3 Opus';
+    } else if (modelId.includes('claude-2')) {
+      return 'Claude 2';
+    } else if (modelId.includes('titan-text-express')) {
+      return 'Amazon Titan Text Express';
+    } else if (modelId.includes('titan-text-lite')) {
+      return 'Amazon Titan Text Lite';
+    } else if (modelId.includes('titan')) {
+      return 'Amazon Titan';
+    }
+    
+    // Fallback: return the model ID as-is
+    return modelId;
   }
 
   getModelDescription(modelId: string): string {
+    // Handle short model IDs (legacy)
     const descriptions: { [key: string]: string } = {
       'haiku': 'Fast and cost-effective for simple tasks',
       'sonnet': 'High-performance for complex reasoning',
       'titan': 'AWS native model for general text processing'
     };
-    return descriptions[modelId] || 'AI language model';
+    
+    if (descriptions[modelId]) {
+      return descriptions[modelId];
+    }
+    
+    // Handle full Bedrock model IDs
+    if (modelId.includes('haiku')) {
+      return 'Fast and cost-effective for simple tasks';
+    } else if (modelId.includes('sonnet')) {
+      return 'High-performance for complex reasoning';
+    } else if (modelId.includes('opus')) {
+      return 'Most capable model for complex tasks';
+    } else if (modelId.includes('titan')) {
+      return 'AWS native model for general text processing';
+    }
+    
+    return 'AI language model';
   }
 
   getModelRecommendation(agentType: string): string {

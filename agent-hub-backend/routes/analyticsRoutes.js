@@ -10,6 +10,100 @@ const router = express.Router();
 const db = require('../services/database');
 
 /**
+ * GET /api/v1/analytics/executions
+ * 
+ * List all execution history across all agents for FinOps dashboard
+ * Supports filtering and pagination
+ */
+router.get('/analytics/executions', async (req, res) => {
+  try {
+    const {
+      execution_mode,
+      status,
+      start_date,
+      end_date,
+      limit = 1000,
+      offset = 0
+    } = req.query;
+
+    // Build query with filters
+    let query = `
+      SELECT 
+        id as executionId,
+        agent_id as agentId,
+        execution_mode as category,
+        status,
+        started_at as timestamp,
+        completed_at,
+        duration_ms as duration,
+        documents_retrieved,
+        tools_invoked,
+        llm_cost,
+        vector_db_cost,
+        mcp_cost,
+        total_cost as costSavings,
+        llm_latency_ms,
+        vector_db_latency_ms,
+        mcp_latency_ms,
+        input_tokens as inputTokens,
+        output_tokens as outputTokens,
+        error_message,
+        metadata
+      FROM agent_execution_logs
+      WHERE 1=1
+    `;
+    
+    const params = [];
+
+    // Add filters
+    if (execution_mode) {
+      query += ' AND execution_mode = ?';
+      params.push(execution_mode);
+    }
+
+    if (status) {
+      query += ' AND status = ?';
+      params.push(status);
+    }
+
+    if (start_date) {
+      query += ' AND started_at >= ?';
+      params.push(start_date);
+    }
+
+    if (end_date) {
+      query += ' AND started_at <= ?';
+      params.push(end_date);
+    }
+
+    // Order by most recent first
+    query += ' ORDER BY started_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const executions = await db.query(query, params);
+
+    res.json({
+      success: true,
+      data: executions.map(exec => ({
+        ...exec,
+        timestamp: new Date(exec.timestamp),
+        status: exec.status === 'success' ? 'completed' : 'failed',
+        metadata: exec.metadata ? JSON.parse(exec.metadata) : null
+      })),
+      count: executions.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching all executions:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch execution history',
+      details: error.message
+    });
+  }
+});
+
+/**
  * GET /api/v1/agents/:id/executions
  * 
  * List execution history for a specific agent

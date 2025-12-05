@@ -80,7 +80,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
         titleColor: '#111827',
         primaryButton: 'primary' as const,
         primaryButtonText: 'Execute Agent',
-        configButtonText: 'Configure'
+        configButtonText: 'Edit'
       };
     } else {
       return {
@@ -184,41 +184,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
           {agent.description}
         </Card.Text>
         
-        {/* Agent Metrics */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          marginBottom: '12px',
-          padding: '8px',
-          backgroundColor: '#f8fafc',
-          borderRadius: '6px',
-          fontSize: '0.8rem'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: '#374151' }}>
-              {agent.usage_count.toLocaleString()}
-            </div>
-            <div style={{ color: '#6b7280' }}>Executions</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: '#374151' }}>
-              {agent.average_rating.toFixed(1)}★
-            </div>
-            <div style={{ color: '#6b7280' }}>Rating</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontWeight: 'bold', color: '#374151' }}>
-              {agent.estimatedCost 
-                ? `$${agent.estimatedCost.toFixed(2)}`
-                : variant === 'active' ? 'Ready' : 'Demo'
-              }
-            </div>
-            <div style={{ color: '#6b7280' }}>
-              {agent.estimatedCost ? 'Cost/1K' : 'Status'}
-            </div>
-          </div>
-        </div>
-        
+
         <div className="mt-auto">
           <div className="d-grid gap-2">
             {/* Primary Action Button */}
@@ -262,71 +228,7 @@ const AgentCard: React.FC<AgentCardProps> = ({
               </Button>
             </div>
             
-            {/* Testing Status Section */}
-            {agent.testingStatus && agent.testingStatus.quality !== 'not-tested' && (
-              <div style={{
-                marginBottom: theme.spacing.sm,
-                padding: theme.spacing.sm,
-                backgroundColor: theme.colors.backgroundSecondary,
-                borderRadius: theme.borderRadius.sm,
-                border: `1px solid ${theme.colors.border}`
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: theme.spacing.xs
-                }}>
-                  <div style={{
-                    fontSize: theme.typography.fontSize.xs,
-                    fontWeight: theme.typography.fontWeight.semibold,
-                    color: theme.colors.textPrimary
-                  }}>
-                    📊 Test Results
-                  </div>
-                  {agent.testingStatus.quality && (
-                    <TestingBadge 
-                      quality={agent.testingStatus.quality}
-                      passRate={agent.testingStatus.passRate}
-                      compact
-                    />
-                  )}
-                </div>
-                
-                <div style={{
-                  fontSize: theme.typography.fontSize.xs,
-                  color: theme.colors.textSecondary,
-                  marginBottom: theme.spacing.xs
-                }}>
-                  Pass Rate: {agent.testingStatus.passRate}% 
-                  {agent.testingStatus.universalTests && (
-                    <>({agent.testingStatus.universalTests.passed}/{agent.testingStatus.universalTests.total})</>
-                  )}
-                </div>
-                
-                <div style={{
-                  fontSize: theme.typography.fontSize.xs,
-                  color: theme.colors.textMuted,
-                  marginBottom: theme.spacing.xs
-                }}>
-                  {agent.testingStatus.lastTestRun && (
-                    <>Last: {formatRelativeTime(agent.testingStatus.lastTestRun)}</>
-                  )}
-                </div>
-                
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => navigate(`/agent-testing?agentId=${agent.agent_id}`)}
-                  style={{ width: '100%', fontSize: theme.typography.fontSize.xs }}
-                >
-                  View History →
-                </Button>
-              </div>
-            )}
-            
-            {/* Testing Summary Badge - NEW */}
-            <TestingSummaryBadge agentId={agent.agent_id} />
+
             
             <div className="d-flex gap-1" style={{ marginTop: theme.spacing.sm }}>
               <Button
@@ -334,17 +236,14 @@ const AgentCard: React.FC<AgentCardProps> = ({
                 size="sm"
                 onClick={() => onToggle(agent.agent_id)}
                 className="flex-fill"
-                title={isActive ? 'Deactivate agent' : 'Activate agent'}
+                title={isActive ? 'Disable agent' : 'Enable agent'}
                 style={{ 
                   borderColor: '#6b7280', 
                   color: '#6b7280',
                   backgroundColor: 'transparent'
                 }}
               >
-                {isDeployed 
-                  ? 'Toggle' 
-                  : (isActive ? 'Deactivate' : 'Activate')
-                }
+                {isActive ? 'Disable' : 'Enable'}
               </Button>
               <Button
                 variant="outline-secondary"

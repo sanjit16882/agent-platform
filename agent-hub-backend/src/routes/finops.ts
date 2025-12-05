@@ -23,7 +23,11 @@ router.get('/dashboard', async (req, res) => {
         monthlyProjection: costData.serviceBreakdown.bedrock * 30,
         costSavings: 0,
         trend: 'stable',
-        usage: `${costData.modelBreakdown.reduce((sum, m) => sum + m.executionCount, 0)} API Calls`,
+        usage: costData.modelBreakdown.length > 0 
+          ? `${costData.modelBreakdown.reduce((sum, m) => sum + m.executionCount, 0)} API Calls`
+          : costData.serviceBreakdown.bedrock > 0 
+            ? 'See AWS Console for usage details'
+            : '0 API Calls',
         description: 'Real AWS Bedrock AI model costs'
       },
       {
@@ -58,13 +62,16 @@ router.get('/dashboard', async (req, res) => {
       }
     ];
 
+    // Calculate total projected monthly cost from individual services
+    const totalProjectedMonthlyCost = services.reduce((sum, service) => sum + service.monthlyProjection, 0);
+
     const response = {
       success: true,
       data: {
         totalCost: costData.totalCost,
         budgetUtilization: costData.budgetUtilization,
         activeAlerts: costData.activeAlerts,
-        projectedMonthlyCost: costData.projectedMonthlyCost,
+        projectedMonthlyCost: totalProjectedMonthlyCost, // Use calculated projection instead of historical average
         serviceBreakdown: costData.serviceBreakdown,
         services,
         modelBreakdown: costData.modelBreakdown,

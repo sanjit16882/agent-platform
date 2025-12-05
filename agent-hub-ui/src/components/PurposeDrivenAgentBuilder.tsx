@@ -4,6 +4,7 @@ import { Card, Form, Button, Alert, Row, Col, Badge, Modal } from 'react-bootstr
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
 import VectorDBConfigSection from './VectorDBConfigSection';
+import TestRecommendationSection from './TestRecommendationSection';
 
 interface AgentTemplate {
   id: string;
@@ -44,6 +45,10 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
   const [selectedBedrockModel, setSelectedBedrockModel] = useState<string>('');
   const [selectedBedrockModelName, setSelectedBedrockModelName] = useState<string>('');
   
+  // Test Recommendation state
+  const [agentCategory, setAgentCategory] = useState<string | null>(null);
+  const [agentSubType, setAgentSubType] = useState<string | null>(null);
+
   // Testing framework state
   const [showTestingModal, setShowTestingModal] = useState(false);
   const [testingStatus, setTestingStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -252,6 +257,12 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
   const createAgent = async () => {
     if (!selectedTemplate || !validateInputs()) return;
 
+    // Validate AI model selection
+    if (!selectedBedrockModel) {
+      setError('Please select an AI model for your agent. This is required to power the agent\'s intelligence.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -265,7 +276,8 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
           name: agentName,
           description: agentDescription,
           purpose: customPurpose,
-          category: customCategory || 'Custom',
+          category: agentCategory || customCategory || 'Custom',
+          agentSubType: agentSubType || null,
           inputSchema: customInputs,
           outputSchema: customOutputs,
           processingLogic: processingLogic,
@@ -284,6 +296,8 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
           templateId: selectedTemplate.id,
           name: agentName,
           description: agentDescription,
+          category: agentCategory || null,
+          agentSubType: agentSubType || null,
           customInputs: inputs,
           bedrockConfig: selectedBedrockModel ? {
             defaultModel: selectedBedrockModel,
@@ -494,16 +508,24 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
                     />
                   </Form.Group>
 
-                  <BedrockModelSelector
-                    selectedModel={selectedBedrockModel}
-                    onModelChange={(modelId, modelName) => {
-                      setSelectedBedrockModel(modelId);
-                      setSelectedBedrockModelName(modelName);
-                    }}
-                    agentType={selectedTemplate?.category?.toLowerCase() || 'custom'}
-                    label="AI Model"
-                    required={false}
-                  />
+                  {/* AI Model Selection */}
+                  <Card className="mb-3">
+                    <Card.Header>
+                      <strong>AI Model</strong>
+                    </Card.Header>
+                    <Card.Body>
+                      <BedrockModelSelector
+                        selectedModel={selectedBedrockModel}
+                        onModelChange={(modelId, modelName) => {
+                          setSelectedBedrockModel(modelId);
+                          setSelectedBedrockModelName(modelName);
+                        }}
+                        agentType={selectedTemplate?.category?.toLowerCase() || 'custom'}
+                        label=""
+                        required={true}
+                      />
+                    </Card.Body>
+                  </Card>
 
                   {/* Vector DB Configuration */}
                   <VectorDBConfigSection
@@ -512,6 +534,17 @@ const PurposeDrivenAgentBuilder: React.FC = () => {
                     onCostChange={setVectorDBCost}
                     onLatencyChange={setVectorDBLatency}
                   />
+
+                  {/* Test Recommendation Section */}
+                  <div className="mt-3">
+                    <TestRecommendationSection
+                      category={agentCategory}
+                      agentSubType={agentSubType}
+                      onCategoryChange={setAgentCategory}
+                      onAgentSubTypeChange={setAgentSubType}
+                      disabled={loading}
+                    />
+                  </div>
 
                   {selectedTemplate.id === 'custom' && (
                     <>

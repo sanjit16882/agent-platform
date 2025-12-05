@@ -70,79 +70,9 @@ export class AgentExecutionService {
   }
 
   getAllAgentConfigs(): AgentTemplate[] {
-    // Return all built-in templates plus some common agent types
-    const additionalAgents: AgentTemplate[] = [
-      {
-        id: 'test-generator',
-        name: 'Test Generator',
-        category: 'Testing',
-        description: 'Generates test cases for code',
-        purpose: 'Create comprehensive test suites for various programming languages',
-        inputSchema: [
-          {
-            name: 'source_code',
-            type: 'string',
-            required: true,
-            description: 'Source code to generate tests for'
-          },
-          {
-            name: 'framework',
-            type: 'string',
-            required: false,
-            description: 'Testing framework preference (jest, mocha, pytest, etc.)'
-          }
-        ],
-        outputSchema: [
-          {
-            name: 'test_cases',
-            type: 'string',
-            description: 'Generated test code'
-          },
-          {
-            name: 'coverage_analysis',
-            type: 'object',
-            description: 'Test coverage analysis'
-          }
-        ],
-        processingLogic: 'Analyze source code structure and generate comprehensive test cases'
-      },
-      {
-        id: 'security-scanner',
-        name: 'Security Scanner',
-        category: 'Security',
-        description: 'Scans code for security vulnerabilities',
-        purpose: 'Identify potential security issues and provide remediation suggestions',
-        inputSchema: [
-          {
-            name: 'source_code',
-            type: 'string',
-            required: true,
-            description: 'Source code to scan for vulnerabilities'
-          },
-          {
-            name: 'severity_level',
-            type: 'string',
-            required: false,
-            description: 'Minimum severity level to report (low, medium, high, critical)'
-          }
-        ],
-        outputSchema: [
-          {
-            name: 'security_issues',
-            type: 'array',
-            description: 'List of identified security issues'
-          },
-          {
-            name: 'suggestions',
-            type: 'array',
-            description: 'Remediation suggestions'
-          }
-        ],
-        processingLogic: 'Scan code for common security vulnerabilities and provide detailed analysis'
-      }
-    ];
-
-    return [...AGENT_TEMPLATES, ...additionalAgents];
+    // Return empty array to prevent hardcoded templates from appearing
+    // Only S3 agents will be shown in the UI
+    return [];
   }
 
   async executeAgent(agentId: string, input: any): Promise<any> {

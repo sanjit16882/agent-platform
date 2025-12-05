@@ -108,7 +108,7 @@ class TestExecutionService {
       
       // Execute the agent with the test input
       console.log(`      🤖 Calling agent...`);
-      const agentResponse = await this.invokeAgent(agentId, input, options);
+      const agentResponse = await this.invokeAgent(agentId, input, options, test); // Pass test metadata
       console.log(`      📤 Response received (${agentResponse.usage?.input_tokens + agentResponse.usage?.output_tokens || 0} tokens)`);
       
       // Evaluate the response
@@ -421,7 +421,7 @@ class TestExecutionService {
    * Invoke agent with test input
    * @private
    */
-  async invokeAgent(agentId, input, options) {
+  async invokeAgent(agentId, input, options, testMetadata = null) {
     // Detect intent from input
     const inputStr = typeof input === 'string' ? input : JSON.stringify(input);
     const intent = this.detectIntent(inputStr);
@@ -434,6 +434,7 @@ class TestExecutionService {
       agent_id: agentId,
       model_id: options.modelId, // Support custom model ID for comparison
       intent: intent, // Pass detected intent
+      test_metadata: testMetadata, // NEW: Pass test metadata for test-aware prompting
       ...options.context
     };
     

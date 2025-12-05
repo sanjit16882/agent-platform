@@ -3,12 +3,17 @@ export interface Agent {
   name: string;
   description: string;
   category: string;
+  agentSubType?: string | null; // Agent sub-type for test recommendations
   usage_count: number;
   average_rating: number;
   created_at: string;
-  agent_type: 'production' | 'demo' | 'hybrid' | 'builtin' | 's3_custom' | 'template' | 'custom';
+  agent_type: 'production' | 'demo' | 'hybrid' | 'builtin' | 's3_custom' | 'template' | 'custom' | 'purpose-driven' | string;
   configuration_status?: 'complete' | 'partial' | 'not_started';
   status?: 'active' | 'inactive' | 'configuring' | 'error';
+  selectedModel?: string; // Selected Bedrock model ID
+  selectedModelName?: string; // Selected Bedrock model name
+  bedrockConfig?: any; // Bedrock configuration
+  mcpIntegration?: any; // MCP integration configuration
   // Testing Framework Integration (Task 16.1)
   testingStatus?: {
     lastTestRun?: string;

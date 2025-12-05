@@ -9,6 +9,7 @@ import { nlpApi } from '../services/nlpApi';
 import { AgentComponent, AgentType } from '../types/hybridAgent';
 import BedrockStatus from './BedrockStatus';
 import BedrockModelSelector from './BedrockModelSelector';
+import TestRecommendationSection from './TestRecommendationSection';
 import { IntelligenceModal } from './IntelligenceModal';
 import { realTestingFramework } from '../services/realTestingFramework';
 
@@ -85,6 +86,10 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
   const [selectedBedrockModel, setSelectedBedrockModel] = useState<string>('');
   const [selectedBedrockModelName, setSelectedBedrockModelName] = useState<string>('');
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  
+  // Test Recommendation state
+  const [agentCategory, setAgentCategory] = useState<string | null>(null);
+  const [agentSubType, setAgentSubType] = useState<string | null>(null);
   
   // Enhanced testing framework state
   const [showComprehensiveTestingModal, setShowComprehensiveTestingModal] = useState(false);
@@ -789,6 +794,8 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
       const request = {
         name: generatedAgent.name,
         description: generatedAgent.description,
+        category: agentCategory || null,
+        agentSubType: agentSubType || null,
         components: generatedAgent.components.map(comp => ({
           id: comp.id,
           type: comp.type,
@@ -1170,6 +1177,17 @@ const NaturalLanguageAgentGenerator: React.FC = () => {
                           agentType="hybrid"
                           label="AI Model for Agent"
                           required={false}
+                        />
+                      </div>
+
+                      {/* Test Recommendation Section */}
+                      <div className="mt-3">
+                        <TestRecommendationSection
+                          category={agentCategory}
+                          agentSubType={agentSubType}
+                          onCategoryChange={setAgentCategory}
+                          onAgentSubTypeChange={setAgentSubType}
+                          disabled={loading}
                         />
                       </div>
                     </Col>

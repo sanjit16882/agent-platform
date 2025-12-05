@@ -151,7 +151,9 @@ Format each recommendation as:
 - Priority: [High/Medium/Low]
 
 ## Output Format
-Return your analysis as a JSON object with this structure:
+CRITICAL: You MUST respond with ONLY a valid JSON object. Do NOT include any explanatory text before or after the JSON.
+
+Return your analysis as a JSON object with this EXACT structure:
 {
   "hallucinations": [
     {
@@ -200,7 +202,11 @@ Return your analysis as a JSON object with this structure:
   ]
 }
 
-Be specific, actionable, and focus on the most impactful improvements.`;
+IMPORTANT: 
+- If there are NO issues in a category, use an empty array: []
+- If all tests passed, focus on "reasoningStrengths" and provide general "recommendations" for future improvements
+- Your response must be ONLY the JSON object, nothing else
+- Be specific, actionable, and focus on the most impactful improvements`;
   }
 
   /**
@@ -233,42 +239,59 @@ Be specific, actionable, and focus on the most impactful improvements.`;
       
       // Extract JSON from response
       const content = responseBody.content[0].text;
-      console.log('📝 Bedrock response content:', content.substring(0, 500));
+      console.log('📝 Bedrock response content (first 300 chars):', content.substring(0, 300));
       
       // Try multiple JSON extraction methods
       let insights = null;
       
-      // Method 1: Try markdown code block
-      const markdownMatch = content.match(/```json\n([\s\S]*?)\n```/);
-      if (markdownMatch) {
-        try {
-          insights = JSON.parse(markdownMatch[1]);
-          console.log('✅ Extracted JSON from markdown code block');
-        } catch (e) {
-          console.warn('⚠️ Failed to parse markdown JSON:', e.message);
-        }
+      // Method 1: Try parsing entire content as JSON (most common)
+      try {
+        insights = JSON.parse(content);
+        console.log('✅ Parsed entire content as JSON');
+      } catch (e) {
+        console.log('⚠️ Content is not pure JSON, trying extraction methods...');
       }
       
-      // Method 2: Try finding JSON object
+      // Method 2: Try markdown code block with json tag
       if (!insights) {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
+        const markdownMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        if (markdownMatch) {
           try {
-            insights = JSON.parse(jsonMatch[0]);
-            console.log('✅ Extracted JSON from content');
+            insights = JSON.parse(markdownMatch[1].trim());
+            console.log('✅ Extracted JSON from ```json code block');
           } catch (e) {
-            console.warn('⚠️ Failed to parse extracted JSON:', e.message);
+            console.warn('⚠️ Failed to parse markdown JSON:', e.message);
           }
         }
       }
       
-      // Method 3: Try parsing entire content as JSON
+      // Method 3: Try markdown code block without json tag
       if (!insights) {
-        try {
-          insights = JSON.parse(content);
-          console.log('✅ Parsed entire content as JSON');
-        } catch (e) {
-          console.warn('⚠️ Failed to parse entire content as JSON:', e.message);
+        const codeBlockMatch = content.match(/```\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch) {
+          try {
+            insights = JSON.parse(codeBlockMatch[1].trim());
+            console.log('✅ Extracted JSON from ``` code block');
+          } catch (e) {
+            console.warn('⚠️ Failed to parse code block JSON:', e.message);
+          }
+        }
+      }
+      
+      // Method 4: Try finding JSON object (greedy match for nested objects)
+      if (!insights) {
+        // Find the first { and last } to capture the entire JSON object
+        const firstBrace = content.indexOf('{');
+        const lastBrace = content.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          const jsonStr = content.substring(firstBrace, lastBrace + 1);
+          try {
+            insights = JSON.parse(jsonStr);
+            console.log('✅ Extracted JSON by finding braces');
+          } catch (e) {
+            console.warn('⚠️ Failed to parse extracted JSON:', e.message);
+          }
         }
       }
       

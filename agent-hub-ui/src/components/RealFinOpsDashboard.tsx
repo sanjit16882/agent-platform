@@ -100,11 +100,13 @@ const RealFinOpsDashboard: React.FC = () => {
 
       // Use real AWS cost data from backend
       const realAWSCosts = finOpsData.data;
+      console.log('🔍 FinOps Dashboard - Real AWS Costs:', realAWSCosts);
       const totalExecutions = agentInsights.reduce((sum, agent) => sum + agent.executionCount, 0);
       const totalCostSavings = agentInsights.reduce((sum, agent) => sum + agent.costSavings, 0);
 
       // Real cost breakdown from actual AWS usage
       const services = realAWSCosts.services || [];
+      console.log('🔍 FinOps Dashboard - Services:', services);
       const realCosts: RealCostData[] = services.map((service: any) => ({
         service: service.name,
         provider: service.provider,
@@ -165,17 +167,22 @@ const RealFinOpsDashboard: React.FC = () => {
       const totalRealCost = realAWSCosts.totalCost || 0;
       const projectedMonthlyCost = realAWSCosts.projectedMonthlyCost || 0;
       
+      // Calculate monthly savings rate (total savings / 12 months)
+      const monthlySavings = totalCostSavings / 12;
+      
       const roi: ROIMetrics = {
         totalInvestment: projectedMonthlyCost,
         totalSavings: totalCostSavings,
         netROI: totalCostSavings - projectedMonthlyCost,
         roiPercentage: projectedMonthlyCost > 0 ? 
           ((totalCostSavings - projectedMonthlyCost) / projectedMonthlyCost) * 100 : 0,
-        paybackPeriod: projectedMonthlyCost > 0 ? 
-          (projectedMonthlyCost / (totalCostSavings / 12)) : 0, // months
+        paybackPeriod: monthlySavings > 0 ? 
+          (projectedMonthlyCost / monthlySavings) : 0, // months - only calculate if there are savings
         automationHours: totalExecutions * 2.5 // Estimate 2.5 hours saved per execution
       };
 
+      console.log('💰 FinOps Dashboard - Setting cost data:', realCosts);
+      console.log('💰 FinOps Dashboard - Cost data length:', realCosts.length);
       setCostData(realCosts);
       setBudgetAlerts(alerts);
       setROIMetrics(roi);
@@ -628,7 +635,11 @@ const RealFinOpsDashboard: React.FC = () => {
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                           <span>Payback Period:</span>
-                          <strong>{roiMetrics.paybackPeriod.toFixed(1)} months</strong>
+                          <strong>
+                            {roiMetrics.paybackPeriod > 0 && isFinite(roiMetrics.paybackPeriod)
+                              ? `${roiMetrics.paybackPeriod.toFixed(1)} months`
+                              : 'N/A (no savings yet)'}
+                          </strong>
                         </div>
                       </div>
                     </Card.Body>

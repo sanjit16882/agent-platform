@@ -165,7 +165,6 @@ const DDTFWorkflow: React.FC = () => {
             selectedAgent={workflowState.selectedAgent}
             selectedTests={workflowState.selectedTests}
             onSelectTests={(tests) => updateWorkflowState({ selectedTests: tests })}
-            onSamplePromptsLoaded={(prompts) => updateWorkflowState({ samplePrompts: prompts })}
           />
         );
       case 4:
@@ -180,9 +179,9 @@ const DDTFWorkflow: React.FC = () => {
         const allTests = [...workflowState.selectedTests, ...workflowState.customTests];
         return (
           <StepProvideInput
+            selectedAgent={workflowState.selectedAgent}
             selectedTests={allTests}
             testInputs={workflowState.testInputs}
-            samplePrompts={workflowState.samplePrompts}
             onUpdateInputs={(inputs) => updateWorkflowState({ testInputs: inputs })}
           />
         );

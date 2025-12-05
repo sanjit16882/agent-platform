@@ -10,6 +10,7 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 import MultimodalTestingPanel from './MultimodalTestingPanel';
 import ApiCliDocumentationPage from './ApiCliDocumentationPage';
 import BatchTestExecution from './BatchTestExecution';
+import IntegrationGuidePage from './IntegrationGuidePage';
 
 /**
  * AgentTestingMain Component
@@ -34,6 +35,7 @@ const AgentTestingMain: React.FC = () => {
         <Route path="/multimodal" element={<MultimodalTestingPanel agentId="" testId="" />} />
         <Route path="/api-cli-docs" element={<ApiCliDocumentationPage />} />
         <Route path="/batch" element={<BatchTestExecution />} />
+        <Route path="/integrations" element={<IntegrationGuidePage />} />
       </Routes>
     );
   }
@@ -212,6 +214,31 @@ const AgentTestingMain: React.FC = () => {
               style={{ width: '100%' }}
             >
               Start Batch Testing →
+            </Button>
+          </Card.Body>
+        </Card>
+
+        {/* Integration Guide */}
+        <Card>
+          <Card.Header>
+            <Card.Title>🔌 Integration Guide</Card.Title>
+          </Card.Header>
+          <Card.Body>
+            <p style={{ marginBottom: theme.spacing.lg, color: theme.colors.textSecondary }}>
+              Integrate DDTF with popular testing frameworks and test management tools.
+            </p>
+            <ul style={{ marginBottom: theme.spacing.lg, paddingLeft: theme.spacing.xl }}>
+              <li>Robot Framework, Selenium, Cypress</li>
+              <li>JUnit, Pytest integration</li>
+              <li>TestRail, Xray, qTest</li>
+              <li>CI/CD pipeline examples</li>
+            </ul>
+            <Button
+              variant="primary"
+              onClick={() => navigate('/agent-testing/integrations')}
+              style={{ width: '100%' }}
+            >
+              View Integration Guide →
             </Button>
           </Card.Body>
         </Card>

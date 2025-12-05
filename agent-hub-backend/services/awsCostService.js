@@ -1,5 +1,4 @@
 const { CostExplorerClient, GetCostAndUsageCommand, GetDimensionValuesCommand } = require('@aws-sdk/client-cost-explorer');
-const { fromEnv, fromIni } = require('@aws-sdk/credential-providers');
 
 class AWSCostService {
   constructor() {
@@ -10,21 +9,15 @@ class AWSCostService {
 
   async initializeClient() {
     try {
-      // Try to initialize AWS client with credentials (env vars, AWS CLI, or IAM roles)
-      // The SDK will automatically try: env vars -> AWS CLI config -> IAM roles
       this.client = new CostExplorerClient({
         region: process.env.AWS_REGION || 'us-east-1'
-        // Credentials will be automatically loaded by AWS SDK
       });
       
-      // Test the connection
       await this.testConnection();
       this.isConfigured = true;
       console.log('✅ AWS Cost Explorer client initialized successfully');
-      console.log('✅ Using AWS Account:', process.env.AWS_ACCOUNT_ID || 'auto-detected');
     } catch (error) {
       console.log('⚠️ AWS Cost Explorer not configured:', error.message);
-      console.log('⚠️ Error details:', error);
       this.isConfigured = false;
     }
   }
@@ -52,17 +45,14 @@ class AWSCostService {
       const endDate = new Date();
       const startDate = new Date();
       
-      // Option 1: Fetch last N days
       if (daysBack > 0) {
         startDate.setDate(startDate.getDate() - daysBack);
       } else {
-        // Option 2: Fetch current month only
-        startDate.setDate(1); // First day of current month
+        startDate.setDate(1);
       }
       
       console.log(`📅 Fetching costs from ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
 
-      // Get cost and usage data
       const costCommand = new GetCostAndUsageCommand({
         TimePeriod: {
           Start: startDate.toISOString().split('T')[0],
@@ -79,23 +69,6 @@ class AWSCostService {
       });
 
       const costResponse = await this.client.send(costCommand);
-      
-      // Log the raw response for debugging
-      console.log('📊 Cost Explorer Response:', JSON.stringify({
-        resultCount: costResponse.ResultsByTime?.length || 0,
-        hasGroups: costResponse.ResultsByTime?.[0]?.Groups?.length || 0,
-        dateRange: {
-          start: startDate.toISOString().split('T')[0],
-          end: endDate.toISOString().split('T')[0]
-        },
-        sampleResult: costResponse.ResultsByTime?.[0] ? {
-          date: costResponse.ResultsByTime[0].TimePeriod?.Start,
-          groupCount: costResponse.ResultsByTime[0].Groups?.length,
-          firstGroup: costResponse.ResultsByTime[0].Groups?.[0]
-        } : null
-      }, null, 2));
-      
-      // Process the response
       return this.processCostData(costResponse, startDate, endDate);
     } catch (error) {
       console.error('❌ Error fetching real AWS costs:', error);
@@ -108,10 +81,6 @@ class AWSCostService {
     let totalCost = 0;
     const dailyCosts = [];
 
-    console.log('🔍 Processing Cost Explorer data...');
-    console.log('📊 Total time periods:', costResponse.ResultsByTime?.length || 0);
-
-    // Process results by time period
     costResponse.ResultsByTime.forEach(result => {
       const date = result.TimePeriod.Start;
       let dailyTotal = 0;
@@ -137,20 +106,10 @@ class AWSCostService {
       totalCost += dailyTotal;
     });
 
-    console.log('💰 Total Cost Calculated:', totalCost);
-    console.log('📊 Services with costs:', Object.keys(services).filter(s => services[s].totalCost > 0));
-    
-    // Log detailed breakdown
-    Object.keys(services).filter(s => services[s].totalCost > 0).forEach(serviceName => {
-      console.log(`   - ${serviceName}: $${services[serviceName].totalCost.toFixed(4)}`);
-    });
-
-    // Calculate projections and format data
     const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
     const daysSoFar = new Date().getDate();
     const projectedMonthlyCost = (totalCost / daysSoFar) * daysInMonth;
 
-    // Get all AWS services from your actual account (both with costs and without costs)
     const allAWSServices = [
       'Claude 3 Haiku (Amazon Bedrock Edition)',
       'Amazon Simple Storage Service',
@@ -166,7 +125,6 @@ class AWSCostService {
       'EC2 - Other'
     ];
 
-    // Format services for frontend - include all services, showing real costs or $0.00
     const formattedServices = allAWSServices.map(serviceName => {
       const realService = services[serviceName];
       const hasRealCost = realService && realService.totalCost > 0;
@@ -186,7 +144,6 @@ class AWSCostService {
       };
     });
 
-    // Sort by cost (services with costs first, then alphabetically)
     formattedServices.sort((a, b) => {
       if (a.monthlyCost > 0 && b.monthlyCost === 0) return -1;
       if (a.monthlyCost === 0 && b.monthlyCost > 0) return 1;
@@ -197,7 +154,7 @@ class AWSCostService {
     return {
       totalCost: Math.round(totalCost * 100) / 100,
       dailyAverage: Math.round((totalCost / daysSoFar) * 100) / 100,
-      monthlyBudget: 5000, // This could be fetched from AWS Budgets API
+      monthlyBudget: 5000,
       budgetUtilization: Math.round((totalCost / 5000) * 100 * 100) / 100,
       costTrend: totalCost > 100 ? 'increasing' : 'stable',
       services: formattedServices,
@@ -209,8 +166,8 @@ class AWSCostService {
         totalCost: Math.round(totalCost * 100) / 100,
         projectedMonthly: Math.round(projectedMonthlyCost * 100) / 100,
         budgetRemaining: Math.round((5000 - totalCost) * 100) / 100,
-        costSavingsOpportunity: 0, // Would need additional analysis
-        roiPercentage: 150 // Would need business metrics
+        costSavingsOpportunity: 0,
+        roiPercentage: 150
       },
       dataInfo: {
         source: 'AWS Cost Explorer API',
@@ -245,7 +202,6 @@ class AWSCostService {
   }
 
   getUsageInfo(serviceName) {
-    // This would ideally come from usage metrics
     const usageMap = {
       'Claude 3 Haiku (Amazon Bedrock Edition)': 'API Calls',
       'Amazon Simple Storage Service': 'Storage',
@@ -275,14 +231,12 @@ class AWSCostService {
     return 'stable';
   }
 
-  // Get AWS account information
   async getAccountInfo() {
     if (!this.isConfigured) {
       return { configured: false, message: 'AWS credentials not configured' };
     }
 
     try {
-      // This would use STS to get account info
       return {
         configured: true,
         region: process.env.AWS_REGION || 'us-east-1',
@@ -290,6 +244,121 @@ class AWSCostService {
       };
     } catch (error) {
       return { configured: false, message: error.message };
+    }
+  }
+
+  // ===== AGENT COST ESTIMATION METHODS =====
+  
+  async getCostEstimate(agentId) {
+    const db = require('./database');
+    
+    try {
+      const history = await db.query(
+        `SELECT AVG(cost) as avg_cost, COUNT(*) as execution_count
+         FROM test_costs 
+         WHERE test_id = ?
+         LIMIT 10`,
+        [agentId]
+      );
+      
+      if (history && history[0] && history[0].execution_count > 0) {
+        return {
+          agentId,
+          estimatedCostPerExecution: history[0].avg_cost,
+          basedOnExecutions: history[0].execution_count,
+          confidence: 'high'
+        };
+      }
+    } catch (error) {
+      console.log('⚠️ Could not fetch historical cost data:', error.message);
+    }
+    
+    return {
+      agentId,
+      estimatedCostPerExecution: 0.05,
+      basedOnExecutions: 0,
+      confidence: 'low',
+      note: 'Estimate based on typical agent execution costs'
+    };
+  }
+
+  async saveCostData(costData) {
+    const db = require('./database');
+    
+    try {
+      const result = await db.execute(
+        `INSERT INTO test_costs (run_id, test_id, model_id, input_tokens, output_tokens, total_tokens, cost)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          costData.executionId || costData.runId,
+          costData.agentId || costData.testId,
+          costData.modelId || 'unknown',
+          costData.inputTokens || 0,
+          costData.outputTokens || 0,
+          costData.totalTokens || 0,
+          costData.cost || 0
+        ]
+      );
+      
+      return {
+        id: result.lastID,
+        saved: true,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('❌ Error saving cost data:', error);
+      throw error;
+    }
+  }
+
+  async getCostHistory(agentId, limit = 50) {
+    const db = require('./database');
+    
+    try {
+      const history = await db.query(
+        `SELECT * FROM test_costs 
+         WHERE test_id = ? 
+         ORDER BY created_at DESC 
+         LIMIT ?`,
+        [agentId, limit]
+      );
+      
+      return history || [];
+    } catch (error) {
+      console.error('❌ Error fetching cost history:', error);
+      throw error;
+    }
+  }
+
+  async getCostAnalytics(startDate, endDate) {
+    const db = require('./database');
+    
+    try {
+      const analytics = await db.query(
+        `SELECT 
+          test_id as agentId,
+          model_id as modelId,
+          COUNT(*) as executionCount,
+          SUM(cost) as totalCost,
+          AVG(cost) as avgCost,
+          SUM(total_tokens) as totalTokens,
+          AVG(total_tokens) as avgTokens
+         FROM test_costs
+         WHERE created_at >= ? AND created_at <= ?
+         GROUP BY test_id, model_id
+         ORDER BY totalCost DESC`,
+        [startDate || '2024-01-01', endDate || new Date().toISOString()]
+      );
+      
+      return {
+        analytics: analytics || [],
+        period: { startDate, endDate },
+        totalExecutions: analytics.reduce((sum, a) => sum + a.executionCount, 0),
+        totalCost: analytics.reduce((sum, a) => sum + a.totalCost, 0)
+      };
+    } catch (error) {
+      console.error('❌ Error fetching cost analytics:', error);
+      throw error;
     }
   }
 }

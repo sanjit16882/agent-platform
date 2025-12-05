@@ -87,9 +87,9 @@ const StepInsights: React.FC<StepInsightsProps> = ({
         throw new Error('No insights data in response');
       }
       
-      // Check if using fallback insights
+      // Check if using fallback insights (this is OK, fallback insights are accurate)
       if (data.metadata?.fallback) {
-        console.warn('⚠️ Using fallback insights:', data.metadata.fallbackReason);
+        console.log('ℹ️ Using rule-based insights (fallback):', data.metadata.fallbackReason);
       }
       
       setInsights(generatedInsights);

@@ -11,6 +11,75 @@ import { vectorDBConfigService } from '../services/vectorDBConfigService';
 const router = express.Router();
 
 /**
+ * GET /api/v1/vector-db/access-requests
+ * Get all access requests for admin review
+ */
+router.get('/access-requests', (req: Request, res: Response) => {
+  try {
+    // Return mock access requests for now
+    // In production, this would query the database
+    res.json({
+      success: true,
+      data: []
+    });
+  } catch (error: any) {
+    console.error('Error fetching access requests:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/v1/vector-db/access-requests/:id/approve
+ * Approve an access request
+ */
+router.post('/access-requests/:id/approve', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { comments } = req.body;
+    
+    // Mock approval - in production, update database
+    res.json({
+      success: true,
+      message: 'Access request approved',
+      data: { id, status: 'approved', comments }
+    });
+  } catch (error: any) {
+    console.error('Error approving request:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/v1/vector-db/access-requests/:id/reject
+ * Reject an access request
+ */
+router.post('/access-requests/:id/reject', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    // Mock rejection - in production, update database
+    res.json({
+      success: true,
+      message: 'Access request rejected',
+      data: { id, status: 'rejected', reason }
+    });
+  } catch (error: any) {
+    console.error('Error rejecting request:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/v1/vector-db/providers
  * Get all providers (approved + marketplace)
  */

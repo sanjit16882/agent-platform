@@ -317,7 +317,12 @@ class AdvancedAnalyticsService {
 
       const agents = await agentApiService.getAgents();
       const s3Agents = await s3AgentService.getAllAgents();
-      const allAgents = [...agents, ...s3Agents];
+      
+      // Deduplicate agents by ID (S3 agents take precedence)
+      const agentMapTemp = new Map();
+      agents.forEach(a => agentMapTemp.set(a.id, a));
+      s3Agents.forEach(a => agentMapTemp.set(a.id, a)); // S3 agents override templates
+      const allAgents = Array.from(agentMapTemp.values());
       
       console.log('📊 Analytics Debug - Agent IDs in catalog:', allAgents.map(a => a.id));
       

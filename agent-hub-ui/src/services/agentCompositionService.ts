@@ -46,12 +46,12 @@ class AgentCompositionService {
   // Component Templates
   getComponentTemplates(): ComponentTemplate[] {
     return [
-      // LLM Components
+      // AI Components (LLM-based)
       {
         id: 'llm-text-analyzer',
         type: 'llm',
-        name: 'Text Analyzer',
-        description: 'Analyzes text content using LLM',
+        name: 'AI Text Analyzer',
+        description: 'AI component that analyzes text content using language models',
         defaultConfig: {
           provider: 'custom',
           model: 'llm-model',
@@ -63,14 +63,14 @@ class AgentCompositionService {
         },
         requiredInputs: ['text'],
         providedOutputs: ['analysis', 'sentiment', 'summary'],
-        category: 'Natural Language Processing',
+        category: 'AI Processing',
         complexity: 'simple'
       },
       {
         id: 'llm-code-generator',
         type: 'llm',
-        name: 'Code Generator',
-        description: 'Generates code based on requirements',
+        name: 'AI Code Generator',
+        description: 'AI component that generates code based on requirements',
         defaultConfig: {
           provider: 'custom',
           model: 'llm-model',

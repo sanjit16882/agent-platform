@@ -29,17 +29,16 @@ export interface CategorizedAgents {
  * Categorizes agents into active (production), available (demo), and template groups
  */
 export const categorizeAgents = (agents: Agent[]): CategorizedAgents => {
-  // Include ALL agent types from S3 storage as active agents
-  // This includes: production, hybrid, builtin, s3_custom, custom, and any other types
-  const activeAgents = agents.filter(agent => 
-    agent.agent_type === 'production' || 
-    agent.agent_type === 'hybrid' || 
-    agent.agent_type === 'builtin' ||
-    agent.agent_type === 's3_custom' ||
-    agent.agent_type === 'custom' // ← ADDED: Include custom agents from S3
-  );
-  const availableAgents = agents.filter(agent => agent.agent_type === 'demo');
+  // ROBUST APPROACH: Include ALL agents EXCEPT demo and template as active
+  // This way, any new agent type will automatically work without code changes
   const templateAgents = agents.filter(agent => agent.agent_type === 'template');
+  const availableAgents = agents.filter(agent => agent.agent_type === 'demo');
+  
+  // Active agents = everything else (production, hybrid, custom, purpose-driven, etc.)
+  const activeAgents = agents.filter(agent => 
+    agent.agent_type !== 'demo' && 
+    agent.agent_type !== 'template'
+  );
 
   const stats: AgentCategoryStats = {
     total: agents.length,
@@ -189,11 +188,12 @@ export const filterAgents = (
  * Sorts agents by priority (production first, then hybrid, builtin, then demo, then by usage count)
  */
 export const sortAgentsByPriority = (agents: Agent[]): Agent[] => {
-  const typePriority = {
+  const typePriority: Record<string, number> = {
     'production': 1,
     'hybrid': 2,
     's3_custom': 3,
-    'custom': 3, // Same priority as s3_custom
+    'custom': 3,
+    'purpose-driven': 3,
     'builtin': 4,
     'demo': 5,
     'template': 6
@@ -201,7 +201,10 @@ export const sortAgentsByPriority = (agents: Agent[]): Agent[] => {
 
   return [...agents].sort((a, b) => {
     // Sort by agent type priority first
-    const priorityDiff = typePriority[a.agent_type] - typePriority[b.agent_type];
+    // Unknown types default to priority 3 (same as custom)
+    const priorityA = typePriority[a.agent_type] ?? 3;
+    const priorityB = typePriority[b.agent_type] ?? 3;
+    const priorityDiff = priorityA - priorityB;
     if (priorityDiff !== 0) return priorityDiff;
     
     // Then by usage count (descending)
