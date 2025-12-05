@@ -443,6 +443,262 @@ const AgentTestingDashboard: React.FC = () => {
           </Row>
         </Tab>
 
+        {/* Coming Soon Tab */}
+        <Tab eventKey="coming-soon" title="🚀 Coming Soon">
+          <Card>
+            <Card.Header style={{ backgroundColor: '#f0f8ff', borderBottom: '2px solid #0066cc' }}>
+              <h5 style={{ margin: 0, color: '#0066cc' }}>
+                🚀 Advanced Agent Testing Capabilities - Coming Soon
+              </h5>
+              <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#666' }}>
+                Next-generation testing features for production-grade AI agents
+              </p>
+            </Card.Header>
+            <Card.Body>
+              <Row>
+                {/* Feature 1 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        🛡️ 1. Agent Hallucination Firewall (AHF)
+                      </h6>
+                      <Badge bg="danger" className="mb-2">Real-Time Protection</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> Agents hallucinate while calling tools, APIs, or executing code. 
+                        No realtime firewall exists to intercept hallucinated actions.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> A runtime service that sits between Agent ↔ Tools/APIs
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Scores every agent action for hallucination risk</li>
+                        <li>Blocks suspicious tool calls</li>
+                        <li>Auto-retries with self-correction</li>
+                        <li>Logs hallucination metrics</li>
+                        <li>Integrates with AWS AgentCore, Vertex, Azure</li>
+                      </ul>
+                      <Badge bg="info">Enterprise Demand: High</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 2 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        ⚡ 2. Agent Load Testing & Reliability Simulator
+                      </h6>
+                      <Badge bg="warning" className="mb-2">Chaos Engineering</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> No one knows how agents behave under stress, concurrency, 
+                        memory drift, tool failures, or ill-structured prompts.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> "Chaos Monkey for Agents"
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Random tool outages & latency injection</li>
+                        <li>Wrong data injection</li>
+                        <li>Long-session memory fatigue</li>
+                        <li>Multi-agent concurrency battles</li>
+                        <li>Produces reliability scores & behavioral drift graphs</li>
+                      </ul>
+                      <Badge bg="info">Market: Production Deployments</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 3 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        📋 3. Agent Audit & Compliance Recorder
+                      </h6>
+                      <Badge bg="success" className="mb-2">Enterprise Compliance</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> Enterprises need proof of agent actions, traceability, 
+                        and compliance for HIPAA/GDPR/SOX. No standard exists.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> Compliance layer for agents
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Records every agent step</li>
+                        <li>Hashes actions for immutability</li>
+                        <li>Provides "agent replay" capability</li>
+                        <li>Generates compliance-ready reports</li>
+                        <li>Integrates with AWS AgentCore + Azure + Google</li>
+                      </ul>
+                      <Badge bg="info">First-Mover Advantage</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 4 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        📊 4. Agent Behavior Drift Detector
+                      </h6>
+                      <Badge bg="primary" className="mb-2">Continuous Monitoring</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> LLMs drift over time (model updates cause different behavior). 
+                        Agents silently become worse or unpredictable.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> Continuous behavior monitoring SaaS
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Runs baseline tests daily</li>
+                        <li>Detects behavioral drift</li>
+                        <li>Notifies if model updates break agents</li>
+                        <li>Suggests fixes automatically</li>
+                        <li>Auto-retrains guardrails</li>
+                      </ul>
+                      <Badge bg="info">Essential for Production</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 5 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        🎯 5. Multi-Agent Task Orchestrator (MATO)
+                      </h6>
+                      <Badge bg="dark" className="mb-2">Kubernetes for Agents</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> Companies need multiple agents collaborating 
+                        (Planner, Research, Database, Code, QA agents). No universal orchestrator exists.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> Universal orchestration framework
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Auto-routing tasks between agents</li>
+                        <li>Resource allocation & conflict resolution</li>
+                        <li>Cross-agent memory management</li>
+                        <li>Performance scoring</li>
+                        <li>Think: Kubernetes for Agents</li>
+                      </ul>
+                      <Badge bg="info">Huge Demand</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 6 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        📈 6. Agent Telemetry & Observability Platform
+                      </h6>
+                      <Badge bg="info" className="mb-2">Datadog for Agents</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> AgentCore gives logs, but no deep observability, 
+                        behavior visualization, or intent-path graphs.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> Advanced observability dashboard
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Agent reasoning timeline</li>
+                        <li>Tool call heatmap</li>
+                        <li>Token cost optimizer</li>
+                        <li>Error clustering</li>
+                        <li>Self-improving insights</li>
+                      </ul>
+                      <Badge bg="info">Underserved Market</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 7 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        🔐 7. Real-Time Agent Identity & Permission Brain
+                      </h6>
+                      <Badge bg="danger" className="mb-2">Dynamic IAM</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> Agents need identity and dynamic access to user data, 
+                        APIs, files, and SaaS accounts. Cloud IAM isn't built for autonomous agents.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> Permission Brain for agents
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Creates temporary identities for agents</li>
+                        <li>Issues scoped permissions dynamically</li>
+                        <li>Expires them automatically</li>
+                        <li>Logs every access decision</li>
+                        <li>Prevents privilege escalation</li>
+                      </ul>
+                      <Badge bg="info">Critical Gap</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+
+                {/* Feature 8 */}
+                <Col md={6} className="mb-4">
+                  <Card style={{ height: '100%', border: '2px solid #e3f2fd' }}>
+                    <Card.Body>
+                      <h6 style={{ color: '#0066cc', marginBottom: '12px' }}>
+                        🏪 8. Agent Benchmark Marketplace
+                      </h6>
+                      <Badge bg="success" className="mb-2">Plug & Play Tests</Badge>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Problem:</strong> Every company tests agents manually. 
+                        No standardized benchmark marketplace exists.
+                      </p>
+                      <p style={{ fontSize: '13px', marginBottom: '12px' }}>
+                        <strong>Solution:</strong> MLPerf for Agents
+                      </p>
+                      <ul style={{ fontSize: '12px', marginBottom: '12px' }}>
+                        <li>Anyone can publish agent test suites</li>
+                        <li>Teams run them against any agent</li>
+                        <li>Results shareable as scores</li>
+                        <li>Includes hallucination, security, reasoning, performance</li>
+                        <li>Community-driven test library</li>
+                      </ul>
+                      <Badge bg="info">Platform Play</Badge>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* Call to Action */}
+              <Card style={{ backgroundColor: '#fff3cd', border: '2px solid #ffc107', marginTop: '24px' }}>
+                <Card.Body>
+                  <Row>
+                    <Col md={9}>
+                      <h6 style={{ marginBottom: '8px' }}>
+                        <strong>🎯 Want Early Access to These Features?</strong>
+                      </h6>
+                      <p style={{ fontSize: '13px', marginBottom: 0 }}>
+                        These advanced testing capabilities are in active development. 
+                        Join our early access program to influence the roadmap and get priority access 
+                        when features launch. Perfect for enterprises deploying production AI agents.
+                      </p>
+                    </Col>
+                    <Col md={3} style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                      <Button variant="warning" size="lg">
+                        📝 Request Early Access
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </Card.Body>
+          </Card>
+        </Tab>
+
         {/* Integration Guide Tab */}
         <Tab eventKey="integration" title="Enterprise Integration">
           <Card>
