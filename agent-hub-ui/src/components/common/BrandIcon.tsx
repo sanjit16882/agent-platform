@@ -41,7 +41,7 @@ export const BrandIcon: React.FC<BrandIconProps> = ({
     );
   }
   
-  const IconComponent = brandIcon.component;
+  const IconComponent = brandIcon.component as React.ComponentType<any>;
   const iconColor = color || brandIcon.color;
   
   return (
@@ -54,12 +54,12 @@ export const BrandIcon: React.FC<BrandIconProps> = ({
         ...style
       }}
     >
-      {React.createElement(IconComponent, {
-        size,
-        color: iconColor,
-        style: { flexShrink: 0 },
-        title: brandIcon.displayName
-      })}
+      <IconComponent 
+        size={size} 
+        color={iconColor}
+        style={{ flexShrink: 0 }}
+        title={brandIcon.displayName}
+      />
       {showLabel && (
         <span style={{ fontSize: '14px', color: '#333', fontWeight: 500 }}>
           {brandIcon.displayName}
