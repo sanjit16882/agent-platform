@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Form, Card, Alert, Badge, ProgressBar } from 'react-bootstrap';
+import { BrandIcon } from './common/BrandIcon';
 
 interface VectorDBConfig {
   enabled: boolean;
@@ -209,13 +210,24 @@ const VectorDBConfigSection: React.FC<VectorDBConfigSectionProps> = ({
                     <option value="mock">Mock (Development)</option>
                     {providers.map(provider => (
                       <option key={provider.id} value={provider.id}>
-                        {provider.icon} {provider.name} {provider.status === 'marketplace' ? '(Marketplace)' : ''}
+                        {provider.name} {provider.status === 'marketplace' ? '(Marketplace)' : ''}
                       </option>
                     ))}
                   </>
                 )}
               </Form.Select>
-              <Form.Text className="text-muted">
+              
+              {/* Show selected provider with brand icon */}
+              {config.provider && config.provider !== 'mock' && (
+                <div className="mt-2 d-flex align-items-center gap-2">
+                  <BrandIcon name={config.provider} size={20} />
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    {providers.find(p => p.id === config.provider)?.name || config.provider}
+                  </span>
+                </div>
+              )}
+              
+              <Form.Text className="text-muted d-block mt-2">
                 {providers.find(p => p.id === config.provider)?.description || 'Select the vector database provider for storing embeddings'}
               </Form.Text>
             </Form.Group>
