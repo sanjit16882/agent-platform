@@ -6,16 +6,18 @@
 async function analyzeQueryDynamically(query, userId, context) {
   console.log('📝 Intelligence Fix: Analyzing query:', query ? query.substring(0, 50) : 'empty');
   
-  // Return a basic analysis structure
+  // Return the complete structure expected by the backend
   return {
     success: true,
     analysis: {
-      intent: 'general_query',
+      intent: 'agent_creation',
       confidence: 0.8,
       category: 'general',
       suggestedActions: [],
       context: context || {}
     },
+    existingAgents: [],  // Required field
+    suggestions: [],     // Required field
     recommendations: [],
     timestamp: new Date().toISOString()
   };
