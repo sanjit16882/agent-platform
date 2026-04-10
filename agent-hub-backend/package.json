@@ -1,7 +1,7 @@
 {
   "name": "agent-hub-backend",
   "version": "1.0.0",
-  "description": "AgentHub API Gateway - REST API for agent execution and management",
+  "description": "Multi-cloud AI Agent Platform — build, deploy & manage agents with MCP, Vector DB, Multi-Agent workflows, Learning Analytics, Enterprise integrations and more",
   "main": "dist/server.js",
   "scripts": {
     "start": "cross-env PORT=3002 node dist/reliable-server.js",

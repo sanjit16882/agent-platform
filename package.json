@@ -1,7 +1,7 @@
 {
   "name": "agent-hub-platform",
   "version": "1.0.0",
-  "description": "Agent Lifecycle Management Platform with separate local and production configurations",
+  "description": "Multi-cloud AI Agent Platform — build, deploy & manage agents with MCP, Vector DB, Multi-Agent workflows, Learning Analytics, Enterprise integrations and more",
   "scripts": {
     "start:local": "cross-env NODE_ENV=local npm run start:backend:local",
     "start:prod": "cross-env NODE_ENV=production npm run start:backend:prod",

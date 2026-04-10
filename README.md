@@ -1,6 +1,6 @@
 # Agent Hub Platform
 
-A comprehensive AI agent management platform with real-time learning analytics, intelligent routing, and enterprise-grade features.
+Multi-cloud AI Agent Platform — build, deploy & manage agents with MCP, Vector DB, Multi-Agent workflows, Learning Analytics, Enterprise integrations and more.
 
 ---
 
