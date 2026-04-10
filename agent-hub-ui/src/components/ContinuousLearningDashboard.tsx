@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Badge, Button, Modal, Table, ProgressBar } from 'react-bootstrap';
 import { API_CONFIG } from '../config/api';
-// React Icons compatibility fix - using createElement
-const { createElement } = React;
-const icons = require('react-icons/fa');
 
-const FaBrain = (props: any) => createElement(icons.FaBrain, props);
-const FaChartLine = (props: any) => createElement(icons.FaChartLine, props);
-const FaUsers = (props: any) => createElement(icons.FaUsers, props);
-const FaLightbulb = (props: any) => createElement(icons.FaLightbulb, props);
-const FaCog = (props: any) => createElement(icons.FaCog, props);
-const FaFlask = (props: any) => createElement(icons.FaFlask, props);
-const FaDownload = (props: any) => createElement(icons.FaDownload, props);
+// React Icons compatibility fix - using createElement with fallback
+const { createElement } = React;
+let icons: any = {};
+try { icons = require('react-icons/fa'); } catch (_) {}
+
+const iconFallback = (name: string) => (props: any) => {
+  const icon = icons[name];
+  return icon ? createElement(icon, props) : createElement('span', props, '');
+};
+
+const FaBrain = iconFallback('FaBrain');
+const FaChartLine = iconFallback('FaChartLine');
+const FaUsers = iconFallback('FaUsers');
+const FaLightbulb = iconFallback('FaLightbulb');
+const FaCog = iconFallback('FaCog');
+const FaFlask = iconFallback('FaFlask');
+const FaDownload = iconFallback('FaDownload');
 
 interface LearningAnalytics {
   totalUsers: number;
