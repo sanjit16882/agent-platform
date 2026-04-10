@@ -214,7 +214,8 @@ app.use((req, _res, next) => {
 // Initialize Multi-Agent Coordinator
 const MultiAgentCoordinator = require('./services/multiAgentCoordinator');
 const BedrockService = require('./services/bedrockService');
-const bedrockService = new BedrockService();
+// bedrockService exports an instance, not a class — use directly
+const bedrockService = BedrockService && BedrockService.callBedrock ? BedrockService : (BedrockService.default || BedrockService);
 const multiAgentCoordinator = new MultiAgentCoordinator(bedrockService, s3Storage);
 console.log('✅ Multi-Agent Coordinator initialized');
 
