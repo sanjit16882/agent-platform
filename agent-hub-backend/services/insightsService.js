@@ -28,6 +28,22 @@ class InsightsService {
    * @returns {Promise<Object>} Generated insights
    */
   async generateInsights(agentName, testSuiteName, testType, overallScore, testResults, modelId) {
+    // TEMPORARY: Skip Bedrock call and use rule-based insights directly
+    // The Bedrock API format needs to be fixed for the specific model being used
+    console.log('📊 Using rule-based insights (Bedrock temporarily disabled)');
+    
+    return {
+      success: true,
+      insights: this.getFallbackInsights(testResults),
+      metadata: {
+        model: 'rule-based',
+        generatedAt: new Date().toISOString(),
+        fallback: true,
+        fallbackReason: 'Bedrock API format needs adjustment - using enhanced rule-based insights'
+      }
+    };
+    
+    /* BEDROCK CALL - TEMPORARILY DISABLED
     // Format test results for the prompt
     const formattedResults = this.formatTestResults(testResults);
     
@@ -44,6 +60,7 @@ class InsightsService {
     const insights = await this.callBedrock(prompt, modelId || this.defaultModel, testResults);
     
     return insights;
+    */
   }
 
   /**
@@ -214,17 +231,32 @@ IMPORTANT:
    * @private
    */
   async callBedrock(prompt, modelId, testResults = []) {
-    const payload = {
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: 2000,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    };
+    console.log(`🤖 Calling Bedrock with model: ${modelId}`);
+    
+    // Prepare payload based on model type
+    let payload;
+    
+    if (modelId.includes('anthropic.claude')) {
+      // Claude models use Messages API format
+      payload = {
+        anthropic_version: "bedrock-2023-05-31",
+        max_tokens: 2000,
+        temperature: 0.3,
+        messages: [
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
+      };
+    } else {
+      // Other models might use different format
+      payload = {
+        prompt: prompt,
+        max_tokens_to_sample: 2000,
+        temperature: 0.3
+      };
+    }
 
     const command = new InvokeModelCommand({
       modelId: modelId,
@@ -232,6 +264,8 @@ IMPORTANT:
       accept: "application/json",
       body: JSON.stringify(payload)
     });
+    
+    console.log(`📤 Sending request to Bedrock...`);
 
     try {
       const response = await this.bedrockClient.send(command);
@@ -312,11 +346,21 @@ IMPORTANT:
       
     } catch (error) {
       console.error('❌ Bedrock insights generation error:', error);
+      console.error('❌ Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+        statusCode: error.$metadata?.httpStatusCode
+      });
       
       // If the primary model fails and we haven't tried the fallback yet, try it
-      if (modelId !== this.fallbackModel && error.message.includes('model')) {
+      if (modelId !== this.fallbackModel && !error.message.includes('Malformed')) {
         console.log(`🔄 Retrying with fallback model: ${this.fallbackModel}`);
-        return await this.callBedrock(prompt, this.fallbackModel, testResults);
+        try {
+          return await this.callBedrock(prompt, this.fallbackModel, testResults);
+        } catch (fallbackError) {
+          console.error('❌ Fallback model also failed:', fallbackError.message);
+        }
       }
       
       // Return fallback insights (pass testResults for accurate analysis)
@@ -341,6 +385,7 @@ IMPORTANT:
    */
   getFallbackInsights(testResults) {
     console.log(`📊 Generating fallback insights for ${testResults.length} test results`);
+    console.log(`📊 Sample test result:`, JSON.stringify(testResults[0], null, 2));
     
     const insights = {
       hallucinations: [],
@@ -357,49 +402,69 @@ IMPORTANT:
     const passRate = totalTests > 0 ? (passedTests.length / totalTests) * 100 : 0;
     
     console.log(`📊 Pass rate: ${passRate.toFixed(1)}% (${passedTests.length}/${totalTests})`);
+    console.log(`📊 Failed tests:`, failedTests.length);
     
     // Analyze individual failed tests for specific issues
     failedTests.forEach((test, index) => {
-      const testNum = test.test_number || index + 1;
+      const testNum = test.test_number || test.testNumber || index + 1;
       const testName = test.test_name || test.testName || 'Unnamed Test';
-      const explanation = test.explanation || '';
-      const category = test.test_category || test.testCategory || 'unknown';
+      const explanation = (test.explanation || '').toLowerCase();
+      const category = (test.test_category || test.testCategory || 'unknown').toLowerCase();
+      
+      console.log(`📊 Analyzing failed test #${testNum}: ${testName}, category: ${category}`);
       
       // Check for hallucination indicators
-      if (explanation.toLowerCase().includes('hallucin') || 
-          explanation.toLowerCase().includes('fabricat') ||
-          explanation.toLowerCase().includes('made up') ||
-          category === 'hallucination') {
+      if (explanation.includes('hallucin') || 
+          explanation.includes('fabricat') ||
+          explanation.includes('made up') ||
+          explanation.includes('incorrect') ||
+          explanation.includes('inaccurate') ||
+          category.includes('hallucination') ||
+          category.includes('accuracy')) {
         insights.hallucinations.push({
           testNumber: testNum,
           issue: testName,
-          evidence: explanation,
+          evidence: test.explanation || 'Test failed',
           severity: test.score < 50 ? 'High' : 'Medium'
         });
       }
       
       // Check for intent/understanding issues
-      if (explanation.toLowerCase().includes('misunderstood') ||
-          explanation.toLowerCase().includes('wrong intent') ||
-          explanation.toLowerCase().includes('incorrect interpretation') ||
-          category === 'intent_detection') {
+      if (explanation.includes('misunderstood') ||
+          explanation.includes('wrong intent') ||
+          explanation.includes('incorrect interpretation') ||
+          explanation.includes('did not understand') ||
+          category.includes('intent') ||
+          category.includes('understanding')) {
         insights.misunderstoodIntent.push({
           testNumber: testNum,
           expectedIntent: test.expected_output || test.expectedOutput || 'Unknown',
           actualResponse: (test.actual_output || test.actualOutput || '').substring(0, 200),
-          whyItFailed: explanation
+          whyItFailed: test.explanation || 'Test failed'
         });
       }
       
       // Check for tool usage issues
-      if (explanation.toLowerCase().includes('tool') ||
-          explanation.toLowerCase().includes('function') ||
-          category === 'tool_usage') {
+      if (explanation.includes('tool') ||
+          explanation.includes('function') ||
+          category.includes('tool')) {
         insights.toolUsageErrors.push({
           testNumber: testNum,
           expectedTool: test.expected_output || test.expectedOutput || 'Unknown',
-          actualBehavior: explanation,
+          actualBehavior: test.explanation || 'Test failed',
           errorType: 'Execution error'
+        });
+      }
+      
+      // If no specific category matched, add as general issue
+      if (!explanation.includes('hallucin') && 
+          !explanation.includes('misunderstood') && 
+          !explanation.includes('tool')) {
+        insights.misunderstoodIntent.push({
+          testNumber: testNum,
+          expectedIntent: testName,
+          actualResponse: (test.actual_output || test.actualOutput || '').substring(0, 200),
+          whyItFailed: test.explanation || 'Test failed - see details'
         });
       }
     });
@@ -508,7 +573,7 @@ IMPORTANT:
     });
     
     // Add strengths
-    if (passedTests > 0) {
+    if (passedTests.length > 0) {
       const strongCategories = Object.entries(categoryCounts)
         .filter(([_, stats]) => stats.passed === stats.total)
         .map(([category, _]) => category);
@@ -531,6 +596,8 @@ IMPORTANT:
         priority: "High"
       });
     }
+    
+    console.log('📊 FINAL FALLBACK INSIGHTS:', JSON.stringify(insights, null, 2));
     
     return insights;
   }

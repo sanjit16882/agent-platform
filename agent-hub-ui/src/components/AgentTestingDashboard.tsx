@@ -673,28 +673,7 @@ const AgentTestingDashboard: React.FC = () => {
                 </Col>
               </Row>
 
-              {/* Call to Action */}
-              <Card style={{ backgroundColor: '#fff3cd', border: '2px solid #ffc107', marginTop: '24px' }}>
-                <Card.Body>
-                  <Row>
-                    <Col md={9}>
-                      <h6 style={{ marginBottom: '8px' }}>
-                        <strong>🎯 Want Early Access to These Features?</strong>
-                      </h6>
-                      <p style={{ fontSize: '13px', marginBottom: 0 }}>
-                        These advanced testing capabilities are in active development. 
-                        Join our early access program to influence the roadmap and get priority access 
-                        when features launch. Perfect for enterprises deploying production AI agents.
-                      </p>
-                    </Col>
-                    <Col md={3} style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                      <Button variant="warning" size="lg">
-                        📝 Request Early Access
-                      </Button>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
+
             </Card.Body>
           </Card>
         </Tab>

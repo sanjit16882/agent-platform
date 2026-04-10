@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Alert, ProgressBar, Table } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Alert, ProgressBar, Table, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { advancedAnalyticsService } from '../services/advancedAnalyticsService';
 import { agentApiService } from '../services/agentApiService';
 import { s3AgentService } from '../services/s3AgentService';
@@ -32,6 +32,12 @@ const RealAnalyticsDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [systemHealth, setSystemHealth] = useState<any>(null);
+  const [costBreakdown, setCostBreakdown] = useState<{
+    totalTests: number;
+    manualCost: number;
+    apiCost: number;
+    netSavings: number;
+  } | null>(null);
 
   useEffect(() => {
     loadRealData();
@@ -62,6 +68,32 @@ const RealAnalyticsDashboard: React.FC = () => {
       
       const totalExecutions = agentInsights.reduce((sum, agent) => sum + agent.executionCount, 0);
       const totalCostSavings = agentInsights.reduce((sum, agent) => sum + agent.costSavings, 0);
+      
+      // Calculate detailed cost breakdown for tooltip
+      // Get execution history to calculate total tests and API costs
+      const executionHistory = (advancedAnalyticsService as any).executionHistory || [];
+      const testExecutions = executionHistory.filter((e: any) => e.testRun);
+      const totalTests = testExecutions.reduce((sum: number, e: any) => sum + (e.totalTests || 0), 0);
+      const totalApiCost = testExecutions.reduce((sum: number, e: any) => {
+        // Estimate API cost from execution data
+        const cost = e.cost || (e.inputTokens + e.outputTokens) * 0.000001; // Rough estimate
+        return sum + cost;
+      }, 0);
+      const manualCost = totalTests * 15; // $15 per manual test
+      
+      setCostBreakdown({
+        totalTests,
+        manualCost,
+        apiCost: totalApiCost,
+        netSavings: totalCostSavings
+      });
+      
+      console.log('💰 Cost Breakdown Calculated:', {
+        totalTests,
+        manualCost,
+        apiCost: totalApiCost,
+        netSavings: totalCostSavings
+      });
       
       // Calculate weighted average success rate based on execution counts
       const agentsWithExecutions = agentInsights.filter(agent => agent.executionCount > 0);
@@ -118,10 +150,12 @@ const RealAnalyticsDashboard: React.FC = () => {
 
       console.log('📊 Real Analytics - Data Summary:');
       console.log(`  - Total agents in catalog: ${allAgents.length}`);
+      console.log(`  - Agent names:`, allAgents.map(a => a.name));
       console.log(`  - Agents with executions: ${agentInsights.filter(i => i.executionCount > 0).length}`);
       console.log(`  - Total executions: ${totalExecutions}`);
       console.log(`  - Overall success rate: ${avgSuccessRate.toFixed(2)}%`);
       console.log(`  - Agent table rows: ${agentTableData.length}`);
+      console.log(`  - Agent table data:`, agentTableData.map(a => ({ name: a.name, executions: a.executions })));
 
       setAgentData(agentTableData.sort((a, b) => b.executions - a.executions));
       setSystemHealth(systemMetrics);
@@ -277,15 +311,15 @@ const RealAnalyticsDashboard: React.FC = () => {
         </Col>
         
         <Col md={3}>
-          <Card style={{ height: '100%', borderColor: getStatusColor(realMetrics.successRate, { good: 90, warning: 80 }) }}>
+          <Card style={{ height: '100%', borderColor: realMetrics.totalExecutions === 0 ? theme.colors.textMuted : getStatusColor(realMetrics.successRate, { good: 90, warning: 80 }) }}>
             <Card.Body style={{ textAlign: 'center', padding: theme.spacing.xl }}>
               <div style={{ 
                 fontSize: theme.typography.fontSize['3xl'],
-                color: getStatusColor(realMetrics.successRate, { good: 90, warning: 80 }),
+                color: realMetrics.totalExecutions === 0 ? theme.colors.textMuted : getStatusColor(realMetrics.successRate, { good: 90, warning: 80 }),
                 fontWeight: theme.typography.fontWeight.bold,
                 marginBottom: theme.spacing.sm
               }}>
-                {formatPercentage(realMetrics.successRate)}
+                {realMetrics.totalExecutions === 0 ? 'N/A' : formatPercentage(realMetrics.successRate)}
               </div>
               <div style={{ 
                 color: theme.colors.textMuted,
@@ -294,8 +328,8 @@ const RealAnalyticsDashboard: React.FC = () => {
               }}>
                 Success Rate
               </div>
-              <Badge bg={getStatusBadge(realMetrics.successRate, { good: 90, warning: 80 })}>
-                {realMetrics.successRate >= 90 ? 'Excellent' : realMetrics.successRate >= 80 ? 'Good' : 'Needs Attention'}
+              <Badge bg={realMetrics.totalExecutions === 0 ? 'secondary' : getStatusBadge(realMetrics.successRate, { good: 90, warning: 80 })}>
+                {realMetrics.totalExecutions === 0 ? 'No Data' : realMetrics.successRate >= 90 ? 'Excellent' : realMetrics.successRate >= 80 ? 'Good' : 'Needs Attention'}
               </Badge>
             </Card.Body>
           </Card>
@@ -327,28 +361,71 @@ const RealAnalyticsDashboard: React.FC = () => {
         </Col>
         
         <Col md={3}>
-          <Card style={{ height: '100%', borderColor: theme.colors.success }}>
-            <Card.Body style={{ textAlign: 'center', padding: theme.spacing.xl }}>
-              <div style={{ 
-                fontSize: theme.typography.fontSize['3xl'],
-                color: theme.colors.success,
-                fontWeight: theme.typography.fontWeight.bold,
-                marginBottom: theme.spacing.sm
-              }}>
-                {formatCurrency(realMetrics.totalCostSavings)}
-              </div>
-              <div style={{ 
-                color: theme.colors.textMuted,
-                fontSize: theme.typography.fontSize.sm,
-                marginBottom: theme.spacing.sm
-              }}>
-                Cost Savings
-              </div>
-              <Badge bg="success">
-                Actual ROI
-              </Badge>
-            </Card.Body>
-          </Card>
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip id="cost-savings-tooltip">
+                <div style={{ textAlign: 'left', padding: '8px' }}>
+                  <strong>Cost Savings Calculation:</strong>
+                  <br />
+                  <br />
+                  <strong>Your Data:</strong>
+                  <br />
+                  {costBreakdown ? (
+                    <>
+                      • Total Tests: <strong>{costBreakdown.totalTests.toLocaleString()}</strong>
+                      <br />
+                      • Manual Cost: <strong>{formatCurrency(costBreakdown.manualCost)}</strong>
+                      <br />
+                      <small style={{ marginLeft: '10px' }}>({costBreakdown.totalTests} tests × $15/test)</small>
+                      <br />
+                      • API Cost: <strong>{formatCurrency(costBreakdown.apiCost)}</strong>
+                      <br />
+                      <small style={{ marginLeft: '10px' }}>(Actual Bedrock charges)</small>
+                      <br />
+                      • Net Savings: <strong>{formatCurrency(costBreakdown.netSavings)}</strong>
+                      <br />
+                      <br />
+                      <small>
+                        <em>ROI: {costBreakdown.apiCost > 0 ? ((costBreakdown.netSavings / costBreakdown.apiCost) * 100).toLocaleString(undefined, {maximumFractionDigits: 0}) : '∞'}%</em>
+                      </small>
+                    </>
+                  ) : (
+                    <>Loading...</>
+                  )}
+                  <br />
+                  <br />
+                  <small style={{ color: '#888' }}>
+                    Manual testing cost based on industry average:<br />
+                    15-30 min per test @ $30-60/hr = $15/test
+                  </small>
+                </div>
+              </Tooltip>
+            }
+          >
+            <Card style={{ height: '100%', borderColor: theme.colors.success, cursor: 'help' }}>
+              <Card.Body style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+                <div style={{ 
+                  fontSize: theme.typography.fontSize['3xl'],
+                  color: theme.colors.success,
+                  fontWeight: theme.typography.fontWeight.bold,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  {formatCurrency(realMetrics.totalCostSavings)}
+                </div>
+                <div style={{ 
+                  color: theme.colors.textMuted,
+                  fontSize: theme.typography.fontSize.sm,
+                  marginBottom: theme.spacing.sm
+                }}>
+                  Cost Savings ℹ️
+                </div>
+                <Badge bg="success">
+                  Actual ROI
+                </Badge>
+              </Card.Body>
+            </Card>
+          </OverlayTrigger>
         </Col>
       </Row>
 
@@ -417,30 +494,42 @@ const RealAnalyticsDashboard: React.FC = () => {
               {systemHealth && (
                 <>
                   <div className="mb-3">
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>S3 Requests (24h)</span>
-                      <Badge bg="primary">{systemHealth.s3RequestCount.toLocaleString()}</Badge>
+                      <Badge bg="primary">{systemHealth.s3RequestCount.toLocaleString()} requests</Badge>
                     </div>
+                    <small style={{ color: theme.colors.textMuted, fontSize: '0.75rem' }}>
+                      ~{(systemHealth.s3RequestCount / Math.max(1, realMetrics.totalExecutions)).toFixed(1)} per execution
+                    </small>
                   </div>
                   <div className="mb-3">
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Bedrock Invocations</span>
-                      <Badge bg="warning">{systemHealth.bedrockInvocations.toLocaleString()}</Badge>
+                      <Badge bg="warning">{systemHealth.bedrockInvocations.toLocaleString()} calls</Badge>
                     </div>
+                    <small style={{ color: theme.colors.textMuted, fontSize: '0.75rem' }}>
+                      AI model API calls
+                    </small>
                   </div>
                   <div className="mb-3">
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>Lambda Executions</span>
-                      <Badge bg="success">{systemHealth.lambdaExecutions.toLocaleString()}</Badge>
+                      <Badge bg="secondary">{systemHealth.lambdaExecutions.toLocaleString()}</Badge>
                     </div>
+                    <small style={{ color: theme.colors.textMuted, fontSize: '0.75rem' }}>
+                      Not using Lambda (direct API)
+                    </small>
                   </div>
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>CloudWatch Alerts</span>
                       <Badge bg={systemHealth.cloudWatchAlerts === 0 ? 'success' : 'danger'}>
-                        {systemHealth.cloudWatchAlerts}
+                        {systemHealth.cloudWatchAlerts} {systemHealth.cloudWatchAlerts === 1 ? 'alert' : 'alerts'}
                       </Badge>
                     </div>
+                    <small style={{ color: theme.colors.textMuted, fontSize: '0.75rem' }}>
+                      {systemHealth.cloudWatchAlerts === 0 ? 'All systems healthy' : 'Requires attention'}
+                    </small>
                   </div>
                 </>
               )}
@@ -484,9 +573,13 @@ const RealAnalyticsDashboard: React.FC = () => {
                           <strong>{agent.executions}</strong>
                         </td>
                         <td>
-                          <Badge bg={getStatusBadge(agent.successRate, { good: 90, warning: 80 })}>
-                            {formatPercentage(agent.successRate)}
-                          </Badge>
+                          {agent.executions === 0 ? (
+                            <Badge bg="secondary">N/A</Badge>
+                          ) : (
+                            <Badge bg={getStatusBadge(agent.successRate, { good: 90, warning: 80 })}>
+                              {formatPercentage(agent.successRate)}
+                            </Badge>
+                          )}
                         </td>
                         <td>
                           <small>{agent.lastUsed.toLocaleDateString()}</small>

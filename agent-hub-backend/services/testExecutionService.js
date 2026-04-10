@@ -560,20 +560,23 @@ class TestExecutionService {
         if (ruleName.includes('accuracy') || ruleName.includes('correctness')) {
           // Check if output seems reasonable and relevant
           const hasContent = actualOutput && actualOutput.length > 10;
-          const hasRelevantKeywords = this.checkRelevance(input, actualOutput);
+          const relevanceScore = this.calculateRelevanceScore(input, actualOutput, expectedBehavior);
           
-          if (hasContent && hasRelevantKeywords) {
-            ruleScore = 85;
-            feedback = 'Response contains relevant information and addresses the input';
+          // Use relevance score (0-100) directly
+          ruleScore = relevanceScore;
+          
+          if (relevanceScore >= 80) {
+            feedback = 'Response is highly accurate and relevant to the input';
             passed = true;
-          } else if (hasContent) {
-            ruleScore = 60;
-            feedback = 'Response has content but may not fully address the question';
-            issues.push(`${ruleName}: Response lacks relevant keywords from input`);
+          } else if (relevanceScore >= 60) {
+            feedback = 'Response is mostly accurate with some minor gaps';
+            passed = true;
+          } else if (relevanceScore >= 40) {
+            feedback = 'Response has some accuracy issues';
+            issues.push(`${ruleName}: Response could be more accurate`);
           } else {
-            ruleScore = 30;
-            feedback = 'Response is too short or missing';
-            issues.push(`${ruleName}: Insufficient response content`);
+            feedback = 'Response has significant accuracy problems';
+            issues.push(`${ruleName}: Low accuracy - response doesn't match expected behavior`);
           }
         } else if (ruleName.includes('hallucination')) {
           // Check for fabricated information
@@ -939,6 +942,51 @@ class TestExecutionService {
     const union = new Set([...words1, ...words2]);
     
     return intersection.size / union.size;
+  }
+
+  /**
+   * Calculate relevance score (0-100) based on input, output, and expected behavior
+   * @private
+   */
+  calculateRelevanceScore(input, actualOutput, expectedBehavior) {
+    if (!actualOutput || actualOutput.length < 10) {
+      return 20; // Very low score for insufficient output
+    }
+
+    let score = 50; // Base score
+
+    // Check keyword overlap with input (30 points)
+    const inputKeywords = this.extractKeywords(input);
+    const outputLower = actualOutput.toLowerCase();
+    const matchedKeywords = inputKeywords.filter(kw => outputLower.includes(kw.toLowerCase()));
+    const keywordScore = inputKeywords.length > 0 ? (matchedKeywords.length / inputKeywords.length) * 30 : 15;
+    score += keywordScore;
+
+    // Check expected behavior match (20 points)
+    if (expectedBehavior) {
+      const behaviorKeywords = this.extractKeywords(expectedBehavior);
+      const matchedBehavior = behaviorKeywords.filter(kw => outputLower.includes(kw.toLowerCase()));
+      const behaviorScore = behaviorKeywords.length > 0 ? (matchedBehavior.length / behaviorKeywords.length) * 20 : 10;
+      score += behaviorScore;
+    } else {
+      score += 10; // Partial credit if no expected behavior defined
+    }
+
+    return Math.min(100, Math.round(score));
+  }
+
+  /**
+   * Extract keywords from text (words longer than 3 characters, excluding common words)
+   * @private
+   */
+  extractKeywords(text) {
+    const commonWords = new Set(['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use', 'this', 'that', 'with', 'have', 'from', 'they', 'will', 'what', 'been', 'more', 'when', 'your', 'than', 'them', 'some', 'time', 'very', 'just', 'know', 'take', 'into', 'year', 'good', 'make', 'over', 'such', 'come', 'only', 'work', 'also', 'well', 'back', 'call', 'down', 'even', 'find', 'give', 'hand', 'high', 'keep', 'last', 'life', 'long', 'made', 'many', 'most', 'much', 'must', 'name', 'need', 'next', 'part', 'same', 'seem', 'show', 'side', 'tell', 'turn', 'want', 'week', 'were', 'where', 'which', 'while', 'would', 'about', 'after', 'again', 'could', 'every', 'first', 'found', 'great', 'house', 'large', 'might', 'never', 'other', 'place', 'point', 'right', 'small', 'still', 'their', 'there', 'these', 'thing', 'think', 'those', 'three', 'under', 'water', 'world', 'write', 'should', 'because', 'through', 'between', 'without', 'another', 'however', 'something']);
+    
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, ' ')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && !commonWords.has(word));
   }
 
   /**

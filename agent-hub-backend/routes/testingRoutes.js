@@ -527,6 +527,7 @@ router.get('/agents/:agentId/runs', async (req, res) => {
 router.post('/insights/generate', async (req, res) => {
   try {
     const {
+      run_id,
       agentName,
       testSuiteName,
       testType,
@@ -535,10 +536,34 @@ router.post('/insights/generate', async (req, res) => {
       modelId
     } = req.body;
     
+    // If run_id is provided, fetch the run data
+    if (run_id) {
+      const run = await testExecutionService.getRunById(run_id);
+      if (!run) {
+        return res.status(404).json({
+          success: false,
+          error: 'Test run not found'
+        });
+      }
+      
+      // Generate insights from the run data
+      const result = await insightsService.generateInsights(
+        run.agentName || 'Unknown Agent',
+        run.testSuiteName || 'Test Suite',
+        run.testType || 'General',
+        run.overallScore || 0,
+        run.results || [],
+        run.modelId
+      );
+      
+      return res.json(result);
+    }
+    
+    // Otherwise, use the provided fields
     if (!agentName || !testResults || !Array.isArray(testResults)) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: agentName, testResults'
+        error: 'Missing required fields: run_id OR (agentName + testResults)'
       });
     }
     
@@ -550,6 +575,8 @@ router.post('/insights/generate', async (req, res) => {
       testResults,
       modelId
     );
+    
+    console.log('📤 Sending insights response:', JSON.stringify(result, null, 2));
     
     res.json(result);
     

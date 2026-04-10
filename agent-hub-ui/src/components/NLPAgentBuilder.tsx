@@ -212,19 +212,33 @@ const NLPAgentBuilder: React.FC = () => {
           const safeType = (data.analysis.intent === 'create-agent') ? 'Custom' : (data.analysis.intent || 'Custom');
           const noMatchesFound = data.analysis.intent === 'create-agent' && data.existingAgents?.length === 0;
           
+          // Calculate the REAL confidence based on existing agent matches
+          // If no agents match, confidence should be 0 (not the semantic analysis confidence)
+          let realConfidence = 0;
+          if (data.existingAgents && data.existingAgents.length > 0) {
+            // Use the highest similarity score from existing agents
+            const highestSimilarity = Math.max(...data.existingAgents.map((a: any) => a.similarity || 0));
+            realConfidence = highestSimilarity;
+          }
+          
           const dynamicAnalysis = {
             type: safeType,
             frameworks: data.analysis.frameworks || [],
             languages: data.analysis.languages || [],
             capabilities: data.analysis.capabilities || [],
             suggestedTemplates: data.suggestions?.map((s: any) => s.title) || [],
-            confidence: Math.round(data.analysis.confidence * 100),
+            confidence: realConfidence, // Use agent similarity, not semantic confidence
             keywords: data.analysis.keywords || [],
             intent: data.analysis.intent,
-            noMatchesFound: noMatchesFound
+            noMatchesFound: noMatchesFound || realConfidence === 0
           };
           
-          console.log('✅ Dynamic analysis result:', dynamicAnalysis);
+          console.log('✅ Dynamic analysis result:', {
+            ...dynamicAnalysis,
+            semanticConfidence: Math.round(data.analysis.confidence * 100) + '%',
+            agentMatchConfidence: realConfidence + '%',
+            matchingAgents: data.existingAgents?.length || 0
+          });
           setNlpAnalysis(dynamicAnalysis);
           
           // Generate simple suggestions based on dynamic analysis
@@ -481,7 +495,7 @@ const NLPAgentBuilder: React.FC = () => {
 
   const getConfidenceText = (confidence: number, noMatchesFound?: boolean) => {
     // If no matches found, show clear message instead of percentage
-    if (noMatchesFound) {
+    if (noMatchesFound || confidence === 0) {
       return '✨ Ready to Create New Agent';
     }
     // Display confidence as percentage with proper formatting

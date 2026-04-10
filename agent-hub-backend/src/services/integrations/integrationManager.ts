@@ -19,7 +19,7 @@ export class IntegrationManager {
     
     switch (config.type) {
       case 'confluence':
-        integration = new ConfluenceIntegration(config);
+        integration = new ConfluenceIntegration(config as any);
         break;
       
       // Add more integrations here:

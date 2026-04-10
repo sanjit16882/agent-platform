@@ -23,6 +23,14 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [mostUsedAgents, setMostUsedAgents] = useState<any[]>([]);
+  const [categoryCount, setCategoryCount] = useState<{[key: string]: number}>({
+    'QE': 0,
+    'DevOps': 0,
+    'Security': 0,
+    'Business': 0,
+    'Development': 0,
+    'SRE': 0
+  });
 
   console.log('Dashboard - deployed agent count:', deployedAgentCount);
 
@@ -41,6 +49,25 @@ const Dashboard: React.FC = () => {
           // Calculate categories
           const categories = new Set(agents.map((a: any) => a.category)).size;
           
+          // Calculate agent count by category
+          const counts: {[key: string]: number} = {
+            'QE': 0,
+            'DevOps': 0,
+            'Security': 0,
+            'Business': 0,
+            'Development': 0,
+            'SRE': 0
+          };
+          
+          agents.forEach((agent: any) => {
+            const category = agent.category;
+            if (counts.hasOwnProperty(category)) {
+              counts[category]++;
+            }
+          });
+          
+          setCategoryCount(counts);
+          
           // Update stats with real data
           setStats({
             totalAgents: agents.length,
@@ -50,19 +77,40 @@ const Dashboard: React.FC = () => {
             uptime: 99.98 // Static for now
           });
 
-          // Get most used agents (sort by usage_count)
-          const sortedByUsage = [...agents]
-            .sort((a: any, b: any) => (b.usage_count || 0) - (a.usage_count || 0))
-            .slice(0, 4)
-            .map((agent: any) => ({
-              name: agent.name,
-              uses: agent.usage_count || 0,
-              category: agent.category,
-              lastUsed: agent.updated_at ? formatRelativeTime(agent.updated_at) : 'Never',
-              id: agent.id
-            }));
-          
-          setMostUsedAgents(sortedByUsage);
+          // Get real execution data from analytics service
+          try {
+            const { advancedAnalyticsService } = await import('../services/advancedAnalyticsService');
+            const agentInsights = await advancedAnalyticsService.getAgentInsights();
+            
+            // Match agents with their execution data
+            const agentsWithUsage = agents.map((agent: any) => {
+              const insight = agentInsights.find(i => i.agentId === agent.id);
+              return {
+                ...agent,
+                executionCount: insight?.executionCount || 0,
+                lastExecuted: insight && insight.executionCount > 0 ? new Date() : null
+              };
+            });
+            
+            // Get most used agents (sort by execution count)
+            const sortedByUsage = agentsWithUsage
+              .filter((a: any) => a.executionCount > 0) // Only show agents with executions
+              .sort((a: any, b: any) => b.executionCount - a.executionCount)
+              .slice(0, 4)
+              .map((agent: any) => ({
+                name: agent.name,
+                uses: agent.executionCount,
+                category: agent.category,
+                lastUsed: agent.lastExecuted ? formatRelativeTime(agent.lastExecuted.toISOString()) : 'Never',
+                id: agent.id
+              }));
+            
+            setMostUsedAgents(sortedByUsage);
+          } catch (analyticsError) {
+            console.warn('Could not fetch execution data:', analyticsError);
+            // Fallback to showing agents without usage data
+            setMostUsedAgents([]);
+          }
         } else {
           // Fallback to context value
           setStats(prev => ({
@@ -442,7 +490,9 @@ const Dashboard: React.FC = () => {
               }}>
                 Generate test suites for Selenium, Cypress, Playwright, and API testing frameworks
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>5 Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>
+                {loading ? '...' : `${categoryCount['QE'] || 0} Agent${categoryCount['QE'] !== 1 ? 's' : ''}`}
+              </Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -470,7 +520,9 @@ const Dashboard: React.FC = () => {
               }}>
                 Cloud cost optimization, performance monitoring, and infrastructure analysis
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>
+                {loading ? '...' : `${categoryCount['DevOps'] || 0} Agent${categoryCount['DevOps'] !== 1 ? 's' : ''}`}
+              </Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -498,7 +550,9 @@ const Dashboard: React.FC = () => {
               }}>
                 Vulnerability scanning, compliance auditing, and security best practices
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>
+                {loading ? '...' : `${categoryCount['Security'] || 0} Agent${categoryCount['Security'] !== 1 ? 's' : ''}`}
+              </Badge>
             </div>
             <div style={{ textAlign: 'center', padding: theme.spacing.lg }}>
               <Badge 
@@ -526,7 +580,9 @@ const Dashboard: React.FC = () => {
               }}>
                 Data analysis, reporting automation, and business insights generation
               </p>
-              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>4 Agents</Badge>
+              <Badge bg="light" style={{ color: theme.colors.textSecondary }}>
+                {loading ? '...' : `${categoryCount['Business'] || 0} Agent${categoryCount['Business'] !== 1 ? 's' : ''}`}
+              </Badge>
             </div>
           </div>
           

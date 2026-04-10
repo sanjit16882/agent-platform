@@ -70,21 +70,21 @@ class AgentManagementService {
    */
   async getAllManagedAgents(): Promise<ManagedAgent[]> {
     try {
-      console.log('🔍 AgentManagementService: Fetching all agents...');
+      console.log('🔍 AgentManagementService: Fetching all agents from S3...');
       
-      // Get all agents from the main catalog endpoint (includes S3, hybrid, built-in, marketplace)
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents`);
-      const catalogData = await response.json();
+      // Get all agents directly from S3 endpoint (most reliable source)
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/s3`);
+      const s3Data = await response.json();
       
-      if (!catalogData.success) {
-        throw new Error(catalogData.error || 'Failed to fetch agents from catalog');
+      if (!s3Data.success) {
+        throw new Error(s3Data.error || 'Failed to fetch agents from S3');
       }
       
-      const allAgents = catalogData.data || [];
-      console.log('✅ All agents received from catalog:', allAgents.length, allAgents);
+      const allAgents = s3Data.data || [];
+      console.log('✅ All agents received from S3:', allAgents.length, allAgents);
       
       // Filter out template agents (they're not real manageable agents)
-      const realAgents = allAgents.filter((agent: any) => agent.agent_type !== 'template');
+      const realAgents = allAgents.filter((agent: any) => agent.agent_type !== 'template' && agent.type !== 'template');
       console.log('✅ Filtered real agents (excluding templates):', realAgents.length, realAgents);
       
       // Convert catalog agents to managed agents with metrics
@@ -309,7 +309,32 @@ class AgentManagementService {
       return this.metricsCache.get(agentId)!;
     }
 
-    // Calculate metrics from execution history
+    // Try to get real execution data from analytics service
+    try {
+      const { advancedAnalyticsService } = await import('./advancedAnalyticsService');
+      const agentInsights = await advancedAnalyticsService.getAgentInsights();
+      const insight = agentInsights.find(i => i.agentId === agentId);
+      
+      if (insight && insight.executionCount > 0) {
+        // Use real data from analytics service
+        const metrics: AgentMetrics = {
+          totalExecutions: insight.executionCount,
+          successRate: insight.successRate,
+          avgExecutionTime: insight.averageLatency,
+          lastExecuted: new Date().toISOString(), // Use current time as approximation
+          errorCount: Math.round(insight.executionCount * (1 - insight.successRate / 100)),
+          dailyExecutions: [], // Could be calculated from execution history
+          weeklyExecutions: []
+        };
+        
+        this.metricsCache.set(agentId, metrics);
+        return metrics;
+      }
+    } catch (error) {
+      console.warn('Could not fetch real execution data, using fallback:', error);
+    }
+
+    // Fallback: Calculate metrics from local execution history
     const history = this.executionHistory.get(agentId) || [];
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);

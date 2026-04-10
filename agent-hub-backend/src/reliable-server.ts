@@ -151,6 +151,9 @@ import finopsRoutes from './routes/finops';
 // Import Analytics routes
 import analyticsRoutes from './routes/analyticsRoutes';
 
+// Multi-Agent Collaboration Routes
+const multiAgentRoutes = require('./routes/multiAgentRoutes');
+
 // Import Test Metadata routes (JavaScript module)
 const testMetadataRoutes = require('./routes/testMetadata');
 
@@ -207,6 +210,17 @@ app.use((req, _res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
+
+// Initialize Multi-Agent Coordinator
+const MultiAgentCoordinator = require('./services/multiAgentCoordinator');
+const BedrockService = require('./services/bedrockService');
+const bedrockService = new BedrockService();
+const multiAgentCoordinator = new MultiAgentCoordinator(bedrockService, s3Storage);
+console.log('✅ Multi-Agent Coordinator initialized');
+
+// Register Multi-Agent Collaboration API
+app.use('/api/v1/multi-agent', multiAgentRoutes(multiAgentCoordinator));
+console.log('✅ Multi-Agent routes registered');
 
 // Initialize S3 storage
 (async () => {

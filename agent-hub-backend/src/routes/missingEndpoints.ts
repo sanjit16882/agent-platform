@@ -13,14 +13,24 @@ const router = Router();
 /**
  * GET /api/v1/agents/s3
  * Returns all agents stored in S3
+ * DISABLED - This route is handled by server.ts to fetch real S3 agents
  */
+// Route commented out - handled by server.ts instead
+/*
 router.get('/agents/s3', async (req: Request, res: Response) => {
   try {
-    console.log('📦 S3: Fetching agents from S3...');
+    console.log('📦 S3: Returning empty array (mock agents disabled)');
     
-    // Mock S3 agents - 14 active agents + 3 template agents
-    // In production, this would query from S3
-    const agents = [
+    // Return empty array - use only custom agents created by users
+    res.json({
+      success: true,
+      data: [],
+      count: 0
+    });
+    return;
+    
+    // Mock S3 agents - DISABLED
+    const agents_disabled = [
       // Active Production Agents (14)
       {
         id: 'code-reviewer',
@@ -196,11 +206,7 @@ router.get('/agents/s3', async (req: Request, res: Response) => {
       }
     ];
 
-    res.json({
-      success: true,
-      data: agents,
-      count: agents.length
-    });
+    // This code is disabled - we return empty array above
   } catch (error) {
     console.error('❌ S3 agents error:', error);
     res.status(500).json({
@@ -210,6 +216,7 @@ router.get('/agents/s3', async (req: Request, res: Response) => {
     });
   }
 });
+*/
 
 // ============================================================================
 // Analytics Endpoints

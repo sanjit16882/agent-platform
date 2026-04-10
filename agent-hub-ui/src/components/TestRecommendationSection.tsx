@@ -41,16 +41,73 @@ const TestRecommendationSection: React.FC<TestRecommendationSectionProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:3002/api/v1/test-metadata/agent-types/${selectedCategory}`
-      );
+      // Temporary: Use hardcoded agent types until backend route is fixed
+      const agentTypesByCategory: Record<string, AgentType[]> = {
+        'QE': [
+          { id: 'Test Case Creation', description: 'Agents that generate test cases', coreTestCount: 6 },
+          { id: 'Defect Reporting', description: 'Agents that analyze and report defects', coreTestCount: 5 },
+          { id: 'Test Automation', description: 'Agents that create automated tests', coreTestCount: 5 },
+          { id: 'API Testing', description: 'Agents that test REST APIs', coreTestCount: 4 }
+        ],
+        'Testing': [
+          { id: 'Test Execution', description: 'Agents that execute test suites', coreTestCount: 7 },
+          { id: 'Test Analysis', description: 'Agents that analyze test results', coreTestCount: 5 }
+        ],
+        'Documentation': [
+          { id: 'API Documentation', description: 'Agents that generate API docs', coreTestCount: 4 },
+          { id: 'User Guides', description: 'Agents that create user guides', coreTestCount: 3 }
+        ],
+        'DevOps': [
+          { id: 'CI/CD Pipeline', description: 'Agents that manage CI/CD', coreTestCount: 5 },
+          { id: 'Infrastructure as Code', description: 'Agents that generate IaC', coreTestCount: 5 },
+          { id: 'Container Management', description: 'Agents for Docker/K8s', coreTestCount: 4 }
+        ],
+        'SRE': [
+          { id: 'Performance Monitoring', description: 'Agents that monitor performance', coreTestCount: 4 },
+          { id: 'Incident Response', description: 'Agents that assist with incidents', coreTestCount: 4 }
+        ],
+        'Security': [
+          { id: 'Vulnerability Assessment', description: 'Agents that identify vulnerabilities', coreTestCount: 5 },
+          { id: 'Security Audit', description: 'Agents that perform security audits', coreTestCount: 5 }
+        ],
+        'Security Testing': [
+          { id: 'Penetration Testing', description: 'Agents that perform pen testing', coreTestCount: 4 },
+          { id: 'Security Test Case Generation', description: 'Agents that generate security tests', coreTestCount: 4 }
+        ],
+        'Automated Testing': [
+          { id: 'Test Framework Setup', description: 'Agents that set up test frameworks', coreTestCount: 4 },
+          { id: 'Test Script Generation', description: 'Agents that generate test scripts', coreTestCount: 4 }
+        ],
+        'Development': [
+          { id: 'Code Generation', description: 'Agents that generate code', coreTestCount: 5 },
+          { id: 'Code Review', description: 'Agents that review code', coreTestCount: 4 },
+          { id: 'Bug Fixing', description: 'Agents that fix bugs', coreTestCount: 4 },
+          { id: 'Documentation', description: 'Agents that generate docs', coreTestCount: 4 }
+        ],
+        'Business Analysis': [
+          { id: 'Requirements Analysis', description: 'Agents that analyze requirements', coreTestCount: 4 },
+          { id: 'User Story Creation', description: 'Agents that create user stories', coreTestCount: 4 },
+          { id: 'Process Mapping', description: 'Agents that map processes', coreTestCount: 4 }
+        ],
+        'Product Management': [
+          { id: 'Feature Prioritization', description: 'Agents that prioritize features', coreTestCount: 4 },
+          { id: 'Roadmap Planning', description: 'Agents that plan roadmaps', coreTestCount: 4 },
+          { id: 'Market Analysis', description: 'Agents that analyze markets', coreTestCount: 4 }
+        ],
+        'Project Management': [
+          { id: 'Project Planning', description: 'Agents that create project plans', coreTestCount: 4 },
+          { id: 'Risk Management', description: 'Agents that manage risks', coreTestCount: 4 },
+          { id: 'Status Reporting', description: 'Agents that generate status reports', coreTestCount: 4 }
+        ],
+        'Production Support': [
+          { id: 'Incident Analysis', description: 'Agents that analyze incidents', coreTestCount: 4 },
+          { id: 'Root Cause Analysis', description: 'Agents that perform RCA', coreTestCount: 4 },
+          { id: 'Troubleshooting', description: 'Agents that troubleshoot issues', coreTestCount: 4 }
+        ]
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch agent types');
-      }
-
-      const data = await response.json();
-      setAgentTypes(data.agentTypes || []);
+      setAgentTypes(agentTypesByCategory[selectedCategory] || []);
+      console.log(`✅ Loaded ${agentTypesByCategory[selectedCategory]?.length || 0} agent types for category: ${selectedCategory}`);
     } catch (err) {
       console.error('Error fetching agent types:', err);
       setError('Failed to load agent types. Please try again.');

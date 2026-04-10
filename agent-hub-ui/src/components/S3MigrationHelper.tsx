@@ -23,13 +23,13 @@ const S3MigrationHelper: React.FC = () => {
 
   const checkTotalAgents = async () => {
     try {
-      // Get all agents from unified catalog
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents`);
+      // Get all agents from S3 (most reliable source)
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3002'}/api/v1/agents/s3`);
       const data = await response.json();
       
       if (data.success) {
         // Filter out template agents (they're not real manageable agents)
-        const realAgents = data.data.filter((agent: any) => agent.agent_type !== 'template');
+        const realAgents = data.data.filter((agent: any) => agent.agent_type !== 'template' && agent.type !== 'template');
         const totalAgents = realAgents.length;
         setS3AgentCount(totalAgents);
         return totalAgents;

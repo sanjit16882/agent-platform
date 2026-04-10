@@ -96,6 +96,18 @@ const StepInsights: React.FC<StepInsightsProps> = ({
       onInsightsGenerated(generatedInsights);
       
       console.log('✅ Insights set in state');
+      console.log('📊 Insights structure:', {
+        hasHallucinations: !!generatedInsights.hallucinations,
+        hallucinationsCount: generatedInsights.hallucinations?.length || 0,
+        hasMisunderstood: !!generatedInsights.misunderstoodIntent,
+        misunderstoodCount: generatedInsights.misunderstoodIntent?.length || 0,
+        hasToolErrors: !!generatedInsights.toolUsageErrors,
+        toolErrorsCount: generatedInsights.toolUsageErrors?.length || 0,
+        hasStrengths: !!generatedInsights.reasoningStrengths,
+        strengthsCount: generatedInsights.reasoningStrengths?.length || 0,
+        hasRecommendations: !!generatedInsights.recommendations,
+        recommendationsCount: generatedInsights.recommendations?.length || 0
+      });
     } catch (err: any) {
       console.error('❌ Error generating insights:', err);
       setError(err.message);
@@ -212,6 +224,76 @@ const StepInsights: React.FC<StepInsightsProps> = ({
 
       {insights && (
         <div>
+          {console.log('🎨 Rendering insights:', insights)}
+          
+          {/* Show message if no issues but also no strengths/recommendations */}
+          {(!insights.hallucinations || insights.hallucinations.length === 0) &&
+           (!insights.misunderstoodIntent || insights.misunderstoodIntent.length === 0) &&
+           (!insights.toolUsageErrors || insights.toolUsageErrors.length === 0) &&
+           (!insights.reasoningStrengths || insights.reasoningStrengths.length === 0) &&
+           (!insights.recommendations || insights.recommendations.length === 0) && (
+            <Card style={{ marginBottom: theme.spacing.xl }}>
+              <Card.Body>
+                <div style={{ textAlign: 'center', padding: theme.spacing['3xl'] }}>
+                  <div style={{
+                    fontSize: theme.typography.fontSize['2xl'],
+                    marginBottom: theme.spacing.lg
+                  }}>
+                    ✨
+                  </div>
+                  <div style={{
+                    fontSize: theme.typography.fontSize.lg,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    color: theme.colors.success,
+                    marginBottom: theme.spacing.md
+                  }}>
+                    No Insights Available
+                  </div>
+                  <div style={{
+                    fontSize: theme.typography.fontSize.sm,
+                    color: theme.colors.textSecondary
+                  }}>
+                    Unable to generate insights from the test results.
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
+          
+          {/* Show success message if only strengths, no issues */}
+          {(!insights.hallucinations || insights.hallucinations.length === 0) &&
+           (!insights.misunderstoodIntent || insights.misunderstoodIntent.length === 0) &&
+           (!insights.toolUsageErrors || insights.toolUsageErrors.length === 0) &&
+           (insights.reasoningStrengths && insights.reasoningStrengths.length > 0) &&
+           (!insights.recommendations || insights.recommendations.length === 0) && (
+            <Card style={{ marginBottom: theme.spacing.xl }}>
+              <Card.Body>
+                <div style={{ textAlign: 'center', padding: theme.spacing.xl }}>
+                  <div style={{
+                    fontSize: theme.typography.fontSize['2xl'],
+                    marginBottom: theme.spacing.md
+                  }}>
+                    🎉
+                  </div>
+                  <div style={{
+                    fontSize: theme.typography.fontSize.lg,
+                    fontWeight: theme.typography.fontWeight.semibold,
+                    color: theme.colors.success,
+                    marginBottom: theme.spacing.sm
+                  }}>
+                    Excellent Performance!
+                  </div>
+                  <div style={{
+                    fontSize: theme.typography.fontSize.sm,
+                    color: theme.colors.textSecondary
+                  }}>
+                    All tests passed with no issues detected. See strengths below.
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
+          
           {/* Hallucinations */}
           {insights.hallucinations && insights.hallucinations.length > 0 && (
             <Card style={{ marginBottom: theme.spacing.xl }}>

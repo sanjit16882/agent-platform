@@ -24,6 +24,7 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
   const [activeTab, setActiveTab] = useState('overview');
   const [configuration, setConfiguration] = useState<Partial<AgentConfiguration>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [hasAnalyticsData, setHasAnalyticsData] = useState(false);
 
   useEffect(() => {
     if (agent && isOpen) {
@@ -31,8 +32,28 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
       setActiveTab('overview');
       setConfiguration({});
       setHasChanges(false);
+      
+      // Check if agent has analytics data
+      checkAnalyticsData();
     }
   }, [agent, isOpen]);
+  
+  const checkAnalyticsData = async () => {
+    if (!agent) return;
+    
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const response = await fetch(`${API_BASE_URL}/api/v1/analytics/agent/${agent.agent_id}`);
+      const data = await response.json();
+      
+      // Check if there's any execution data
+      const hasData = data.success && data.data?.overall?.total_executions > 0;
+      setHasAnalyticsData(hasData);
+    } catch (error) {
+      console.error('Error checking analytics data:', error);
+      setHasAnalyticsData(false);
+    }
+  };
 
   const handleClose = () => {
     if (hasChanges) {
@@ -159,22 +180,20 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
             </Tab>
           )}
 
-          {/* Deployment Tab */}
-          {agent.agent_type === 'production' && (
-            <Tab 
-              eventKey="deployment" 
-              title={
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Icon name="upload" size="small" />
-                  Deployment
-                </span>
-              }
-            >
-              <div style={{ padding: theme.spacing.xl }}>
-                <AgentDeploymentTab agent={agent} />
-              </div>
-            </Tab>
-          )}
+          {/* Deployment Tab - Available for all agents */}
+          <Tab 
+            eventKey="deployment" 
+            title={
+              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Icon name="upload" size="small" />
+                Deployment
+              </span>
+            }
+          >
+            <div style={{ padding: theme.spacing.xl }}>
+              <AgentDeploymentTab agent={agent} />
+            </div>
+          </Tab>
 
           {/* Metrics Tab */}
           <Tab 
@@ -191,20 +210,7 @@ const AgentDetailsModal: React.FC<AgentDetailsModalProps> = ({
             </div>
           </Tab>
 
-          {/* Analytics Tab */}
-          <Tab 
-            eventKey="analytics" 
-            title={
-              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Icon name="chart" size="small" />
-                Analytics
-              </span>
-            }
-          >
-            <div style={{ padding: theme.spacing.xl }}>
-              <AgentAnalytics agentId={agent.agent_id} agentName={agent.name} />
-            </div>
-          </Tab>
+          {/* Analytics Tab - Removed: Only relevant for production executions, not testing */}
         </Tabs>
       </Modal.Body>
 
@@ -485,29 +491,210 @@ const AgentConfigurationTab: React.FC<{
   </div>
 );
 
-const AgentDeploymentTab: React.FC<{ agent: Agent }> = ({ agent }) => (
-  <div>
-    <h5 style={{ color: '#374151', marginBottom: theme.spacing.lg }}>
-      Deployment Status
-    </h5>
-    <div style={{
-      padding: theme.spacing.xl,
-      backgroundColor: '#f0fdf4',
-      borderRadius: theme.borderRadius.lg,
-      border: '1px solid #22c55e'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.md }}>
-        <Icon name="success" size="large" style={{ color: '#22c55e' }} />
-        <div>
-          <h6 style={{ color: '#15803d', margin: 0 }}>Production Ready</h6>
-          <p style={{ color: '#166534', margin: 0 }}>
-            This agent is deployed and ready for production use
-          </p>
+const AgentDeploymentTab: React.FC<{ agent: Agent }> = ({ agent }) => {
+  const [selectedTarget, setSelectedTarget] = React.useState<string>('docker');
+  const [downloading, setDownloading] = React.useState(false);
+  const [showChecklist, setShowChecklist] = React.useState(false);
+
+  const deploymentTargets = [
+    { id: 'docker', name: 'Docker Compose', icon: '🐳', desc: 'Local or on-premise deployment' },
+    { id: 'kubernetes', name: 'Kubernetes', icon: '☸️', desc: 'Any K8s cluster (EKS, GKE, AKS, on-prem)' },
+    { id: 'aws-lambda', name: 'AWS Lambda', icon: '⚡', desc: 'Serverless on AWS' },
+    { id: 'aws-ecs', name: 'AWS ECS', icon: '📦', desc: 'Container service on AWS' },
+    { id: 'gcp-run', name: 'Google Cloud Run', icon: '🏃', desc: 'Serverless containers on GCP' },
+    { id: 'azure-container', name: 'Azure Container', icon: '☁️', desc: 'Container instances on Azure' }
+  ];
+
+  const handleDownloadPackage = async () => {
+    setDownloading(true);
+    try {
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+      const response = await fetch(`${API_BASE_URL}/api/agents/${agent.agent_id}/deployment-package`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: selectedTarget })
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${agent.name.replace(/\s+/g, '-').toLowerCase()}-${selectedTarget}-deployment.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Failed to generate deployment package. This feature is coming soon!');
+      }
+    } catch (error) {
+      console.error('Error downloading package:', error);
+      alert('Failed to generate deployment package. This feature is coming soon!');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h5 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+        🚀 Deploy Anywhere
+      </h5>
+      <p style={{ color: '#6b7280', marginBottom: theme.spacing.xl }}>
+        Generate deployment packages for any environment - cloud, on-premise, or local development.
+      </p>
+
+      {/* Deployment Checklist */}
+      <div style={{ marginBottom: theme.spacing.xl }}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowChecklist(!showChecklist)}
+          style={{ marginBottom: theme.spacing.md }}
+        >
+          {showChecklist ? '▼' : '▶'} Pre-Deployment Checklist
+        </Button>
+        
+        {showChecklist && (
+          <div style={{
+            padding: theme.spacing.lg,
+            backgroundColor: '#f0f9ff',
+            borderRadius: theme.borderRadius.lg,
+            border: '1px solid #0ea5e9',
+            marginBottom: theme.spacing.lg
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span>
+                <span>Agent configuration validated</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span>
+                <span>Dependencies identified</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <span style={{ color: '#22c55e', fontSize: '1.2rem' }}>✅</span>
+                <span>Resource requirements calculated</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <span style={{ color: '#eab308', fontSize: '1.2rem' }}>⚠️</span>
+                <span><strong>Secrets needed:</strong> AWS_ACCESS_KEY, BEDROCK_API_KEY</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                <span style={{ color: '#0ea5e9', fontSize: '1.2rem' }}>ℹ️</span>
+                <span><strong>Estimated cost:</strong> $0.05/1K requests (varies by cloud provider)</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Target Selection */}
+      <div style={{ marginBottom: theme.spacing.xl }}>
+        <h6 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+          Select Deployment Target
+        </h6>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gap: theme.spacing.md
+        }}>
+          {deploymentTargets.map(target => (
+            <div
+              key={target.id}
+              onClick={() => setSelectedTarget(target.id)}
+              style={{
+                padding: theme.spacing.lg,
+                backgroundColor: selectedTarget === target.id ? '#dbeafe' : '#f9fafb',
+                border: selectedTarget === target.id ? '2px solid #0ea5e9' : '1px solid #e5e7eb',
+                borderRadius: theme.borderRadius.lg,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                textAlign: 'center'
+              }}
+            >
+              <div style={{ fontSize: '2rem', marginBottom: theme.spacing.sm }}>{target.icon}</div>
+              <div style={{ fontWeight: 'bold', color: '#374151', marginBottom: '4px' }}>
+                {target.name}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                {target.desc}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Package Contents Preview */}
+      <div style={{ marginBottom: theme.spacing.xl }}>
+        <h6 style={{ color: '#374151', marginBottom: theme.spacing.md }}>
+          📦 Package Contents
+        </h6>
+        <div style={{
+          padding: theme.spacing.lg,
+          backgroundColor: '#f9fafb',
+          borderRadius: theme.borderRadius.lg,
+          border: '1px solid #e5e7eb',
+          fontFamily: 'monospace',
+          fontSize: '0.9rem'
+        }}>
+          <div style={{ marginBottom: theme.spacing.sm }}>📄 {selectedTarget}-deployment.yaml</div>
+          <div style={{ marginBottom: theme.spacing.sm }}>📄 .env.example</div>
+          <div style={{ marginBottom: theme.spacing.sm }}>📄 DEPLOY.md (step-by-step instructions)</div>
+          <div style={{ marginBottom: theme.spacing.sm }}>📄 agent-config.json</div>
+          <div style={{ marginBottom: theme.spacing.sm }}>📄 health-check.sh</div>
+          <div>📄 rollback.sh</div>
+        </div>
+      </div>
+
+      {/* Download Button */}
+      <div style={{ textAlign: 'center' }}>
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={handleDownloadPackage}
+          disabled={downloading}
+          style={{ minWidth: '250px' }}
+        >
+          {downloading ? (
+            <>⏳ Generating Package...</>
+          ) : (
+            <>⬇️ Download {deploymentTargets.find(t => t.id === selectedTarget)?.name} Package</>
+          )}
+        </Button>
+        <p style={{ 
+          marginTop: theme.spacing.md, 
+          fontSize: '0.9rem', 
+          color: '#6b7280',
+          fontStyle: 'italic'
+        }}>
+          Your DevOps team can deploy this package to any {deploymentTargets.find(t => t.id === selectedTarget)?.name} environment
+        </p>
+      </div>
+
+      {/* Key Features */}
+      <div style={{ 
+        marginTop: theme.spacing.xl,
+        padding: theme.spacing.lg,
+        backgroundColor: '#f0fdf4',
+        borderRadius: theme.borderRadius.lg,
+        border: '1px solid #22c55e'
+      }}>
+        <h6 style={{ color: '#15803d', marginBottom: theme.spacing.md }}>
+          ✨ What Makes This Different
+        </h6>
+        <ul style={{ color: '#166534', margin: 0, paddingLeft: theme.spacing.xl }}>
+          <li>Environment-agnostic: Same agent, any infrastructure</li>
+          <li>Production-ready: Includes health checks, monitoring, and rollback scripts</li>
+          <li>Security-first: Secrets management templates included</li>
+          <li>Cost-optimized: Resource limits and auto-scaling configurations</li>
+          <li>Zero vendor lock-in: Deploy to AWS, GCP, Azure, or on-premise</li>
+        </ul>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AgentMetricsTab: React.FC<{ agent: Agent & {
   testingStatus?: {

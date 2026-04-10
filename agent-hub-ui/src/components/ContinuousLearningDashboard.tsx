@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Badge, Alert, Button, Modal, Table, ProgressBar } from 'react-bootstrap';
+import { Card, Row, Col, Badge, Button, Modal, Table, ProgressBar } from 'react-bootstrap';
 import { API_CONFIG } from '../config/api';
 // React Icons compatibility fix - using createElement
 const { createElement } = React;
@@ -62,34 +62,89 @@ const ContinuousLearningDashboard: React.FC = () => {
   const fetchLearningData = async () => {
     try {
       setLoading(true);
-      const baseUrl = API_CONFIG.BACKEND_URL;
       
-      // Fetch learning analytics
-      const analyticsResponse = await fetch(`${baseUrl}/api/intelligence/learning-analytics`);
-      const analyticsData = await analyticsResponse.json();
+      // Use mock data for now (backend endpoints not yet implemented)
+      console.log('📊 Loading mock learning data...');
       
-      if (analyticsData.success) {
-        setAnalytics(analyticsData.analytics);
-      }
+      // Mock analytics data matching LearningAnalytics interface
+      const mockAnalytics: LearningAnalytics = {
+        totalUsers: 156,
+        activeUsers: 89,
+        totalInteractions: 1247,
+        totalFeedback: 423,
+        avgAcceptanceRate: 0.85,
+        avgExplorationLevel: 0.72,
+        feedbackRate: 0.34,
+        learningVelocity: 0.92,
+        topIntents: [
+          { intent: 'code-analysis', count: 342 },
+          { intent: 'testing', count: 289 },
+          { intent: 'documentation', count: 187 },
+          { intent: 'deployment', count: 145 }
+        ],
+        topSuggestionTypes: [
+          { type: 'agent-recommendation', score: 0.88, positive: 245, negative: 32 },
+          { type: 'workflow-optimization', score: 0.82, positive: 198, negative: 45 },
+          { type: 'parameter-tuning', score: 0.79, positive: 167, negative: 38 }
+        ],
+        insights: [
+          {
+            type: 'trend',
+            title: 'Increasing Agent Usage',
+            description: 'Code analysis agent usage increased by 23% this week',
+            recommendation: 'Consider adding more code analysis capabilities'
+          },
+          {
+            type: 'optimization',
+            title: 'High Acceptance Rate',
+            description: 'Users accept 85% of AI suggestions',
+            recommendation: 'Current suggestion algorithm is performing well'
+          }
+        ]
+      };
+      
+      setAnalytics(mockAnalytics);
 
-      // Fetch user profile
-      const profileResponse = await fetch(`${baseUrl}/api/intelligence/learning/profile/${currentUserId}`);
-      const profileData = await profileResponse.json();
+      // Mock user profile matching UserProfile interface
+      const mockProfile: UserProfile = {
+        userId: currentUserId,
+        interactionCount: 47,
+        learningProgress: 0.68,
+        acceptanceRate: 0.82,
+        explorationLevel: 0.75,
+        confidenceThreshold: 0.7,
+        recommendations: [
+          'Try using the testing agent for better code coverage',
+          'Explore multi-agent workflows for complex tasks',
+          'Consider enabling continuous learning features'
+        ],
+        lastActive: new Date().toISOString()
+      };
       
-      if (profileData.success) {
-        setUserProfile(profileData.profile);
-      }
+      setUserProfile(mockProfile);
 
-      // Fetch A/B test results for demo
-      try {
-        const abResponse = await fetch(`${baseUrl}/api/intelligence/learning/ab-test/suggestion_algorithm_v2/results`);
-        const abData = await abResponse.json();
-        if (abData.success) {
-          setAbTestResults(abData);
-        }
-      } catch (abError) {
-        console.log('No A/B test data available');
-      }
+      // Mock A/B test results
+      const mockAbTestResults = {
+        success: true,
+        testName: 'suggestion_algorithm_v2',
+        controlGroup: {
+          users: 500,
+          conversions: 350,
+          conversionRate: 0.70
+        },
+        treatmentGroup: {
+          users: 500,
+          conversions: 425,
+          conversionRate: 0.85
+        },
+        improvement: 21.4,
+        confidence: 0.95,
+        status: 'significant'
+      };
+      
+      setAbTestResults(mockAbTestResults);
+      
+      console.log('✅ Mock learning data loaded successfully');
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch learning data');
@@ -180,19 +235,28 @@ const ContinuousLearningDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="container-fluid mt-4">
-        <Alert variant="danger">
-          <Alert.Heading>Error Loading Learning Data</Alert.Heading>
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">Error Loading Learning Data</h4>
           <p>{error}</p>
           <Button variant="outline-danger" onClick={fetchLearningData}>
             Try Again
           </Button>
-        </Alert>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container-fluid mt-4">
+      {/* Demo Mode Notice */}
+      <div className="alert alert-info mb-3" role="alert">
+        <h4 className="alert-heading">📊 Demo Mode</h4>
+        <p className="mb-0">
+          This dashboard is currently displaying mock data for demonstration purposes. 
+          The continuous learning backend endpoints are not yet implemented.
+        </p>
+      </div>
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2><FaBrain className="me-2 text-primary" />Continuous Learning Dashboard</h2>
@@ -331,12 +395,12 @@ const ContinuousLearningDashboard: React.FC = () => {
               <Card.Body>
                 {analytics?.insights && analytics.insights.length > 0 ? (
                   analytics.insights.map((insight, index) => (
-                    <Alert key={index} variant={getInsightBadgeVariant(insight.type)} className="p-2 mb-2">
+                    <div key={index} className={`alert alert-${getInsightBadgeVariant(insight.type)} p-2 mb-2`} role="alert">
                       <div className="small">
                         <strong>{insight.title}</strong><br />
                         {insight.description}
                       </div>
-                    </Alert>
+                    </div>
                   ))
                 ) : (
                   <p className="text-muted">No insights available yet. Keep using the platform to generate insights!</p>
@@ -524,9 +588,9 @@ const ContinuousLearningDashboard: React.FC = () => {
             <li>Suggestion performance metrics</li>
             <li>A/B testing results</li>
           </ul>
-          <Alert variant="info" className="small">
+          <div className="alert alert-info small" role="alert">
             Data will be exported as JSON format with anonymized user identifiers.
-          </Alert>
+          </div>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowExportModal(false)}>

@@ -104,6 +104,13 @@ class S3AgentStorage {
   }
 
   /**
+   * Alias for getAgent (for compatibility)
+   */
+  async getAgentById(agentId) {
+    return this.getAgent(agentId);
+  }
+
+  /**
    * List all agents from S3
    */
   async listAgents() {

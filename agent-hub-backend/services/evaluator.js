@@ -527,11 +527,20 @@ class Evaluator {
     // Calculate performance score
     const performanceScore = this.calculatePerformanceScore(performance);
 
+    // Debug logging
+    console.log('📊 Score Breakdown:');
+    console.log(`  Accuracy: ${accuracyScore.toFixed(2)} (weight: ${weights.accuracy})`);
+    console.log(`  Quality: ${qualityScore.toFixed(2)} (weight: ${weights.quality})`);
+    console.log(`  Performance: ${performanceScore.toFixed(2)} (weight: ${weights.performance})`);
+    console.log(`  Quality Details:`, quality);
+
     // Weighted average
     const overallScore =
       (accuracyScore * weights.accuracy) +
       (qualityScore * weights.quality) +
       (performanceScore * weights.performance);
+
+    console.log(`  Overall Score: ${overallScore.toFixed(2)}`);
 
     return Math.round(overallScore * 100) / 100;
   }

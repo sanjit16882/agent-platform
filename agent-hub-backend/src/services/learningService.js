@@ -1,4 +1,7 @@
 // Continuous Learning and Improvement Service
+const fs = require('fs');
+const path = require('path');
+
 class LearningService {
   constructor() {
     // In-memory storage for demo - in production, use database
@@ -7,33 +10,125 @@ class LearningService {
     this.userPreferences = new Map();
     this.suggestionPerformance = new Map();
     this.abTestGroups = new Map();
+    
+    // Load existing data from files
+    this.loadDataFromFiles();
+  }
+
+  // Load existing data from JSON files
+  loadDataFromFiles() {
+    try {
+      const dataDir = path.join(__dirname, '../../data/learning');
+      
+      // Load interactions
+      const interactionsPath = path.join(dataDir, 'interactions.json');
+      if (fs.existsSync(interactionsPath)) {
+        const interactionsData = JSON.parse(fs.readFileSync(interactionsPath, 'utf8'));
+        interactionsData.forEach(interaction => {
+          this.interactions.set(interaction.id, interaction);
+        });
+        console.log(`✅ Loaded ${interactionsData.length} interactions from file`);
+      }
+      
+      // Load feedback
+      const feedbackPath = path.join(dataDir, 'feedback.json');
+      if (fs.existsSync(feedbackPath)) {
+        const feedbackData = JSON.parse(fs.readFileSync(feedbackPath, 'utf8'));
+        feedbackData.forEach(feedback => {
+          this.feedbackData.set(feedback.id, feedback);
+        });
+        console.log(`✅ Loaded ${feedbackData.length} feedback entries from file`);
+      }
+      
+      // Load user profiles and convert to the format expected by learningService
+      const profilesPath = path.join(dataDir, 'user-profiles.json');
+      if (fs.existsSync(profilesPath)) {
+        const profilesData = JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
+        Object.entries(profilesData).forEach(([userId, profile]) => {
+          // Convert file format to in-memory format
+          const userProfile = {
+            userId: profile.userId,
+            interactionCount: profile.interactionCount || 0,
+            lastActive: profile.lastActive || new Date().toISOString(),
+            learningProfile: {
+              explorationLevel: (profile.explorationLevel || 50) / 100,
+              feedbackFrequency: 0,
+              acceptanceRate: profile.acceptedCount / Math.max(profile.interactionCount, 1)
+            },
+            confidenceThreshold: profile.confidenceThreshold || 0.7,
+            preferredIntents: profile.intents || {},
+            preferredSuggestionTypes: {}
+          };
+          this.userPreferences.set(userId, userProfile);
+        });
+        console.log(`✅ Loaded ${Object.keys(profilesData).length} user profiles from file`);
+      }
+      
+      // Load A/B test data
+      const abTestsPath = path.join(dataDir, 'ab-tests.json');
+      if (fs.existsSync(abTestsPath)) {
+        const abTestsData = JSON.parse(fs.readFileSync(abTestsPath, 'utf8'));
+        Object.entries(abTestsData).forEach(([testName, testData]) => {
+          this.abTestGroups.set(testName, testData);
+        });
+        console.log(`✅ Loaded ${Object.keys(abTestsData).length} A/B tests from file`);
+      }
+      
+    } catch (error) {
+      console.error('⚠️  Failed to load learning data from files:', error.message);
+      console.log('📝 Starting with empty learning data');
+    }
   }
 
   // Track user interactions for learning
   async recordInteraction(userId, interactionData) {
-    const interactionId = `interaction_${Date.now()}_${userId}`;
+    const interactionId = `int_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const interaction = {
       id: interactionId,
       userId,
-      timestamp: new Date().toISOString(),
+      agentId: interactionData.agentId,
+      agentName: interactionData.agentName,
+      intent: interactionData.intent || interactionData.analysis?.intent,
       query: interactionData.query,
-      intent: interactionData.analysis?.intent,
-      confidence: interactionData.analysis?.confidence,
-      suggestionsGenerated: interactionData.suggestions?.length || 0,
-      topSuggestionType: interactionData.suggestions?.[0]?.type,
-      topSuggestionConfidence: interactionData.suggestions?.[0]?.confidence,
-      context: interactionData.context,
-      sessionId: interactionData.sessionId || `session_${Date.now()}`
+      accepted: interactionData.accepted !== false,
+      timestamp: interactionData.timestamp || new Date().toISOString(),
+      executionTime: interactionData.executionTime || 0,
+      success: interactionData.success !== false
     };
 
     this.interactions.set(interactionId, interaction);
     
+    // Save to file
+    try {
+      const dataDir = path.join(__dirname, '../../data/learning');
+      const interactionsPath = path.join(dataDir, 'interactions.json');
+      
+      // Read existing interactions
+      let interactions = [];
+      if (fs.existsSync(interactionsPath)) {
+        interactions = JSON.parse(fs.readFileSync(interactionsPath, 'utf8'));
+      }
+      
+      // Add new interaction
+      interactions.push(interaction);
+      
+      // Keep only last 1000 interactions
+      if (interactions.length > 1000) {
+        interactions = interactions.slice(-1000);
+      }
+      
+      // Save back to file
+      fs.writeFileSync(interactionsPath, JSON.stringify(interactions, null, 2));
+    } catch (error) {
+      console.error('⚠️  Failed to save interaction to file:', error.message);
+    }
+    
     console.log('📝 Learning: Recorded interaction', {
       interactionId,
       userId,
-      intent: interaction.intent,
-      suggestionsCount: interaction.suggestionsGenerated
+      agentId: interaction.agentId,
+      intent: interaction.intent
     });
 
     // Update user behavior patterns
@@ -145,6 +240,38 @@ class LearningService {
     }
 
     this.userPreferences.set(userId, profile);
+    
+    // Save to file
+    try {
+      const dataDir = path.join(__dirname, '../../data/learning');
+      const profilesPath = path.join(dataDir, 'user-profiles.json');
+      
+      // Read existing profiles
+      let profiles = {};
+      if (fs.existsSync(profilesPath)) {
+        profiles = JSON.parse(fs.readFileSync(profilesPath, 'utf8'));
+      }
+      
+      // Update profile in file format
+      profiles[userId] = {
+        userId: profile.userId,
+        interactionCount: profile.interactionCount,
+        acceptedCount: Math.round(profile.interactionCount * profile.learningProfile.acceptanceRate),
+        rejectedCount: profile.interactionCount - Math.round(profile.interactionCount * profile.learningProfile.acceptanceRate),
+        totalExecutionTime: 0,
+        intents: profile.preferredIntents,
+        agents: {},
+        firstSeen: profiles[userId]?.firstSeen || new Date().toISOString(),
+        lastActive: profile.lastActive,
+        confidenceThreshold: profile.confidenceThreshold,
+        explorationLevel: Math.round(profile.learningProfile.explorationLevel * 100)
+      };
+      
+      // Save back to file
+      fs.writeFileSync(profilesPath, JSON.stringify(profiles, null, 2));
+    } catch (error) {
+      console.error('⚠️  Failed to save user profile to file:', error.message);
+    }
   }
 
   // Learn from user feedback patterns
@@ -342,14 +469,27 @@ class LearningService {
 
   // Get A/B test results
   async getABTestResults(testName) {
-    const results = { A: { interactions: 0, conversions: 0 }, B: { interactions: 0, conversions: 0 } };
+    const testData = this.abTestGroups.get(testName);
     
-    for (const [key, data] of this.abTestGroups.entries()) {
-      if (data.testName === testName) {
-        results[data.group].interactions += data.interactions;
-        results[data.group].conversions += data.conversions;
-      }
+    if (!testData || !testData.interactions) {
+      return { 
+        A: { interactions: 0, conversions: 0, conversionRate: 0 }, 
+        B: { interactions: 0, conversions: 0, conversionRate: 0 } 
+      };
     }
+    
+    const results = {
+      A: {
+        interactions: testData.interactions.A?.total || 0,
+        conversions: testData.interactions.A?.conversions || 0,
+        conversionRate: 0
+      },
+      B: {
+        interactions: testData.interactions.B?.total || 0,
+        conversions: testData.interactions.B?.conversions || 0,
+        conversionRate: 0
+      }
+    };
     
     // Calculate conversion rates
     results.A.conversionRate = results.A.interactions > 0 ? 

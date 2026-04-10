@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { AGENT_TEMPLATES } from './agent-templates';
 const S3AgentStorage = require('./services/s3AgentStorage');
 const APIKeyService = require('./services/apiKeyService');
 
@@ -45,12 +46,19 @@ app.use(express.json());
 // API Key validation middleware
 const validateAPIKey = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Skip API key validation in development mode
-  // Always skip in development for easier testing
-  console.log('🔓 API Key validation disabled for development');
-  return next();
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  const disableAuth = process.env.DISABLE_API_KEY_AUTH === 'true';
+  
+  console.log(`🔐 validateAPIKey middleware - Path: ${req.path}, NODE_ENV: ${process.env.NODE_ENV}, isDevelopment: ${isDevelopment}, DISABLE_API_KEY_AUTH: ${disableAuth}`);
+  
+  if (isDevelopment || disableAuth) {
+    console.log('🔓 API Key validation disabled for development - allowing request');
+    return next();
+  }
 
   // Skip API key validation for health check and API key management endpoints
   if (req.path === '/health' || req.path.startsWith('/api/v1/auth/')) {
+    console.log('🔓 Skipping API key validation for health/auth endpoint');
     return next();
   }
 
@@ -96,6 +104,9 @@ import vectorDBIntegrationRoutes from './routes/vectorDBIntegrationRoutes';
 // const testMetadataRoutes = require('../routes/testMetadataRoutes'); // Disabled - causing module errors
 // Intelligence API temporarily disabled for compilation
 // import intelligenceRouter from './intelligence-api';
+
+// Multi-Agent Collaboration Routes
+const multiAgentRoutes = require('./routes/multiAgentRoutes');
 
 // Apply API key validation to all API routes (but not health check)
 app.use('/api', validateAPIKey);
@@ -399,9 +410,27 @@ pytest==7.4.0`;
 
 const executionService = AgentExecutionService.getInstance();
 
+// Store for created agents
+const createdAgents = new Map<string, any>();
+
 // Initialize S3 storage
 const s3Storage = new S3AgentStorage();
 const apiKeyService = new APIKeyService();
+
+// Initialize Multi-Agent Coordinator
+const MultiAgentCoordinator = require('./services/multiAgentCoordinator');
+const bedrockService = require('./services/bedrockService');
+const multiAgentCoordinator = new MultiAgentCoordinator(bedrockService, s3Storage);
+console.log('✅ Multi-Agent Coordinator initialized');
+
+// Register Multi-Agent Collaboration Routes
+app.use('/api/v1/multi-agent', multiAgentRoutes(multiAgentCoordinator));
+console.log('✅ Multi-Agent routes registered');
+
+// Cloud Provider Import Routes (AWS Bedrock, Azure AI Foundry, Vertex AI)
+const cloudImportRoutes = require('./routes/cloudImportRoutes');
+app.use('/api/v1/agents', cloudImportRoutes);
+console.log('✅ Cloud Provider Import routes registered');
 
 // Initialize S3 bucket on startup
 s3Storage.initializeBucket().catch(console.error);
@@ -513,7 +542,7 @@ app.post('/api/v1/auth/validate', (req, res): void => {
 // Get all agents from S3
 app.get('/api/v1/agents/s3', async (req, res): Promise<void> => {
   try {
-    console.log('🔍 S3 API: Fetching all agents from S3...');
+    console.log('🔍 S3 API: Fetching all agents from S3 bucket...');
     const agents = await s3Storage.listAgents();
     console.log('✅ S3 API: Found agents:', agents.length);
     
@@ -763,6 +792,116 @@ app.get('/api/v1/agents/:agentId', (req, res): void => {
   }
 });
 
+// Create agent from template
+app.post('/api/v1/agents/create', async (req, res): Promise<void> => {
+  const { templateId, name, description, customInputs, purpose, category, agentSubType, inputSchema, outputSchema, processingLogic, selectedModel, mcpIntegration, metadata } = req.body;
+  
+  console.log('🎯 Creating agent:', { templateId, name, selectedModel });
+
+  if (!templateId) {
+    res.status(400).json({
+      success: false,
+      error: 'Template ID is required'
+    });
+    return;
+  }
+
+  let template: any;
+  
+  if (templateId === 'custom') {
+    if (!purpose || !processingLogic || !inputSchema || !outputSchema) {
+      res.status(400).json({
+        success: false,
+        error: 'Custom agents require purpose, processingLogic, inputSchema, and outputSchema'
+      });
+      return;
+    }
+    
+    template = {
+      id: 'custom',
+      name: name || 'Custom Agent',
+      category: category || 'Custom',
+      description: description || 'Custom agent with user-defined purpose',
+      purpose: purpose,
+      inputSchema: inputSchema,
+      outputSchema: outputSchema,
+      processingLogic: 'custom_processing'
+    };
+  } else {
+    template = AGENT_TEMPLATES.find((t: any) => t.id === templateId);
+    
+    if (!template) {
+      res.status(404).json({
+        success: false,
+        error: 'Template not found'
+      });
+      return;
+    }
+  }
+
+  const agentId = `${template.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const purposeDrivenAgent: any = {
+    id: agentId,
+    agent_id: agentId,
+    name: name || template.name,
+    description: description || template.description,
+    purpose: template.purpose,
+    version: '1.0.0',
+    type: 'purpose-driven',
+    agent_type: 'purpose-driven',
+    templateId: template.id,
+    created: new Date().toISOString(),
+    updated: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    author: 'current-user',
+    tags: [template.category.toLowerCase(), 'purpose-driven', template.id],
+    category: template.category,
+    agentSubType: agentSubType,
+    usage_count: 0,
+    average_rating: 0,
+    inputSchema: template.inputSchema,
+    outputSchema: template.outputSchema,
+    processingLogic: template.processingLogic,
+    customInputs: customInputs || {},
+    customProcessingLogic: templateId === 'custom' ? processingLogic : undefined,
+    metadata: {
+      templateBased: templateId !== 'custom',
+      purposeDriven: true,
+      functionalityScope: template.purpose,
+      estimatedRuntime: '1-3 seconds',
+      resourceUsage: 'low',
+      securityLevel: 'internal',
+      agentCategory: category,
+      agentSubType: agentSubType
+    }
+  };
+
+  if (mcpIntegration && mcpIntegration.enabled) {
+    purposeDrivenAgent.mcpIntegration = mcpIntegration;
+    purposeDrivenAgent.metadata.mcpConfig = mcpIntegration;
+    console.log(`🔌 MCP integration configured for agent ${agentId}:`, mcpIntegration.selectedServers);
+  }
+
+  createdAgents.set(agentId, purposeDrivenAgent);
+
+  try {
+    console.log(`💾 Saving agent to S3: ${agentId} (${name})`);
+    await s3Storage.saveAgent(purposeDrivenAgent);
+    console.log(`✅ Agent saved to S3 successfully: ${agentId}`);
+  } catch (s3Error) {
+    console.error(`❌ Failed to save agent to S3: ${agentId}`, s3Error);
+  }
+
+  console.log(`Purpose-driven agent created successfully: ${agentId} (${template.name})`);
+  
+  res.status(201).json({
+    success: true,
+    data: purposeDrivenAgent,
+    message: 'Purpose-driven agent created successfully'
+  });
+});
+
 // Execute agent - DYNAMIC AI-POWERED IMPLEMENTATION
 app.post('/api/v1/agents/:agentId/execute', async (req, res): Promise<void> => {
   try {
@@ -850,6 +989,363 @@ app.get('/api/v1/executions/:executionId', (req, res): void => {
     });
   }
 });
+
+// ===== KNOWLEDGE BASES & MCP ENDPOINTS =====
+
+// Get all knowledge bases
+app.get('/api/knowledge-bases', (_req, res): void => {
+  try {
+    // Return empty array for now - can be populated later
+    res.json({
+      success: true,
+      data: [],
+      count: 0
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch knowledge bases'
+    });
+  }
+});
+
+// Get all MCP servers
+app.get('/api/mcp/servers', (_req, res): void => {
+  try {
+    // Return empty array for now - can be populated later
+    res.json({
+      success: true,
+      data: [],
+      count: 0
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch MCP servers'
+    });
+  }
+});
+
+// ===== DEPLOYMENT PACKAGE ENDPOINT =====
+
+// Generate deployment package for an agent
+app.post('/api/agents/:agentId/deployment-package', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    const { target } = req.body;
+    
+    console.log(`📦 Generating ${target} deployment package for agent:`, agentId);
+    
+    // Get agent details from S3
+    const agent = await s3Storage.getAgent(agentId);
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found'
+      });
+      return;
+    }
+    
+    // Generate deployment files based on target
+    const deploymentFiles = generateDeploymentFiles(agent, target);
+    
+    // Create ZIP archive in memory
+    const archiver = require('archiver');
+    const archive = archiver('zip', { zlib: { level: 9 } });
+    
+    // Set response headers for file download
+    const filename = `${agent.name.replace(/\s+/g, '-').toLowerCase()}-${target}-deployment.zip`;
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    // Pipe archive to response
+    archive.pipe(res);
+    
+    // Add files to archive
+    for (const [filename, content] of Object.entries(deploymentFiles)) {
+      archive.append(content, { name: filename });
+    }
+    
+    // Finalize archive
+    await archive.finalize();
+    
+    console.log(`✅ Generated ${target} deployment package for agent: ${agentId}`);
+  } catch (error: any) {
+    console.error('❌ Error generating deployment package:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to generate deployment package'
+    });
+  }
+});
+
+// Helper function to generate deployment files
+function generateDeploymentFiles(agent: any, target: string): Record<string, string> {
+  const files: Record<string, string> = {};
+  
+  // Common files for all targets
+  files['README.md'] = `# ${agent.name} - Deployment Package
+
+## Agent Information
+- **Name**: ${agent.name}
+- **Description**: ${agent.description}
+- **Category**: ${agent.category}
+- **Target Platform**: ${target}
+
+## Quick Start
+1. Review the configuration files
+2. Update environment variables in .env.example
+3. Follow the deployment instructions in DEPLOY.md
+4. Run health checks after deployment
+
+## Support
+For issues or questions, contact your DevOps team.
+`;
+
+  files['.env.example'] = `# Agent Configuration
+AGENT_ID=${agent.id}
+AGENT_NAME=${agent.name}
+
+# AWS Configuration (if using Bedrock)
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+
+# Model Configuration
+${agent.selectedModel ? `BEDROCK_MODEL=${agent.selectedModel}` : '# BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0'}
+
+# API Configuration
+API_PORT=3000
+API_TIMEOUT=30000
+
+# Logging
+LOG_LEVEL=info
+`;
+
+  // Target-specific files
+  switch (target) {
+    case 'docker':
+      files['docker-compose.yml'] = `version: '3.8'
+
+services:
+  ${agent.name.replace(/\s+/g, '-').toLowerCase()}:
+    image: agent-runtime:latest
+    container_name: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+    environment:
+      - AGENT_ID=\${AGENT_ID}
+      - AGENT_NAME=\${AGENT_NAME}
+      - AWS_REGION=\${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=\${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=\${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+`;
+      files['Dockerfile'] = `FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy agent configuration
+COPY agent-config.json .
+COPY .env .
+
+# Install dependencies
+RUN npm install aws-sdk axios
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \\
+  CMD node healthcheck.js || exit 1
+
+# Start agent
+CMD ["node", "index.js"]
+`;
+      break;
+      
+    case 'kubernetes':
+      files['deployment.yaml'] = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+  labels:
+    app: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+  template:
+    metadata:
+      labels:
+        app: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+    spec:
+      containers:
+      - name: agent
+        image: agent-runtime:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: AGENT_ID
+          value: "${agent.id}"
+        - name: AGENT_NAME
+          value: "${agent.name}"
+        envFrom:
+        - secretRef:
+            name: agent-secrets
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+spec:
+  selector:
+    app: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer
+`;
+      break;
+      
+    case 'aws-lambda':
+      files['serverless.yml'] = `service: ${agent.name.replace(/\s+/g, '-').toLowerCase()}
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    AGENT_ID: ${agent.id}
+    AGENT_NAME: ${agent.name}
+    ${agent.selectedModel ? `BEDROCK_MODEL: ${agent.selectedModel}` : ''}
+
+functions:
+  agent:
+    handler: handler.main
+    timeout: 30
+    memorySize: 512
+    events:
+      - http:
+          path: /execute
+          method: post
+          cors: true
+`;
+      break;
+  }
+  
+  // Agent configuration file
+  files['agent-config.json'] = JSON.stringify({
+    id: agent.id,
+    name: agent.name,
+    description: agent.description,
+    category: agent.category,
+    purpose: agent.purpose,
+    processingLogic: agent.processingLogic,
+    selectedModel: agent.selectedModel,
+    metadata: agent.metadata
+  }, null, 2);
+  
+  // Deployment instructions
+  files['DEPLOY.md'] = `# Deployment Instructions - ${agent.name}
+
+## Prerequisites
+- ${target === 'docker' ? 'Docker and Docker Compose installed' : ''}
+- ${target === 'kubernetes' ? 'kubectl configured and connected to your cluster' : ''}
+- ${target === 'aws-lambda' ? 'AWS CLI and Serverless Framework installed' : ''}
+- AWS credentials with appropriate permissions
+
+## Deployment Steps
+
+### 1. Configure Environment
+\`\`\`bash
+cp .env.example .env
+# Edit .env with your actual credentials
+\`\`\`
+
+### 2. Deploy
+${target === 'docker' ? `\`\`\`bash
+docker-compose up -d
+\`\`\`` : ''}
+${target === 'kubernetes' ? `\`\`\`bash
+kubectl apply -f deployment.yaml
+\`\`\`` : ''}
+${target === 'aws-lambda' ? `\`\`\`bash
+serverless deploy
+\`\`\`` : ''}
+
+### 3. Verify Deployment
+${target === 'docker' ? `\`\`\`bash
+curl http://localhost:3000/health
+\`\`\`` : ''}
+${target === 'kubernetes' ? `\`\`\`bash
+kubectl get pods
+kubectl logs -f deployment/${agent.name.replace(/\s+/g, '-').toLowerCase()}
+\`\`\`` : ''}
+
+## Rollback
+${target === 'docker' ? `\`\`\`bash
+docker-compose down
+\`\`\`` : ''}
+${target === 'kubernetes' ? `\`\`\`bash
+kubectl delete -f deployment.yaml
+\`\`\`` : ''}
+${target === 'aws-lambda' ? `\`\`\`bash
+serverless remove
+\`\`\`` : ''}
+
+## Monitoring
+- Check logs regularly
+- Monitor resource usage
+- Set up alerts for failures
+`;
+
+  files['health-check.sh'] = `#!/bin/bash
+# Health check script for ${agent.name}
+
+ENDPOINT="http://localhost:3000/health"
+MAX_RETRIES=3
+RETRY_DELAY=5
+
+for i in \$(seq 1 \$MAX_RETRIES); do
+  echo "Health check attempt \$i/\$MAX_RETRIES..."
+  
+  if curl -f -s "\$ENDPOINT" > /dev/null; then
+    echo "✅ Agent is healthy"
+    exit 0
+  fi
+  
+  if [ \$i -lt \$MAX_RETRIES ]; then
+    echo "⚠️ Health check failed, retrying in \${RETRY_DELAY}s..."
+    sleep \$RETRY_DELAY
+  fi
+done
+
+echo "❌ Agent health check failed after \$MAX_RETRIES attempts"
+exit 1
+`;
+
+  return files;
+}
 
 // ===== HYBRID AGENT ENDPOINTS - REAL FUNCTIONALITY =====
 

@@ -103,17 +103,11 @@ class AdvancedAnalyticsService {
   // Load execution history from localStorage and backend
   private async loadExecutionHistory(): Promise<void> {
     try {
-      // First try to load from backend
+      // Always load from backend (ignore localStorage - it has stale data)
       await this.loadExecutionHistoryFromBackend();
       
-      // If no backend data, try localStorage
-      if (this.executionHistory.length === 0) {
-        const saved = localStorage.getItem('analytics-execution-history');
-        if (saved) {
-          this.executionHistory = JSON.parse(saved);
-          console.log(`📊 Loaded ${this.executionHistory.length} executions from localStorage`);
-        }
-      }
+      // Clear old localStorage data
+      localStorage.removeItem('analytics-execution-history');
     } catch (error) {
       console.error('Failed to load execution history:', error);
       this.executionHistory = [];
@@ -136,8 +130,10 @@ class AdvancedAnalyticsService {
       if (finopsResponse && finopsResponse.ok) {
         const data = await finopsResponse.json();
         if (data.success && data.data) {
-          finopsExecutions = data.data;
-          console.log(`📊 Loaded ${finopsExecutions.length} FinOps executions from backend`);
+          // Filter out old hardcoded test data
+          const hardcodedAgentIds = ['test-agent', 'github-mcp', 'qe-test-generator', 'qe-test-generator-v2', 'devops-monitor-v1', 'security-scanner-pro', 'business-analyzer'];
+          finopsExecutions = data.data.filter((exec: any) => !hardcodedAgentIds.includes(exec.agentId));
+          console.log(`📊 Loaded ${finopsExecutions.length} FinOps executions from backend (filtered out ${data.data.length - finopsExecutions.length} hardcoded test executions)`);
         }
       }
 
@@ -145,25 +141,53 @@ class AdvancedAnalyticsService {
       if (testingResponse && testingResponse.ok) {
         const data = await testingResponse.json();
         if (data.success && data.data) {
+          console.log(`📥 Raw test data from backend (first item):`, data.data[0]);
+          console.log(`🔥 FIX IS LOADED - NEW CODE RUNNING! 🔥`);
+          
           // Convert test runs to execution history format
-          testingExecutions = data.data.map((run: any) => ({
-            executionId: run.id,
-            agentId: run.agentId,
-            agentName: run.agentName,
-            timestamp: new Date(run.startTime),
-            status: run.status === 'completed' ? 'completed' : 'failed',
-            duration: run.duration || 0,
-            category: 'Testing',
-            costSavings: 0, // Testing doesn't generate cost savings
-            inputTokens: run.tokenUsage?.input || 0,
-            outputTokens: run.tokenUsage?.output || 0,
-            model: run.modelId || 'unknown',
-            testRun: true, // Flag to identify test executions
-            testScore: run.overallScore,
-            testsPassed: run.summary?.passed || 0,
-            testsFailed: run.summary?.failed || 0
-          }));
+          testingExecutions = data.data.map((run: any) => {
+            // Backend returns passedTests and totalTests, calculate failed
+            const passed = run.passedTests || run.summary?.passed || 0;
+            const total = run.totalTests || run.summary?.total || 0;
+            const failed = total - passed;
+            
+            console.log(`🔍 Processing run ${run.id}: passedTests=${run.passedTests}, totalTests=${run.totalTests}, calculated passed=${passed}, total=${total}`);
+            
+            // Calculate cost savings from test execution
+            const testCost = run.cost || 0;
+            const manualTestingCost = total * 15; // $15 per manual test avoided
+            const costSavings = manualTestingCost - testCost;
+            
+            return {
+              executionId: run.id,
+              agentId: run.agentId || run.agent_id,
+              agentName: run.agentName || run.agent_name,
+              timestamp: new Date(run.startTime || run.start_time),
+              status: run.status === 'completed' ? 'completed' : 'failed',
+              duration: run.duration || 0,
+              category: 'Testing',
+              costSavings: Math.max(0, costSavings),
+              inputTokens: run.tokenUsage?.input || run.token_usage?.input || 0,
+              outputTokens: run.tokenUsage?.output || run.token_usage?.output || 0,
+              model: run.modelId || run.model_id || 'unknown',
+              testRun: true,
+              testScore: run.averageScore || run.overallScore || run.overall_score || 0,
+              testsPassed: passed,
+              testsFailed: failed,
+              totalTests: total
+            };
+          });
           console.log(`🧪 Loaded ${testingExecutions.length} Agent Testing executions from backend`);
+          
+          if (testingExecutions.length > 0) {
+            console.log('🧪 Sample transformed execution:', {
+              agentName: testingExecutions[0].agentName,
+              totalTests: testingExecutions[0].totalTests,
+              testsPassed: testingExecutions[0].testsPassed,
+              testsFailed: testingExecutions[0].testsFailed,
+              costSavings: testingExecutions[0].costSavings
+            });
+          }
         }
       }
 
@@ -661,15 +685,30 @@ class AdvancedAnalyticsService {
     // For test executions, use test pass rate; for regular executions, use completion status
     let totalTests = 0;
     let passedTests = 0;
+    let testRunCount = 0;
+    let regularRunCount = 0;
     
     executions.forEach(e => {
       if (e.testRun) {
+        testRunCount++;
         // This is a test execution - use test results
         const passed = e.testsPassed || 0;
         const failed = e.testsFailed || 0;
-        totalTests += (passed + failed);
-        passedTests += passed;
+        const total = e.totalTests || (passed + failed);
+        
+        if (total > 0) {
+          // Count individual test cases
+          totalTests += total;
+          passedTests += passed;
+        } else {
+          // If no test data, treat the execution itself as a test
+          totalTests += 1;
+          if (e.status === 'completed' || e.status === 'success') {
+            passedTests += 1;
+          }
+        }
       } else {
+        regularRunCount++;
         // Regular execution - use status
         totalTests += 1;
         if (e.status === 'completed' || e.status === 'success') {
@@ -681,8 +720,10 @@ class AdvancedAnalyticsService {
     const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
     
     // Debug: Log success rate calculation
-    console.log(`📊 Success Rate Debug - Total tests: ${totalTests}, Passed: ${passedTests}, Rate: ${successRate.toFixed(2)}%`);
-    console.log(`📊 Execution breakdown: ${executions.filter(e => e.testRun).length} test runs, ${executions.filter(e => !e.testRun).length} regular executions`);
+    console.log(`📊 Success Rate Calculation:`);
+    console.log(`   - Test runs: ${testRunCount}, Regular runs: ${regularRunCount}`);
+    console.log(`   - Total tests: ${totalTests}, Passed: ${passedTests}`);
+    console.log(`   - Success rate: ${successRate.toFixed(2)}%`);
     
     return successRate;
   }

@@ -206,6 +206,21 @@ const Navbar: React.FC = () => {
 
               <Nav.Link 
                 as={Link} 
+                to="/multi-agent" 
+                className={`px-4 ${location.pathname === '/multi-agent' ? 'active' : ''}`}
+                style={{
+                  color: location.pathname === '/multi-agent' ? '#fff' : 'rgba(255,255,255,0.85)',
+                  fontWeight: location.pathname === '/multi-agent' ? '600' : '500',
+                  borderBottom: location.pathname === '/multi-agent' ? '2px solid #60a5fa' : '2px solid transparent',
+                  transition: 'all 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+              >
+                <span style={{ fontSize: '1rem' }}>🔄</span> Multi-Agent
+              </Nav.Link>
+
+              <Nav.Link 
+                as={Link} 
                 to="/manage" 
                 className={`px-4 ${location.pathname === '/manage' ? 'active' : ''}`}
                 style={{
@@ -229,6 +244,9 @@ const Navbar: React.FC = () => {
                 }}
               >
                 <NavDropdown.Header>📚 Documentation</NavDropdown.Header>
+                <NavDropdown.Item as={Link} to="/architecture">
+                  🏗️ System Architecture
+                </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/api-docs">
                   API Documentation
                 </NavDropdown.Item>

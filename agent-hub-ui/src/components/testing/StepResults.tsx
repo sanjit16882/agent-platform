@@ -481,6 +481,42 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
         </Card>
       )}
 
+      {/* Scoring Methodology */}
+      <Card style={{ marginBottom: theme.spacing.xl, backgroundColor: '#f0f9ff', border: '1px solid #0ea5e9' }}>
+        <Card.Header>
+          <Card.Title style={{ fontSize: theme.typography.fontSize.base, color: '#0369a1' }}>
+            📊 How Scores Are Calculated
+          </Card.Title>
+        </Card.Header>
+        <Card.Body>
+          <div style={{ fontSize: theme.typography.fontSize.sm, color: '#0c4a6e', lineHeight: 1.6 }}>
+            <p style={{ marginBottom: theme.spacing.md }}>
+              Each test is scored on a 0-100 scale based on three key factors:
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing.sm, marginLeft: theme.spacing.lg }}>
+              <div>
+                <strong>1. Base Score (50 points):</strong> Starting point for all responses
+              </div>
+              <div>
+                <strong>2. Input Relevance (up to 30 points):</strong> How well the response addresses the input keywords and context
+              </div>
+              <div>
+                <strong>3. Expected Behavior Match (up to 20 points):</strong> Alignment with the test's expected output criteria
+              </div>
+            </div>
+            <div style={{ 
+              marginTop: theme.spacing.md, 
+              padding: theme.spacing.md, 
+              backgroundColor: '#e0f2fe', 
+              borderRadius: theme.borderRadius.sm,
+              borderLeft: '3px solid #0ea5e9'
+            }}>
+              <strong>Passing Threshold:</strong> Tests pass with a score of 70 or higher. Scores below 70 indicate areas for improvement.
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
       {/* Individual Test Results */}
       <Card>
         <Card.Header>
@@ -541,16 +577,44 @@ const StepResults: React.FC<StepResultsProps> = ({ runId, onResultsLoaded }) => 
                       </span>
                     )}
                   </div>
-                  <div style={{
-                    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-                    backgroundColor: result.passed ? theme.colors.success : theme.colors.danger,
-                    color: theme.colors.white,
-                    borderRadius: theme.borderRadius.full,
-                    fontSize: theme.typography.fontSize.xs,
-                    fontWeight: theme.typography.fontWeight.semibold
-                  }}>
-                    {result.score?.toFixed(1) || 0}%
+                  <div style={{ display: 'flex', alignItems: 'center', gap: theme.spacing.sm }}>
+                    <div style={{
+                      padding: `${theme.spacing.xs} ${theme.spacing.md}`,
+                      backgroundColor: result.passed ? theme.colors.success : theme.colors.danger,
+                      color: theme.colors.white,
+                      borderRadius: theme.borderRadius.full,
+                      fontSize: theme.typography.fontSize.xs,
+                      fontWeight: theme.typography.fontWeight.semibold
+                    }}>
+                      {result.score?.toFixed(1) || 0}%
+                    </div>
+                    <div 
+                      title="Scoring Logic: Base (50 pts) + Keyword Match (30 pts) + Expected Behavior (20 pts)"
+                      style={{
+                        cursor: 'help',
+                        fontSize: theme.typography.fontSize.xs,
+                        color: theme.colors.textSecondary,
+                        padding: `2px ${theme.spacing.xs}`,
+                        backgroundColor: theme.colors.backgroundSecondary,
+                        borderRadius: theme.borderRadius.sm,
+                        border: `1px solid ${theme.colors.border}`
+                      }}
+                    >
+                      ℹ️
+                    </div>
                   </div>
+                </div>
+
+                {/* Scoring Explanation */}
+                <div style={{
+                  marginTop: theme.spacing.sm,
+                  padding: theme.spacing.sm,
+                  backgroundColor: theme.colors.backgroundSecondary,
+                  borderRadius: theme.borderRadius.sm,
+                  fontSize: theme.typography.fontSize.xs,
+                  color: theme.colors.textSecondary
+                }}>
+                  <strong>Score Breakdown:</strong> Base (50 pts) + Input Relevance (up to 30 pts) + Expected Behavior Match (up to 20 pts)
                 </div>
 
                 {result.explanation && (

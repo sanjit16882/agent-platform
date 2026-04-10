@@ -37,6 +37,8 @@ import ContinuousLearningDashboard from './components/ContinuousLearningDashboar
 import NLPTester from './components/NLPTester';
 import PurposeDrivenAgentBuilder from './components/PurposeDrivenAgentBuilder';
 import NLPAgentBuilder from './components/NLPAgentBuilder';
+import MultiAgentWorkflow from './components/MultiAgentWorkflow';
+import { EnhancedMultiAgentWorkflow } from './components/EnhancedMultiAgentWorkflow';
 
 import NaturalLanguageAgentGenerator from './components/NaturalLanguageAgentGenerator';
 import ButtonTest from './components/ButtonTest';
@@ -65,6 +67,7 @@ import KnowledgeBaseManagement from './components/KnowledgeBaseManagement';
 import AgentTemplatesPage from './components/AgentTemplatesPage';
 import VectorDBPage from './pages/VectorDBPage';
 import VectorDBAdminPage from './pages/VectorDBAdminPage';
+import ArchitecturePage from './components/ArchitecturePage';
 import { AgentProvider } from './context/AgentContext';
 import { ProgressProvider } from './context/ProgressContext';
 import { AuthProvider } from './context/AuthContext';
@@ -117,6 +120,7 @@ function App() {
             <Route path="/agent-builder" element={<NLPAgentBuilder />} />
             <Route path="/agent-builder-classic" element={<PurposeDrivenAgentBuilder />} />
             <Route path="/agent-builder-old" element={<NLPTester />} />
+            <Route path="/multi-agent" element={<EnhancedMultiAgentWorkflow />} />
             <Route path="/button-test" element={<ButtonTest />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/roles" element={<RoleManagement />} />
@@ -140,6 +144,7 @@ function App() {
             <Route path="/agent-templates" element={<AgentTemplatesPage />} />
             <Route path="/vector-db" element={<VectorDBPage />} />
             <Route path="/vector-db-admin" element={<VectorDBAdminPage />} />
+            <Route path="/architecture" element={<ArchitecturePage />} />
             <Route path="/login" element={<Login />} />
           </Routes>
         </div>

@@ -49,26 +49,9 @@ class AgentApiService {
   }
 
   async getAgents(): Promise<AgentConfig[]> {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/v1/agents`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer sk-agenthub-system-internal-frontend-key',
-          'x-user-id': this.getUserId()
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.success ? data.data : [];
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      throw error;
-    }
+    // Return empty array - we only use S3 agents now
+    // Template agents from /api/v1/agents are deprecated
+    return [];
   }
 
   async getAgent(agentId: string): Promise<AgentConfig | null> {

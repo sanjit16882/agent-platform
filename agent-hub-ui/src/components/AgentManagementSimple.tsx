@@ -134,8 +134,8 @@ const AgentManagementSimple: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Platform Metrics */}
-      {loading ? (
+      {/* Platform Metrics - Hidden for now */}
+      {/* {loading ? (
         <Row className="mb-4">
           <Col md={3}>
             <Card className="text-center">
@@ -205,7 +205,7 @@ const AgentManagementSimple: React.FC = () => {
             </Card>
           </Col>
         </Row>
-      )}
+      )} */}
 
       {/* Agent List */}
       <Card>
